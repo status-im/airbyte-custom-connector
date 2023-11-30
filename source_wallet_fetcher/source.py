@@ -55,7 +55,10 @@ class Token(HttpStream):
         logging.info("Fetching Tokens balance information")
         tokens_data=response.json()['tokens']
         for t in tokens_data:
-           yield extract_token(t) 
+            try:
+                yield extract_token(t)
+            except Exception as e:
+                logger.error('Dropping token not valid %s' % t )
 # Source
 class SourceWalletFetcher(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
