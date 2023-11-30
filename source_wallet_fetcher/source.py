@@ -24,9 +24,10 @@ class Token(HttpStream):
     # Set this as a noop.
     primary_key = None
 
-    def __init__(self, wallet_address: str, **kwargs):
+    def __init__(self, wallet_address: str, wallet_name: str, **kwargs):
         super().__init__(**kwargs)
         self.wallet_address = wallet_address
+        self.wallet_name = wallet_name
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         return None
@@ -56,7 +57,7 @@ class Token(HttpStream):
         tokens_data=response.json()['tokens']
         for t in tokens_data:
             try:
-                yield extract_token(t)
+                yield extract_token(self.wallet_name, t)
             except Exception as e:
                 logger.error('Dropping token not valid %s' % t )
 # Source
@@ -72,4 +73,13 @@ class SourceWalletFetcher(AbstractSource):
         :param config: A Mapping of the user input configuration as defined in the connector spec.
         """
         # TODO remove the authenticator if not required.
-        return [Token(wallet_address=config["wallet_address"])]
+        tokens: List[Token] = []
+
+        for wallet in config["wallets"]:
+            tokens.append(
+                Token(
+                    wallet_address=wallet['address'], 
+                    wallet_name=wallet['name']
+                )
+            )
+        return tokens

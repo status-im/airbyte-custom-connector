@@ -7,8 +7,23 @@
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object",
           "properties": {
-            "wallet_address": {
-              "type": "string"
+            "wallets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "address"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string"
+                  }
+                }
+              }
             }
           }
         },

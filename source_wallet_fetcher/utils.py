@@ -2,7 +2,7 @@ import logging
 import json
 
 
-def extract_token(token_data):
+def extract_token(wallet_name, token_data):
     description= 'No description available' if 'description' not in token_data['tokenInfo'] else token_data['tokenInfo']['description']
     symbol= 'No Symbol' if 'symbol' not in token_data['tokenInfo'] else token_data['tokenInfo']['symbol']
     try:
@@ -10,6 +10,7 @@ def extract_token(token_data):
             # The data is not valid, droping it.
             raise Exception('Not a valid token')
         token = {
+            "wallet_name": wallet_name,
             "name": token_data['tokenInfo']['name'],
             "symbol": symbol,
             "description": description,
