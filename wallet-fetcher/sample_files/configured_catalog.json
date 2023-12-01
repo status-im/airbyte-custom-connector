@@ -5,27 +5,7 @@
         "name": "token",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object",
-          "properties": {
-            "wallets": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "address"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "address": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
+          "type": "object"
         },
         "supported_sync_modes": [
           "full_refresh"

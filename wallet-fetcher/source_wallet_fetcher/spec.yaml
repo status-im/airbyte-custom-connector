@@ -7,23 +7,8 @@ connectionSpecification:
     - wallets
   properties:
     wallets:
+      title: Wallets
+      description: "List of wallet to scan"
       type: array
-      description: list of wallet
       items:
-        name:
-          type: string
-          description: Name of the wallet
-          examples:
-            - 'Main Wallet'
-        address:
-          type: string
-          description: Adress of the wallet
-          pattern: ^[a-zA-W0-9]+$
-          examples:
-          - '0x766c77F7f7edC99acdC9475012756B98037a8F69'
-        chain:
-          type: string
-          description: 'Blockchain to scan. Not working yet'
-          default: ETH
-
-
+        type: string

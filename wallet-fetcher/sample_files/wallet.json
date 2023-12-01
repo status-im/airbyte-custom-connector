@@ -1,8 +1,5 @@
 {
   "wallets": [
-    {
-      "address": "0x23f4569002a5A07f0Ecf688142eEB6bcD883eeF8",
-      "name": "test"
-    }
+    "0x23f4569002a5A07f0Ecf688142eEB6bcD883eeF8"
   ]
 }
