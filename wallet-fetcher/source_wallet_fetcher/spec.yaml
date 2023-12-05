@@ -20,3 +20,11 @@ connectionSpecification:
           name:
             title: Name
             type: string
+          blockchain:
+            title: blockchain
+            type: array
+            items:
+              type: string
+              enum:
+                - BTC
+                - ETH

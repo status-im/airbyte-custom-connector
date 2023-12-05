@@ -24,6 +24,10 @@ data:
   releaseDate: TODO
   supportLevel: community
   releaseStage: alpha
+  suggestedStreams:
+    streams:
+      - bitcoin_token
+      - ethereum_token
   documentationUrl: https://docs.airbyte.com/integrations/sources/wallet-fetcher
   tags:
     - language:python

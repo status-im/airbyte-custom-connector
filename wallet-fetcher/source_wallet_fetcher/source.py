@@ -16,12 +16,10 @@ from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 
 logger = logging.getLogger("airbyte")
 
-# Basic full refresh stream
-class Token(HttpStream):
-    # TODO: Fill in the url base. Required.
-    url_base = "https://api.ethplorer.io/getAddressInfo/"
 
-    # Set this as a noop.
+class BitcoinToken(HttpStream):
+    url_base = "https://blockchain.info/rawaddr/"
+
     primary_key = None
 
     def __init__(self, wallets: List[str], **kwargs):
@@ -35,18 +33,53 @@ class Token(HttpStream):
                 "name": wallet['name']
             }
 
+    def path(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
+        return f"{stream_slice['address']}"
 
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        return None
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_slice: Mapping[str, Any] = None,
+        **kwargs
+    ) -> Iterable[Mapping]:
+        logger.info("Getting Bitcoin Balance information")
+        bitcoin_data = response.json()
+        yield {
+             "wallet_name": stream_slice['name'],
+             "name":"BTC", 
+             "symbol":"BTC", 
+             "description": "Bitcoin", 
+             "address":"", 
+             "chain": "bitcoin",
+             "balance": bitcoin_data['final_balance'],
+             "decimal":8
+        }
+
+class EthereumToken(HttpStream):
+
+    url_base = "https://api.ethplorer.io/getAddressInfo/"
+
+    primary_key = None
+
+    def __init__(self, wallets: List[str], **kwargs):
+        super().__init__(**kwargs)
+        self.wallets = wallets
+
+    def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
+        for wallet in self.wallets:
+            yield {
+                "address": wallet['address'], 
+                "name": wallet['name']
+            }
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         return None
 
     def path(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
         return f"{stream_slice['address']}?apiKey=freekey"
-
-        #    def request_params(
-        #        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
-        #    ) -> MutableMapping[str, Any]:
-        #        return {"wallet_address": self.wallet_address}
 
     def parse_response(self,
         response: requests.Response,
@@ -57,14 +90,14 @@ class Token(HttpStream):
         eth_data=response.json()['ETH']
         yield {
             "wallet_name": stream_slice['name'],
-               "name":"ETH", 
-               "symbol":"ETH", 
-               "description": "Native Ethereum token", 
-               "address":"", 
-               "chain": "Ethereum",
-               "balance":eth_data['rawBalance']
-               , "decimal":18
-               }
+            "name":"ETH", 
+            "symbol":"ETH", 
+            "description": "Native Ethereum token", 
+            "address":"", 
+            "chain": "Ethereum",
+            "balance":eth_data['rawBalance'],
+            "decimal":18
+        }
         logging.info("Fetching Tokens balance information")
         tokens_data=response.json()['tokens']
         for t in tokens_data:
@@ -72,25 +105,23 @@ class Token(HttpStream):
                 yield extract_token(stream_slice['name'], t)
             except Exception as e:
                 logger.error('Dropping token not valid %s' % t )
+
 # Source
 class SourceWalletFetcher(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
-        # TODO add a check for each endpoint
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
-        """
-        TODO: Replace the streams below with your own streams.
+        
+        bitcoin_wallets: List = []
+        ethereum_wallets: List = []
 
-        :param config: A Mapping of the user input configuration as defined in the connector spec.
-        """
-        # TODO remove the authenticator if not required.
-        tokens: List[Token] = []
+        for wallet in config['wallets']:
+            if 'BTC' in wallet['blockchain']:
+                bitcoin_wallets.append(wallet)
+            if 'ETH' in wallet['blockchain']:
+                ethereum_wallets.append(wallet)
 
-        #        for wallet in config["wallets"]:
-        #            tokens.append(
-        #                Token(
-        #                    wallet_address=wallet['address'], 
-        #                )
-        #            )
-        return [Token(wallets=config['wallets'])]
+        return [
+            BitcoinToken(wallets=bitcoin_wallets),
+            EthereumToken(wallets=ethereum_wallets)]
