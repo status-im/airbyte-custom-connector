@@ -11,4 +11,12 @@ connectionSpecification:
       description: "List of wallet to scan"
       type: array
       items:
-        type: string
+        type: object
+        additionalProperties: true
+        properties:
+          address:
+            title: Address
+            type: string
+          name:
+            title: Name
+            type: string

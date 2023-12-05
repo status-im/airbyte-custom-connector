@@ -77,7 +77,7 @@ class SourceWalletFetcher(AbstractSource):
         for wallet in config["wallets"]:
             tokens.append(
                 Token(
-                    wallet_address=wallet, 
+                    wallet_address=wallet['address'], 
                 )
             )
         return tokens
