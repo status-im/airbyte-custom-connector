@@ -24,26 +24,39 @@ class Token(HttpStream):
     # Set this as a noop.
     primary_key = None
 
-    def __init__(self, wallet_address: str, **kwargs):
+    def __init__(self, wallets: List[str], **kwargs):
         super().__init__(**kwargs)
-        self.wallet_address = wallet_address
+        self.wallets = wallets
+
+    def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
+        for wallet in self.wallets:
+            yield {
+                "address": wallet['address'], 
+                "name": wallet['name']
+            }
+
+
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         return None
 
-    def path(self, **kwargs) -> str:
-        address = self.wallet_address
-        return f"{address}?apiKey=freekey"
+    def path(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
+        return f"{stream_slice['address']}?apiKey=freekey"
 
-    def request_params(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
-        return {"wallet_address": self.wallet_address}
+        #    def request_params(
+        #        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
+        #    ) -> MutableMapping[str, Any]:
+        #        return {"wallet_address": self.wallet_address}
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    def parse_response(self,
+        response: requests.Response,
+        stream_slice: Mapping[str, Any] = None,
+        **kwargs
+    ) -> Iterable[Mapping]:
         logger.info("Getting ETH balance information")
         eth_data=response.json()['ETH']
         yield {
+            "wallet_name": stream_slice['name'],
                "name":"ETH", 
                "symbol":"ETH", 
                "description": "Native Ethereum token", 
@@ -56,7 +69,7 @@ class Token(HttpStream):
         tokens_data=response.json()['tokens']
         for t in tokens_data:
             try:
-                yield extract_token(self.wallet_address, t)
+                yield extract_token(stream_slice['name'], t)
             except Exception as e:
                 logger.error('Dropping token not valid %s' % t )
 # Source
@@ -74,10 +87,10 @@ class SourceWalletFetcher(AbstractSource):
         # TODO remove the authenticator if not required.
         tokens: List[Token] = []
 
-        for wallet in config["wallets"]:
-            tokens.append(
-                Token(
-                    wallet_address=wallet['address'], 
-                )
-            )
-        return tokens
+        #        for wallet in config["wallets"]:
+        #            tokens.append(
+        #                Token(
+        #                    wallet_address=wallet['address'], 
+        #                )
+        #            )
+        return [Token(wallets=config['wallets'])]

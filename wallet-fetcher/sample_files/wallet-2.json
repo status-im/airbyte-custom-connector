@@ -1,6 +1,12 @@
 {
   "wallets": [
-    "0x23f4569002a5A07f0Ecf688142eEB6bcD883eeF8",
-    "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+    {
+      "address": "0x23f4569002a5A07f0Ecf688142eEB6bcD883eeF8",
+      "name": "wallet-test-1"
+    },
+    {
+      "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "name": "wallet-test-2"
+    }
   ]
 }
