@@ -21,7 +21,8 @@ class BlockchainStream(HttpStream):
         for wallet in self.wallets:
             yield {
                 "address":  wallet['address'],
-                "name":     wallet['name']
+                "name":     wallet['name'],
+                "tags":     wallet['tags']
             }
 
    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
@@ -53,7 +54,8 @@ class BitcoinToken(BlockchainStream):
              "address":"", 
              "chain": "bitcoin",
              "balance": bitcoin_data['final_balance'],
-             "decimal":8
+             "decimal":8,
+             "tags": stream_slice['tags']
         }
 
 class EthereumToken(BlockchainStream):
@@ -78,7 +80,9 @@ class EthereumToken(BlockchainStream):
             "address":"", 
             "chain": "Ethereum",
             "balance":eth_data['rawBalance'],
-            "decimal":18
+            "decimal":18,
+            "tags": stream_slice['tags']
+
         }
         logging.info("Fetching Tokens balance information")
         tokens_data=response.json()['tokens']

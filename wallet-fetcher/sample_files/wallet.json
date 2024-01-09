@@ -5,7 +5,8 @@
       "name": "test-wallet",
       "blochain": [
         "ETH"
-      ]
+      ],
+      "tags": "Multisig"
     }
   ]
 }

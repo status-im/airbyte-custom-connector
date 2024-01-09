@@ -17,14 +17,21 @@ connectionSpecification:
           address:
             title: Address
             type: string
+            description: Address of the wallet
           name:
             title: Name
             type: string
+            description: Name of the wallet
           blockchain:
             title: blockchain
+            description: List of blockchain concerning the wallets
             type: array
             items:
               type: string
               enum:
                 - BTC
                 - ETH
+          tags:
+            title: tags
+            type: string
+            description: List of tags linked to the wallet

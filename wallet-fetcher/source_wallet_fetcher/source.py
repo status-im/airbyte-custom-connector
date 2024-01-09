@@ -1,9 +1,3 @@
-#
-# Copyright (c) 2023 Airbyte, Inc., all rights reserved.
-#
-
-
-#from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from .utils import extract_token
 from .stream import BitcoinToken, EthereumToken

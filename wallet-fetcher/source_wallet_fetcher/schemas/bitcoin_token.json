@@ -49,6 +49,12 @@
         "null",
         "number"
       ]
+    },
+    "tags": {
+      "type": [
+        "null",
+        "string"
+      ]
     }
   }
 }
