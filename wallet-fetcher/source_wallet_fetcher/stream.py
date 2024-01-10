@@ -45,6 +45,7 @@ class BitcoinToken(BlockchainStream):
         **kwargs
     ) -> Iterable[Mapping]:
         logger.info("Getting Bitcoin Balance information")
+        logger.info("Response %s",  response.json())
         bitcoin_data = response.json()
         yield {
              "wallet_name": stream_slice['name'],

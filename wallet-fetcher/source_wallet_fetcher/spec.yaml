@@ -5,6 +5,7 @@ connectionSpecification:
   type: object
   required:
     - wallets
+  additionalProperties: true
   properties:
     wallets:
       title: Wallets
@@ -12,12 +13,12 @@ connectionSpecification:
       type: array
       items:
         type: object
-        additionalProperties: true
         properties:
           address:
             title: Address
             type: string
             description: Address of the wallet
+            airbyte_secret: true
           name:
             title: Name
             type: string
