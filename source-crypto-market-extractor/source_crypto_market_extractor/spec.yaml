@@ -1,0 +1,14 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Crypto Market Extractor Spec
+  type: object
+  required:
+    - coins
+  properties:
+    coins:
+      type: array
+      name: coins
+      description: List of coin to fetch the price. List available at coingecko api under `/coins/list`
+      items:
+        type: string
