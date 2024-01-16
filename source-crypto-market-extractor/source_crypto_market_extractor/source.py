@@ -16,7 +16,7 @@ logger = logging.getLogger("airbyte")
 
 class CoinPrice(HttpStream):
     url_base = 'https://api.coingecko.com/api/v3/coins/'
-    
+   
     primary_key = None
 
     def __init__(self, coins: List['str'],  **kwargs):
@@ -27,11 +27,10 @@ class CoinPrice(HttpStream):
         return None
 
 
-
     def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
         for coin in self.coins:
             yield {
-                "coin":  coin,
+                "coin":  coin
             }
 
     def path(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
@@ -43,15 +42,15 @@ class CoinPrice(HttpStream):
         stream_slice: Mapping[str, Any] = None,
         **kwargs
     ) -> Iterable[Mapping]:
-        logger.info("Parsing Coin Gecko date for %s", stream_slice['coin'])
+        coin=stream_slice["coin"]
+        logger.info("Parsing Coin Gecko data for %s", coin)
         market_chart = response.json()
         yield {
-            "coin": stream_slices['coin'],
+            "coin": coin,
             "date": datetime.today().strftime('%Y%m%d_%H%M'),
             # The first value of the prices objects is weird
             "price": market_chart['prices'][1][1],
         }
-
 
 # Source
 class SourceCryptoMarketExtractor(AbstractSource):
@@ -59,5 +58,5 @@ class SourceCryptoMarketExtractor(AbstractSource):
        return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
-        
+        logger.info('Config : %s', config['coins'])
         return [CoinPrice(coins=config['coins'])]
