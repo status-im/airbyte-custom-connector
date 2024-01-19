@@ -16,7 +16,6 @@ logger = logging.getLogger("airbyte")
 
 class CoinPrice(HttpStream):
     url_base = 'https://api.coingecko.com/api/v3/coins/'
-   
     primary_key = None
 
     def __init__(self, coins: List['str'],  **kwargs):
@@ -46,7 +45,7 @@ class CoinPrice(HttpStream):
         logger.info("Parsing Coin Gecko data for %s", coin)
         market_chart = response.json()
         yield {
-            "coin": coin,
+            "name": coin,
             "date": datetime.today().strftime('%Y%m%d_%H%M'),
             # The first value of the prices objects is weird
             "price": market_chart['prices'][1][1],
@@ -55,7 +54,7 @@ class CoinPrice(HttpStream):
 # Source
 class SourceCryptoMarketExtractor(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
-       return True, None
+        return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         logger.info('Config : %s', config['coins'])
