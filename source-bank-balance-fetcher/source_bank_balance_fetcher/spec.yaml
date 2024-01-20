@@ -1,0 +1,16 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Bank Balance Fetcher Spec
+  type: object
+  required:
+    - url
+    - api_key
+  properties:
+    url:
+      type: string
+      description: URL of the data source containing the bank balances informations
+    api_key:
+      type: string
+      description: API Key to use the API
+      airbyte_secret: true
