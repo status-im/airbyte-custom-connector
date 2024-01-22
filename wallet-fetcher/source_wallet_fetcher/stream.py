@@ -3,7 +3,7 @@ from airbyte_cdk.sources.streams.http import HttpStream
 import logging
 import requests
 import json
-
+import time
 
 logger = logging.getLogger("airbyte")
 
@@ -28,6 +28,17 @@ class BlockchainStream(HttpStream):
    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         return None
 
+   def backoff_time(self, response: requests.Response) -> Optional[float]:
+        """This method is called if we run into the rate limit.
+        Slack puts the retry time in the `Retry-After` response header so we
+        we return that value. If the response is anything other than a 429 (e.g: 5XX)
+        fall back on default retry behavior.
+        """
+        if "Retry-After" in response.headers:
+            return int(response.headers["Retry-After"])
+        else:
+            self.logger.info("Retry-after header not found. Using default backoff value")
+            return 5
 
 
 
@@ -52,7 +63,6 @@ class BitcoinToken(BlockchainStream):
              "name":"BTC", 
              "symbol":"BTC", 
              "description": "Bitcoin", 
-             "address":"", 
              "chain": "bitcoin",
              "balance": bitcoin_data['final_balance'],
              "decimal":8,
@@ -71,26 +81,25 @@ class EthereumToken(BlockchainStream):
         stream_slice: Mapping[str, Any] = None,
         **kwargs
     ) -> Iterable[Mapping]:
-        logger.info("Getting ETH balance information")
+        logger.info("Getting ETH balance information %s", stream_slice['name'])
         eth_data=response.json()['ETH']
         yield {
             "wallet_name": stream_slice['name'],
             "name":"ETH", 
             "symbol":"ETH", 
             "description": "Native Ethereum token", 
-            "address":"", 
             "chain": "Ethereum",
             "balance":eth_data['rawBalance'],
             "decimal":18,
             "tags": stream_slice['tags']
 
         }
-        logging.info("Fetching Tokens balance information")
-        tokens_data=response.json()['tokens']
-        for t in tokens_data:
-            try:
-                yield extract_token(stream_slice['name'], t)
-            except Exception as e:
-                logger.error('Dropping token not valid %s' % t )
-
-
+        if 'tokens' in response.json():
+            tokens_data=response.json()['tokens']
+            for t in tokens_data:
+                try:
+                    yield extract_token(stream_slice['name'], t)
+                except Exception as e:
+                    logger.debug('Dropping token not valid %s' % t )
+        # Delaying calls - Not great but that works
+        time.sleep(2)

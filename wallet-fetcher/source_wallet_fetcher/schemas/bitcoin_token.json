@@ -26,12 +26,6 @@
         "string"
       ]
     },
-    "address": {
-      "type": [
-        "null",
-        "string"
-      ]
-    },
     "chain": {
       "type": [
         "null",
