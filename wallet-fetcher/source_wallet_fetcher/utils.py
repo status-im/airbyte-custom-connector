@@ -8,7 +8,9 @@ def extract_token(wallet_name, token_data):
     try:
         if token_data['tokenInfo']['decimals'] == '22270923681254677845691103109158760375340177724800803888364822332811285364736':
             # The data is not valid, droping it.
-            raise Exception('Not a valid token')
+            raise Exception('Invalid token: decimal fields not valid: %s', token_data)
+        if token_data['tokenInfo']['owner'] == '0x0000000000000000000000000000000000000000':
+            raise Exception('Invalid token, owner is the void address: %s', token_data)
         token = {
             "wallet_name": wallet_name,
             "name": token_data['tokenInfo']['name'],
@@ -20,6 +22,5 @@ def extract_token(wallet_name, token_data):
             "decimal": token_data['tokenInfo']['decimals']
         }
         return token
-    except KeyError:
-        raise Exception('Not a  valid token')
-
+    except KeyError as err:
+        raise Exception('Invalid ERC-20 Token: %s', err)

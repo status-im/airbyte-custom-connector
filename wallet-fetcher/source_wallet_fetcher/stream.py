@@ -4,7 +4,7 @@ import logging
 import requests
 import json
 import time
-
+from .utils import extract_token
 logger = logging.getLogger("airbyte")
 
 
@@ -100,6 +100,9 @@ class EthereumToken(BlockchainStream):
                 try:
                     yield extract_token(stream_slice['name'], t)
                 except Exception as e:
-                    logger.debug('Dropping token not valid %s' % t )
+                    name = t 
+                    if 'name' in t:
+                        name= t['name']
+                    logger.warning('Dropping token %s not valid %s',name, e )
         # Delaying calls - Not great but that works
         time.sleep(2)
