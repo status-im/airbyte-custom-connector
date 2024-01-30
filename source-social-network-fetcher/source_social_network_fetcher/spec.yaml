@@ -16,3 +16,6 @@ connectionSpecification:
       description: List of accounts needing to be extracted
       items:
         type: string
+    start_time:
+      type: string
+      description: Start date of fetching data

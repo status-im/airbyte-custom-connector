@@ -68,15 +68,17 @@ class TwitterAccountData(TwitterStream):
     logger.info("Response: %s", response.json())
     data=response.json()['data']
     yield {
-        "account_id": data['id'],
-        "username": data['username'],
-        "account_name": data['name'],
-        "tweet_count": data['public_metrics']['tweet_count'],
-        "like_count": data['public_metrics']['like_count'],
-        "following_count": data['public_metrics']['following_count'],
-        "follower_count": data['public_metrics']['followers_count'],
-        "listed_count": data['public_metrics']['listed_count'],
-        }
+      "account_id": data['id'],
+      "username": data['username'],
+      "account_name": data['name'],
+      "tweet_count": data['public_metrics']['tweet_count'],
+      "like_count": data['public_metrics']['like_count'],
+      "following_count": data['public_metrics']['following_count'],
+      "follower_count": data['public_metrics']['followers_count'],
+      "listed_count": data['public_metrics']['listed_count'],
+    }
+    time.sleep(2)
+
 
 class TwitterTweet(HttpSubStream, TwitterAccountData):
     #TODO: See how to get the account ID
@@ -103,20 +105,19 @@ class TwitterTweet(HttpSubStream, TwitterAccountData):
     logger.info("Response: %s", response.json())
     referenced_tweets=""
     for t in data:
-        if "referenced_tweets" in t:
-            for rt in t.get('referenced_tweets'):
-                referenced_tweets += f"{rt.get('type')}:{rt.get('id')};"
-        yield {
-                "id": t['id'],
-                "created_at": t.get('created_at'),
-                "retweet_count": t.get('public_metrics').get('retweet_count'),
-                "reply_count": t.get('public_metrics').get('reply_count'),
-                "like_count": t.get('public_metrics').get('like_count'),
-                "quote_count": t.get('public_metrics').get('quote_count'),
-                "referenced_tweets": referenced_tweets
-            }
-
-
+      if "referenced_tweets" in t:
+        for rt in t.get('referenced_tweets'):
+          referenced_tweets += f"{rt.get('type')}:{rt.get('id')};"
+      yield {
+        "id": t['id'],
+        "created_at": t.get('created_at'),
+        "retweet_count": t.get('public_metrics').get('retweet_count'),
+        "reply_count": t.get('public_metrics').get('reply_count'),
+        "like_count": t.get('public_metrics').get('like_count'),
+        "quote_count": t.get('public_metrics').get('quote_count'),
+        "referenced_tweets": referenced_tweets
+      }
+    time.sleep(2)
 
 # Source
 class SourceSocialNetworkFetcher(AbstractSource):
