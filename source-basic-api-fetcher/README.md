@@ -1,7 +1,7 @@
 # Bank Balance Fetcher Source
 
 This is the repository for the Bank Balance Fetcher source connector, written in Python.
-For information about how to use this connector within Airbyte, see [the documentation](https://docs.airbyte.com/integrations/sources/bank-balance-fetcher).
+For information about how to use this connector within Airbyte, see [the documentation](https://docs.airbyte.com/integrations/sources/basic-api-fetcher).
 
 ## Local development
 
@@ -31,12 +31,12 @@ If this is mumbo jumbo to you, don't worry about it, just put your deps in `setu
 should work as you expect.
 
 #### Create credentials
-**If you are a community contributor**, follow the instructions in the [documentation](https://docs.airbyte.com/integrations/sources/bank-balance-fetcher)
-to generate the necessary credentials. Then create a file `secrets/config.json` conforming to the `source_bank_balance_fetcher/spec.yaml` file.
+**If you are a community contributor**, follow the instructions in the [documentation](https://docs.airbyte.com/integrations/sources/basic-api-fetcher)
+to generate the necessary credentials. Then create a file `secrets/config.json` conforming to the `source_basic_api_fetcher/spec.yaml` file.
 Note that any directory named `secrets` is gitignored across the entire Airbyte repo, so there is no danger of accidentally checking in sensitive information.
 See `integration_tests/sample_config.json` for a sample config file.
 
-**If you are an Airbyte core member**, copy the credentials in Lastpass under the secret name `source bank-balance-fetcher test creds`
+**If you are an Airbyte core member**, copy the credentials in Lastpass under the secret name `source basic-api-fetcher test creds`
 and place them into `secrets/config.json`.
 
 ### Locally running the connector
@@ -55,9 +55,9 @@ You can follow install instructions [here](https://github.com/airbytehq/airbyte/
 Then running the following command will build your connector:
 
 ```bash
-airbyte-ci connectors --name source-bank-balance-fetcher build
+airbyte-ci connectors --name source-basic-api-fetcher build
 ```
-Once the command is done, you will find your connector image in your local docker registry: `airbyte/source-bank-balance-fetcher:dev`.
+Once the command is done, you will find your connector image in your local docker registry: `airbyte/source-basic-api-fetcher:dev`.
 
 ##### Customizing our build process
 When contributing on our connector you might need to customize the build process to add a system dependency or set an env var.
@@ -94,7 +94,7 @@ If you would like to patch our connector and build your own a simple approach wo
 
 1. Create your own Dockerfile based on the latest version of the connector image.
 ```Dockerfile
-FROM airbyte/source-bank-balance-fetcher:latest
+FROM airbyte/source-basic-api-fetcher:latest
 
 COPY . ./airbyte/integration_code
 RUN pip install ./airbyte/integration_code
@@ -107,18 +107,18 @@ Please use this as an example. This is not optimized.
 
 2. Build your image:
 ```bash
-docker build -t airbyte/source-bank-balance-fetcher:dev .
+docker build -t airbyte/source-basic-api-fetcher:dev .
 # Running the spec command against your patched connector
-docker run airbyte/source-bank-balance-fetcher:dev spec
+docker run airbyte/source-basic-api-fetcher:dev spec
 ````
 
 #### Run
 Then run any of the connector commands as follows:
 ```
-docker run --rm airbyte/source-bank-balance-fetcher:dev spec
-docker run --rm -v $(pwd)/secrets:/secrets airbyte/source-bank-balance-fetcher:dev check --config /secrets/config.json
-docker run --rm -v $(pwd)/secrets:/secrets airbyte/source-bank-balance-fetcher:dev discover --config /secrets/config.json
-docker run --rm -v $(pwd)/secrets:/secrets -v $(pwd)/integration_tests:/integration_tests airbyte/source-bank-balance-fetcher:dev read --config /secrets/config.json --catalog /integration_tests/configured_catalog.json
+docker run --rm airbyte/source-basic-api-fetcher:dev spec
+docker run --rm -v $(pwd)/secrets:/secrets airbyte/source-basic-api-fetcher:dev check --config /secrets/config.json
+docker run --rm -v $(pwd)/secrets:/secrets airbyte/source-basic-api-fetcher:dev discover --config /secrets/config.json
+docker run --rm -v $(pwd)/secrets:/secrets -v $(pwd)/integration_tests:/integration_tests airbyte/source-basic-api-fetcher:dev read --config /secrets/config.json --catalog /integration_tests/configured_catalog.json
 ```
 ## Testing
 Make sure to familiarize yourself with [pytest test discovery](https://docs.pytest.org/en/latest/goodpractices.html#test-discovery) to know how your test files and methods should be named.
@@ -145,7 +145,7 @@ Customize `acceptance-test-config.yml` file to configure tests. See [Connector A
 If your connector requires to create or destroy resources for use during acceptance tests create fixtures for it and place them inside integration_tests/acceptance.py.
 Please run acceptance tests via [airbyte-ci](https://github.com/airbytehq/airbyte/blob/master/airbyte-ci/connectors/pipelines/README.md#connectors-test-command):
 ```bash
-airbyte-ci connectors --name source-bank-balance-fetcher test
+airbyte-ci connectors --name source-basic-api-fetcher test
 ```
 
 ## Dependency Management
@@ -156,10 +156,10 @@ We split dependencies between two groups, dependencies that are:
 
 ### Publishing a new version of the connector
 You've checked out the repo, implemented a million dollar feature, and you're ready to share your changes with the world. Now what?
-1. Make sure your changes are passing our test suite: `airbyte-ci connectors --name=source-bank-balance-fetcher test`
+1. Make sure your changes are passing our test suite: `airbyte-ci connectors --name=source-basic-api-fetcher test`
 2. Bump the connector version in `metadata.yaml`: increment the `dockerImageTag` value. Please follow [semantic versioning for connectors](https://docs.airbyte.com/contributing-to-airbyte/resources/pull-requests-handbook/#semantic-versioning-for-connectors).
 3. Make sure the `metadata.yaml` content is up to date.
-4. Make the connector documentation and its changelog is up to date (`docs/integrations/sources/bank-balance-fetcher.md`).
+4. Make the connector documentation and its changelog is up to date (`docs/integrations/sources/basic-api-fetcher.md`).
 5. Create a Pull Request: use [our PR naming conventions](https://docs.airbyte.com/contributing-to-airbyte/resources/pull-requests-handbook/#pull-request-title-convention).
 6. Pat yourself on the back for being an awesome contributor.
 7. Someone from Airbyte will take a look at your PR and iterate with you to merge it into master.

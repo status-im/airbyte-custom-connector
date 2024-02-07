@@ -6,8 +6,8 @@
 import sys
 
 from airbyte_cdk.entrypoint import launch
-from .source import SourceBankBalanceFetcher
+from .source import SourceBasicApiFetcher
 
 def run():
-    source = SourceBankBalanceFetcher()
+    source = SourceBasicApiFetcher()
     launch(source, sys.argv[1:])

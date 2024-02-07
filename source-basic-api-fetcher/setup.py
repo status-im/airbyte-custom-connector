@@ -17,7 +17,7 @@ TEST_REQUIREMENTS = [
 ]
 
 setup(
-    name="source_bank_balance_fetcher",
+    name="source_basic_api_fetcher",
     description="Source implementation for Bank Balance.",
     author="Status",
     author_email="devops@status.im",
@@ -29,7 +29,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "source-bank-balance-fetcher=source_bank_balance_fetcher.run:run",
+            "source-basic-api-fetcher=source_basic_api_fetcher.run:run",
         ],
     },
 )

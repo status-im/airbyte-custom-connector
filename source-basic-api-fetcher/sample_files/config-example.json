@@ -1,0 +1,5 @@
+{
+  "url": "https://config.test.bi.status.im",
+  "api_key": "some-random-key",
+  "endpoints": ["bank", "tokens"]
+}

@@ -6,6 +6,7 @@ connectionSpecification:
   required:
     - url
     - api_key
+    - endpoints
   properties:
     url:
       type: string
@@ -14,3 +15,9 @@ connectionSpecification:
       type: string
       description: API Key to use the API
       airbyte_secret: true
+    endpoints:
+      type: array
+      name: endpoints
+      description: List of endpoints to query in the urls
+      items:
+        type: string

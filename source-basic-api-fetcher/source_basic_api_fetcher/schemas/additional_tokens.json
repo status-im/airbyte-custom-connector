@@ -2,52 +2,34 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "account_id": {
+    "wallet_name": {
       "type": [
         "null",
         "string"
       ]
     },
-    "bank_name": {
+    "name": {
       "type": [
         "null",
         "string"
       ]
     },
-    "ccy": {
+    "symbol": {
       "type": [
         "null",
         "string"
       ]
     },
-    "tier": {
+    "description": {
       "type": [
         "null",
         "string"
       ]
     },
-    "volatility": {
+    "chain": {
       "type": [
         "null",
         "string"
-      ]
-    },
-    "asset_type": {
-      "type": [
-        "null",
-        "string"
-      ]
-    },
-    "account_owner": {
-      "type": [
-        "null",
-        "string"
-      ]
-    },
-    "balance_date": {
-      "type": [
-        "null",
-        "number"
       ]
     },
     "balance": {
@@ -56,12 +38,17 @@
         "number"
       ]
     },
-    "balance_usd": {
+    "decimal": {
       "type": [
         "null",
         "number"
       ]
+    },
+    "tags": {
+      "type": [
+        "null",
+        "string"
+      ]
     }
-
   }
 }
