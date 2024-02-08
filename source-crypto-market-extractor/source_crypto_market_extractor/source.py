@@ -44,13 +44,19 @@ class CoinPrice(HttpStream):
         coin=stream_slice["coin"]
         logger.info("Parsing Coin Gecko data for %s", coin)
         market_chart = response.json()
-        yield {
-            "name": coin,
-            "date": datetime.today().strftime('%Y%m%d_%H%M'),
-            # The first value of the prices objects is weird
-            "price": market_chart['prices'][1][1],
-        }
-
+        logger.info("Response: %s", market_chart)
+        data={ "name": coin, "date": datetime.today().strftime('%Y%m%d_%H%M')}
+        try:
+            if len(market_chart) > 1:
+                data['price'] = market_chart['prices'][1][1]
+            elif len(market_chart) == 1:
+                data['price'] = market_chart['prices'][0][1]
+            else:
+                logger.error("Invalid response from API, %s", market_chart)
+                raise "No correct data return"
+        except err:
+            logger.error('An error happened : %s', err)
+        yield data 
 # Source
 class SourceCryptoMarketExtractor(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:

@@ -47,9 +47,9 @@ pip install -r requirements.txt
 ### Locally running the connector
 ```
 python main.py spec
-python main.py check --config sample_files/coin_list.json
-python main.py discover --config sample_files/coin_list.json
-python main.py read --config sample_files/coin_list.json --catalog sample_files/configured_catalog.json
+python main.py check --config sample_files/config-example.json
+python main.py discover --config sample_files/config-example.json
+python main.py read --config sample_files/config-example.json --catalog sample_files/configured_catalog.json
 ```
 
 ### Locally running the connector docker image

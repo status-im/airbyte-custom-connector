@@ -10,7 +10,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: ce91e290-be98-4a34-b43b-28330afdc3c9
-  dockerImageTag: 0.0.3
+  dockerImageTag: 0.1.0
   dockerRepository: harbor.status.im/status-im/airbyte/crypto-market-extractor
   githubIssueLabel: source-crypto-market-extractor
   icon: crypto-market-extractor.svg
