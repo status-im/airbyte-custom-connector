@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": ["null", "number"]
+    },
+    "name": {
+      "type": ["null", "string"]
+    },
+    "username": {
+      "type": ["null", "string"]
+    },
+    "active": {
+      "type": ["null", "string"]
+    },
+    "created_at": {
+      "type": ["null", "string"]
+    },
+    "trust_level": {
+      "type": ["null", "number"]
+    },
+    "title": {
+      "type": ["null", "string"]
+    },
+    "time_read": {
+      "type": ["null", "number"]
+    },
+    "staged": {
+      "type": ["null", "string"]
+    },
+    "days_visited": {
+      "type": ["null", "number"]
+    },
+    "posts_read_count": {
+      "type": ["null", "number"]
+    },
+    "topics_entered": {
+      "type": ["null", "number"]
+    },
+    "post_count": {
+      "type": ["null", "number"]
+    }
+  }
+}

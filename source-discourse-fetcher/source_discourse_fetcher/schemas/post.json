@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": ["null", "number"]
+    },
+    "name": {
+      "type": ["null", "string"]
+    },
+    "username": {
+      "type": ["null", "string"]
+    },
+    "created_at": {
+      "type": ["null", "string"]
+    }, 
+    "post_number": {
+      "type": ["null", "number"]
+    },
+    "post_type": {
+      "type": ["null", "number"]
+    },
+    "updated_at": {
+      "type": ["null", "string"]
+    },
+    "reply_count": {
+      "type": ["null", "number"]
+    },
+    "reply_to_post_number": {
+      "type": ["null", "string"]
+    },
+    "quote_count": {
+      "type": ["null", "number"]
+    },
+    "incoming_link_count": {
+      "type": ["null", "number"]
+    },
+    "reads": {
+      "type": ["null", "number"]
+    },
+    "readers_count": {
+      "type": ["null", "number"]
+    },
+    "score": {
+      "type": ["null", "number"]
+    },
+    "topic_id": {
+      "type": ["null", "number"]
+    },
+    "topic_slug": {
+      "type": ["null", "string"]
+    },
+    "topic_title": {
+      "type": ["null", "string"]
+    },
+    "topic_html_title": {
+      "type": ["null", "string"]
+    },
+    "category_id": {
+      "type": ["null", "number"]
+    }
+  }
+}

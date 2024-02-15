@@ -1,0 +1,21 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Discourse Fetcher Spec
+  type: object
+  required:
+    - url
+    - api-key
+    - api-username 
+  properties:
+    url:
+      type: string
+      description: Discourse url
+    api-username:
+      type:  string
+      description: Username to login    
+    api-key:
+      type:  string
+      description: API Key for Authentication
+      airbyte_secret: true
+
