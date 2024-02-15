@@ -1,21 +1,23 @@
 documentationUrl: https://docsurl.com
 connectionSpecification:
   $schema: http://json-schema.org/draft-07/schema#
-  title: Social Network Fetcher
+  title: Twitter Fetcher
   type: object
   required:
     - api_key
     - accounts
+    - start_time
   properties:
     api_key:
       type: string
-      description: API Key to authentify to twitter
+      description: "API Key to authentify to twitter"
       airbyte_secret: true
     accounts:
       type: array
-      description: List of accounts needing to be extracted
+      description: "List of accounts needing to be extracted"
       items:
         type: string
     start_time:
       type: string
-      description: Start date of fetching data
+      description: "Start date of fetching data"
+      format: date-time

@@ -6,8 +6,8 @@
 import sys
 
 from airbyte_cdk.entrypoint import launch
-from .source import SourceSocialNetworkFetcher
+from .source import SourceTwitterFetcher
 
 def run():
-    source = SourceSocialNetworkFetcher()
+    source = SourceTwitterFetcher()
     launch(source, sys.argv[1:])

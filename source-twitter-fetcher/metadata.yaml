@@ -10,16 +10,16 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: 1c448bfb-8950-478c-9ae0-f03aaaf4e920
-  dockerImageTag: '0.0.3'
-  dockerRepository: status-im/airbyte/social-network-fetcher
-  githubIssueLabel: source-social-network-fetcher
-  icon: social-network-fetcher.svg
+  dockerImageTag: '0.0.1'
+  dockerRepository: status-im/airbyte/source-twitter-fetcher
+  githubIssueLabel: source-twitter-fetcher
+  icon: twitter-fetcher.svg
   license: MIT
-  name: Social Network Fetcher
+  name: Twitter Fetcher
   releaseDate: TODO
   supportLevel: community
   releaseStage: alpha
-  documentationUrl: https://docs.airbyte.com/integrations/sources/social-network-fetcher
+  documentationUrl: https://docs.airbyte.com/integrations/sources/twitter-fetcher
   tags:
     - language:python
 metadataSpecVersion: "1.0"

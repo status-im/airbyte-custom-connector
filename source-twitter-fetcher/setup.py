@@ -17,8 +17,8 @@ TEST_REQUIREMENTS = [
 ]
 
 setup(
-    name="source_social_network_fetcher",
-    description="Source implementation for Social Network Fetcher.",
+    name="source_twitter_fetcher",
+    description="Source implementation for Twitter Fetcher.",
     author="Status",
     author_email="devops@status.im",
     packages=find_packages(),
@@ -29,7 +29,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "source-social-network-fetcher=source_social_network_fetcher.run:run",
+            "source-twitter-fetcher=source_twitter_fetcher.run:run",
         ],
     },
 )

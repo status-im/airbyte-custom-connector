@@ -7,6 +7,7 @@ from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 import logging
 import requests
+import time
 from datetime import datetime 
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
@@ -120,7 +121,7 @@ class TwitterTweet(HttpSubStream, TwitterAccountData):
     time.sleep(2)
 
 # Source
-class SourceSocialNetworkFetcher(AbstractSource):
+class SourceTwitterFetcher(AbstractSource):
   def check_connection(self, logger, config) -> Tuple[bool, any]:
     return True, None
 
