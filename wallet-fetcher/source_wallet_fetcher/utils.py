@@ -1,16 +1,26 @@
 import logging
 import json
 
+# Number used as decimal when the contract has been destroyed
+INVALID_DECIMAL_NUMBER="22270923681254677845691103109158760375340177724800803888364822332811285364736"
+VOID_ADDRESS="0x0000000000000000000000000000000000000000"
+
+"""
+Function to verify if the tokens  contracts is still valid
+"""
+def check_token_validity(tokenInfo):
+    if "decimals" not in tokenInfo:
+        raise Exception('Invalid token: decimal fields not present: %s', tokenInfo)
+    if tokenInfo.get("decimals") == INVALID_DECIMAL_NUMBER:
+        raise Exception('Invalid token: decimal fields invalid: %s', tokenInfo)
+    if "owner" in tokenInfo and tokenInfo.get("owner") == VOID_ADDRESS:
+        raise Exception('Invalid token: Owner address is void: %s', tokenInfo)
 
 def extract_token(wallet_name, token_data):
     description= 'No description available' if 'description' not in token_data['tokenInfo'] else token_data['tokenInfo']['description']
     symbol= 'No Symbol' if 'symbol' not in token_data['tokenInfo'] else token_data['tokenInfo']['symbol']
     try:
-        if token_data['tokenInfo']['decimals'] == '22270923681254677845691103109158760375340177724800803888364822332811285364736':
-            # The data is not valid, droping it.
-            raise Exception('Invalid token: decimal fields not valid: %s', token_data)
-        if token_data['tokenInfo']['owner'] == '0x0000000000000000000000000000000000000000':
-            raise Exception('Invalid token, owner is the void address: %s', token_data)
+        check_token_validity(token_data['tokenInfo'])
         token = {
             "wallet_name": wallet_name,
             "name": token_data['tokenInfo']['name'],
