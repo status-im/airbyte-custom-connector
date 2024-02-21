@@ -49,6 +49,12 @@
         "null",
         "string"
       ]
+    },
+    "address": {
+      "type": [
+        "null",
+        "string"
+      ]
     }
   }
 }
