@@ -54,7 +54,7 @@ class CoinPrice(HttpStream):
             else:
                 logger.error("Invalid response from API, %s", market_chart)
                 raise "No correct data return"
-        except err:
+        except Exception as  err:
             logger.error('An error happened : %s', err)
         yield data 
 # Source
