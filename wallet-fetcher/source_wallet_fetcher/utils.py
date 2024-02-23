@@ -13,8 +13,6 @@ def check_token_validity(tokenInfo):
         raise Exception('Invalid token: decimal fields not present: %s', tokenInfo)
     if tokenInfo.get("decimals") == INVALID_DECIMAL_NUMBER:
         raise Exception('Invalid token: decimal fields invalid: %s', tokenInfo)
-    if "owner" in tokenInfo and tokenInfo.get("owner") == VOID_ADDRESS:
-        raise Exception('Invalid token: Owner address is void: %s', tokenInfo)
 
 def extract_token(wallet_name, token_data):
     description= 'No description available' if 'description' not in token_data['tokenInfo'] else token_data['tokenInfo']['description']
