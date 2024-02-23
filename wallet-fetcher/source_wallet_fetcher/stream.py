@@ -91,7 +91,7 @@ class EthereumToken(BlockchainStream):
             "chain": "Ethereum",
             "balance":eth_data['rawBalance'],
             "decimal":18,
-            "tags": stream_slice['tags']
+            "tags": stream_slice['tags'],
             "address": "eth"
         }
         if 'tokens' in response.json():
