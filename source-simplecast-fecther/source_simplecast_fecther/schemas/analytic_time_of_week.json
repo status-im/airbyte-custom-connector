@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "rank": {
+      "type": ["null", "number"]
+    },
+    "hour_of_week": {
+      "type": ["null", "number"]
+    },
+    "hour_of_day": {
+      "type": ["null", "number"]
+    },
+    "day_of_week": {
+      "type": ["null", "number"]
+    },
+    "count": {
+      "type": ["null", "count"]
+    }
+  }
+}

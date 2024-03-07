@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "name": ["null", "string"]
+    },
+    "type": {
+      "type": ["null", "string"]
+    },
+    "title": {
+      "type": ["null", "string"]
+    },
+    "downloads": {
+      "type": ["null", "number"]
+    },
+    "number": {
+      "type": ["null", "number"]
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": ["null", "string"]
+    },
+    "title": {
+      "type": ["null", "string"]
+    },
+    "status": {
+      "type": ["null", "string"]
+    },
+    "href": {
+      "type": ["null", "string"]
+    },
+    "episode_count": {
+      "type": ["null", "number"]
+    },
+    "account_id": {
+      "type": ["null", "string"]
+    },
+    "account_owner_name": {
+      "type": ["null", "string"]
+    }
+  }
+}

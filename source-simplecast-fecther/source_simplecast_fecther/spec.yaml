@@ -1,0 +1,12 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Simplecast Fecther Spec
+  type: object
+  required:
+    - api_key
+  properties:
+    api_key:
+      type: string
+      description: Key to authentify to the API
+      airbyte_secret: true
