@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": [
+        "null",
+        "number"
+      ]
+    },
+    "username": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "discriminator": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "global_name": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "bot": {
+      "type": [
+        "null",
+        "boolean"
+      ]
+    },
+      "mfa_enabled": {
+      "type": [
+        "null",
+        "boolean"
+      ]
+    },
+    "verified":{
+      "type": [
+        "null",
+        "boolean"
+      ]
+    },
+    "email":{
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "prenium_type":{
+      "type": [
+        "null",
+        "integer"
+      ]
+    },
+    "public_flags":{
+      "type": [
+        "null",
+        "integer"
+      ]
+    },
+    "guild_id":{
+      "type": [
+        "null",
+        "integer"
+      ]
+    }
+  }
+}

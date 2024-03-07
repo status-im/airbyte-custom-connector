@@ -1,0 +1,4 @@
+{
+  "api_key": "some-bot-token",
+  "guilds_id": ["some-guild-id"]
+}

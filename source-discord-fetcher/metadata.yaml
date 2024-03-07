@@ -1,0 +1,32 @@
+data:
+  allowedHosts:
+  registries:
+    oss:
+      enabled: true
+    cloud:
+      enabled: false
+  remoteRegistries:
+    pypi:
+      enabled: true
+      packageName: airbyte-source-discord-fetcher
+  connectorBuildOptions:
+    # Please update to the latest version of the connector base image.
+    # https://hub.docker.com/r/airbyte/python-connector-base
+    # Please use the full address with sha256 hash to guarantee build reproducibility.
+    baseImage: docker.io/airbyte/python-connector-base:1.0.0@sha256:dd17e347fbda94f7c3abff539be298a65af2d7fc27a307d89297df1081a45c27
+  connectorSubtype: api
+  connectorType: source
+  definitionId: b62a9143-1b59-41b2-9942-bae709e7da6b
+  dockerImageTag: 1.0.0
+  dockerRepository: harbor.status.im/status-im/airbyte/source-discord-fetcher
+  githubIssueLabel: source-discord-fetcher
+  icon: discord-fetcher.svg
+  license: MIT
+  name: Discord Fetcher
+  releaseDate: TODO
+  supportLevel: community
+  releaseStage: alpha
+  documentationUrl: https://docs.airbyte.com/integrations/sources/discord-fetcher
+  tags:
+    - language:python
+metadataSpecVersion: "1.0"

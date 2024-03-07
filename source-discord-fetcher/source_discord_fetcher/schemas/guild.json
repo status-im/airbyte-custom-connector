@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": [ "null", "number" ]
+    },
+    "name": {
+      "type": [ "null", "string" ]
+    },
+    "owner_id": {
+      "type": [ "null", "number" ]
+    },
+    "roles": {
+      "type": [ "null", "string" ]
+    },
+    "chain": {
+      "type": [ "null", "string" ]
+    },
+    "description": {
+      "type": [ "null", "string" ]
+    },
+    "max_members": {
+      "type": [ "null", "number" ]
+    }
+  }
+}
