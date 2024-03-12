@@ -18,6 +18,7 @@ logger = logging.getLogger("airbyte")
 LOCATION_KEYS=["id", "rank", "name", "downloads_total", "downloads_percent"]
 TIME_OF_WEEK_KEYS=["rank", "hour_of_week", "hour_of_day", "day_of_week", "count"]
 DOWNLOADS_KEY=["interval", "downloads_total", "downloads_percent"]
+TECH_KEY=["rank", "name", "downloads_total", "downloads_percent"]
 # Basic full refresh stream
 class SimplecastFectherStream(HttpStream):
     url_base = "https://api.simplecast.com/"
@@ -41,10 +42,7 @@ class Podcast(SimplecastFectherStream):
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         data=response.json()
-        logger.info("Response: %s", data)
-        if 'collection' not in data.keys():
-            logger.debug("Error when trying to get the data %s", data)
-            raise Exception("error when calling the api")
+        logger.debug("Response: %s", data)
         for elt in data.get('collection'):
             podcast={
                 "id": elt.get("id"),
@@ -76,9 +74,6 @@ class Episode(HttpSubStream, Podcast):
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         data=response.json()
         logger.debug("Response: %s", data)
-        if 'collection' not in data.keys():
-            logger.error("Error when trying to get the data %s", data)
-            raise Exception("error when calling the api")
         for elt in data.get('collection'):
             episode={
                 "id": elt.get("id"),
@@ -86,8 +81,7 @@ class Episode(HttpSubStream, Podcast):
                 "status": elt.get("status"),
                 "published_at": elt.get("published_at"),
                 "updated_at": elt.get("updated_at"),
-                "season_href": elt.get('season').get("href"),
-                "season_number": elt.get('season').get("number"),
+                "season": elt.get('season'),
                 "number": elt.get("number"),
                 "description": elt.get("description"),
                 "token": elt.get("token"),
@@ -95,81 +89,58 @@ class Episode(HttpSubStream, Podcast):
             }
             yield episode
 
-class AnalyticLocation(HttpSubStream, Podcast):
+class AnalyticSubStream(HttpSubStream, Podcast, ABC):
+    primary_key=None
+
+    def __init__(self, endpoint:str, keys_dict:dict, collection_name:str, **kwargs):
+        super().__init__(Podcast(**kwargs), **kwargs)
+        self.endpoint=endpoint
+        self.keys_dict=keys_dict
+        self.collection_name = collection_name
+
+    def path(
+        self, 
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        podcast_id=stream_slice.get("parent").get("id")
+
+        return f"analytics/{self.endpoint}?podcast={podcast_id}"
+
+    """
+    Default implementation of the parse_response to get the data from the json_objection collection_name.
+    If the object mapping is not a simple key mapping then this function as to be overwriten. 
+    """
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        data=response.json()
+        logger.debug("Response: %s", data)
+        for elt in data.get(self.collection_name):
+            logger.debug("Elt %s", elt)
+            analytic={ key: elt.get(key)  for key in self.keys_dict }
+            yield analytic
+
+class AnalyticLocation(AnalyticSubStream):
     primary_key="analytic_location_id"
 
-
     def __init__(self, **kwargs):
-        super().__init__(Podcast(**kwargs), **kwargs)
+        super().__init__(endpoint="location", keys_dict=LOCATION_KEYS, collection_name="countries", **kwargs)
 
-    def path(
-        self, 
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        podcast_id=stream_slice.get("parent").get("id")
-
-        return f"analytics/location?podcast={podcast_id}"
-
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-        data=response.json()
-        logger.info("Response: %s", data)
-        if 'countries' not in data.keys():
-            logger.error("Error when trying to get the data %s", data)
-            raise Exception("error when calling the api")
-        for elt in data.get('countries'):
-            location={ key: elt.get(key) for key in LOCATION_KEYS }
-            yield location
-
-class AnalyticTimeOfWeek(HttpSubStream, Podcast):
+class AnalyticTimeOfWeek(AnalyticSubStream):
     primary_key=None
 
     def __init__(self, **kwargs):
-        super().__init__(Podcast(**kwargs), **kwargs)
+        super().__init__(endpoint="time_of_week", keys_dict=TIME_OF_WEEK_KEYS, collection_name="collection", **kwargs)
 
-    def path(
-        self, 
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        podcast_id=stream_slice.get("parent").get("id")
-
-        return f"analytics/time_of_week?podcast={podcast_id}"
-
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-        data=response.json()
-        logger.info("Response: %s", data)
-        if 'collection' not in data.keys():
-            logger.error("Error when trying to get the data %s", data)
-            raise Exception("error when calling the api")
-        for elt in data.get('collection'):
-            time_of_week={ key: elt.get(key) for key in TIME_OF_WEEK_KEYS }
-            yield time_of_week
-
-class AnalyticEpisode(HttpSubStream, Podcast):
+class AnalyticEpisode(AnalyticSubStream):
     primary_key=None
 
     def __init__(self, **kwargs):
-        super().__init__(Podcast(**kwargs), **kwargs)
-
-    def path(
-        self, 
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        podcast_id=stream_slice.get("parent").get("id")
-
-        return f"analytics/episodes?podcast={podcast_id}"
+        super().__init__(endpoint="episodes", keys_dict=[], collection_name="", **kwargs)
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         data=response.json()
-        logger.info("Response: %s", data)
-        if 'collection' not in data.keys():
-            logger.error("Error when trying to get the data %s", data)
-            raise Exception("error when calling the api")
+        logger.debug("Response: %s", data)
         for elt in data.get('collection'):
             analytic_episode={
                 "id": elt.get("id"),
@@ -180,31 +151,26 @@ class AnalyticEpisode(HttpSubStream, Podcast):
             }
             yield analytic_episode
 
-class AnalyticDownload(HttpSubStream, Podcast):
-    primary_key=None
+class AnalyticDownload(AnalyticSubStream, Podcast):
 
     def __init__(self, **kwargs):
-        super().__init__(Podcast(**kwargs), **kwargs)
+        super().__init__(endpoint="downloads", keys_dict=DOWNLOADS_KEY, collection_name="by_interval", **kwargs)
 
-    def path(
-        self, 
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        podcast_id=stream_slice.get("parent").get("id")
+class TechnologyApplication(AnalyticSubStream):
 
-        return f"analytics/downloads?podcast={podcast_id}"
+    def __init__(self, **kwargs):
+        super().__init__(endpoint="technology/applications", keys_dict=TECH_KEY, collection_name="collection", **kwargs)
 
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-        data=response.json()
-        logger.info("Response: %s", data)
-        if 'by_interval' not in data.keys():
-            logger.error("Error when trying to get the data %s", data)
-            raise Exception("error when calling the api")
-        for elt in data.get('by_interval'):
-            download={ key: elt.get(key)  for key in DOWNLOADS_KEY }
-            yield download
+class TechnologyDeviceClass(AnalyticSubStream):
+
+    def __init__(self, **kwargs):
+        super().__init__(endpoint="technology/devices", keys_dict=TECH_KEY, collection_name="collection", **kwargs)
+
+class TechnologyListeningMethod(AnalyticSubStream):
+
+    def __init__(self, **kwargs):
+        super().__init__(endpoint="technology/listening_methods", keys_dict=TECH_KEY, collection_name="collection", **kwargs)
+
 
 # Source
 class SourceSimplecastFecther(AbstractSource):
@@ -219,5 +185,8 @@ class SourceSimplecastFecther(AbstractSource):
                 AnalyticLocation(authenticator=auth),
                 AnalyticTimeOfWeek(authenticator=auth),
                 AnalyticEpisode(authenticator=auth),
-                AnalyticDownload(authenticator=auth)
+                AnalyticDownload(authenticator=auth),
+                TechnologyApplication(authenticator=auth),
+                TechnologyDeviceClass(authenticator=auth),
+                TechnologyListeningMethod(authenticator=auth)
             ]

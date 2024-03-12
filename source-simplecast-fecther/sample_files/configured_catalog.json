@@ -83,6 +83,48 @@
       },
       "sync_mode":  "incremental",
       "destination_sync_mode": "overwrite"
+    },
+        {
+      "stream": {
+        "name": "technology_application",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object"
+        },
+        "supported_sync_modes": [
+          "full_refresh",  "incremental"
+        ]
+      },
+      "sync_mode":  "incremental",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "technology_device_class",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object"
+        },
+        "supported_sync_modes": [
+          "full_refresh",  "incremental"
+        ]
+      },
+      "sync_mode":  "incremental",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "technology_listening_method",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object"
+        },
+        "supported_sync_modes": [
+          "full_refresh",  "incremental"
+        ]
+      },
+      "sync_mode":  "incremental",
+      "destination_sync_mode": "overwrite"
     }
 
   ]
