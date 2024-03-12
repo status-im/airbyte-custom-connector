@@ -19,6 +19,13 @@ The connector takes the following input:
 The connector will return the following objects:
 - [podcast](./source_simplecast_fecther/schemas/podcast.json)
 - [episode](./source_simplecast_fecther/schemas/episode.json)
+- [analytics/download](./source_simplecast_fecther/schemas/analytic_download.json)
+- [analytics/episode](./source_simplecast_fecther/schemas/analytic_episode.json)
+- [analytics/location](./source_simplecast_fecther/schemas/analytic_location.json)
+- [analytics/time of week](./source_simplecast_fecther/schemas/analytic_time_of_week.json)
+- [analytics/technology/application](./source_simplecast_fecther/schemas/technology_application.json)
+- [analytics/technology/device class](./source_simplecast_fecther/schemas/technology_device_class.json)
+
 
 ## Local development
 

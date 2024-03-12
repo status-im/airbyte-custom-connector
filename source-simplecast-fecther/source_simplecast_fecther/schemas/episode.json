@@ -17,11 +17,12 @@
     "status": {
       "type": ["null", "string"]
     },
-    "season_href": {
-      "type": ["null", "string"]
-    },
-    "season_number": {
-      "type": ["null", "number"]
+    "season": {
+      "type": ["null", "object"],
+      "properties": {
+        "href": { "type" : ["null", "string"]},
+        "number": {"type": ["null", "number"]}
+      }
     },
     "number": {
       "type": ["null", "number"]
