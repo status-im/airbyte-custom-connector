@@ -4,20 +4,38 @@ connectionSpecification:
   title: Twitter Fetcher
   type: object
   required:
-    - api_key
-    - accounts
+    - credentials
     - start_time
   properties:
-    api_key:
-      type: string
-      description: "API Key to authentify to twitter"
-      airbyte_secret: true
-    accounts:
-      type: array
-      description: "List of accounts needing to be extracted"
-      items:
-        type: string
+    credentials:
+      title: Twitter Dev account Credentials
+      type: object
+      properties:
+        client_id:
+          title:        client_id
+          type:         string
+          description:  "Client ID of Twitter Application"
+          airbyte_secret: true
+        client_secret:
+          title:        client_secret
+          type:         string
+          description:  "Client secret of Twitter Application"
+          airbyte_secret: true
+        access_token:
+          title:        access_token
+          type:         string
+          description:  "Access Token of Twitter Dev Account link"
+          airbyte_secret: true
+        refresh_token:
+          title:        refresh_token
+          type:         string
+          description:  "Access Token of Twitter Dev Account link"
+          airbyte_secret: true
+        token_expiry_date:
+          title:        token_expiry_date
+          type:         string
+          description:  "Access Token of Twitter Dev Account link"
     start_time:
-      type: string
-      description: "Start date of fetching data"
-      format: date-time
+      type:         string
+      description:  "Start date of fetching data"
+      format:       date-time

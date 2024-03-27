@@ -2,7 +2,7 @@
   "streams": [
     {
       "stream": {
-        "name": "twitter_account_data",
+        "name": "account",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
@@ -16,7 +16,7 @@
     },
     {
       "stream": {
-        "name": "twitter_tweet",
+        "name": "tweet",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
@@ -28,6 +28,5 @@
       "sync_mode":  "incremental",
       "destination_sync_mode": "overwrite"
     }
-
   ]
 }
