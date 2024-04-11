@@ -15,9 +15,10 @@ logger = logging.getLogger("airbyte")
 GUILD_KEYS = ["id", "name", "owner_id", "roles", "description", "chain", "max_members"]
 CHANNEL_KEYS = ["id", "type", "guild_id", "position", "name", "topic", "last_message_id", "managed", "parent_id", "last_pin_timestamp", "message_count", "member_count", "falgs", "total_message_sent"]
 USER_KEYS = [ "id", "username", "discriminator", "global_name", "bot", "mfa_enabled", "verified", "email", "premium_type", "public_flags"]
+
+MAX_USERS = 1000
 # Basic full refresh stream
 class DiscordFetcherStream(HttpStream, ABC):
-    # TODO: Fill in the url base. Required.
     url_base = "https://discord.com/api/"
 
     def __init__(self, guilds_id: str, endpoint: str="", **kwargs):
@@ -62,22 +63,15 @@ class GuildChannel(DiscordFetcherStream):
     def parse_response(
         self, response: requests.Response, stream_slice: Mapping[str, Any] = None, **kwargs
     ) -> Iterable[Mapping]:
-        logger.debug("Response: %s", response.json())
+        logger.debug("gld_chnl_exec: Response: %s", response.json())
         data=response.json()
-        #Fixme For some reason the HttpSubstream provoke a call to the GuildChannel endpoint that return a single elt
-        # Ignore this call for the meantime
-        if type(data) is dict:
-            logger.info("Weird case due to the Substream")
-            return
         for elt in data:
             channel = { key : elt.get(key) for key in CHANNEL_KEYS }
             yield channel 
 
 
-class Channel(HttpSubStream, GuildChannel):
+class Channel(HttpSubStream, DiscordFetcherStream):
     primary_key="channel_id"
-    def __init__(self,**kwargs):
-        super().__init__(GuildChannel(**kwargs),**kwargs)
 
     def path(
         self, 
@@ -85,7 +79,7 @@ class Channel(HttpSubStream, GuildChannel):
         stream_slice: Mapping[str, Any] = None, 
         next_page_token: Mapping[str, Any] = None
     ) -> str:
-        logger.info("Parent: %s", stream_slice.get('parent'))
+        logger.info("chnl_exec: Parent: %s", stream_slice.get('parent'))
         channel_id = stream_slice.get('parent').get('id')
         return f"channels/{channel_id}"
 
@@ -100,14 +94,24 @@ class Channel(HttpSubStream, GuildChannel):
 class Member(DiscordFetcherStream):
     primary_key="member_id"
 
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        # if the response doesn't contain the maximum number of user then there is no more to fetch
+        logger.debug("memb_exec : response size : %s", len(response.json()))
+        if len(response.json()) == MAX_USERS:
+            last_member_id = response.json()[len(response.json()) - 1].get('user').get('id')
+            return {"after": last_member_id}
+
     def request_params(
         self,
         stream_state: Optional[Mapping[str, Any]],
         stream_slice: Optional[Mapping[str, Any]] = None,
         next_page_token: Optional[Mapping[str, Any]] = None,
     ) -> MutableMapping[str, Any]:
-        return {"limit": 1000}
-
+        params = {"limit": MAX_USERS}
+ 
+        if next_page_token:
+            params.update(**next_page_token)
+        return params
 
     def parse_response(
         self, response: requests.Response, stream_slice: Mapping[str, Any] = None, **kwargs
@@ -126,9 +130,10 @@ class SourceDiscordFetcher(AbstractSource):
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         auth = TokenAuthenticator(token=config["api_key"], auth_method="Bot")
+        guildChannel=GuildChannel(guilds_id=config["guilds_id"], endpoint="/channels", authenticator=auth)
         return [
             Guild(guilds_id=config["guilds_id"],  authenticator=auth),
-            GuildChannel(guilds_id=config["guilds_id"], endpoint="/channels", authenticator=auth),
-            Channel(guilds_id=config["guilds_id"], authenticator=auth),
+            guildChannel,
+            Channel(guilds_id=config["guilds_id"], authenticator=auth, parent=guildChannel),
             Member(guilds_id=config["guilds_id"], endpoint="/members", authenticator=auth)
         ]
