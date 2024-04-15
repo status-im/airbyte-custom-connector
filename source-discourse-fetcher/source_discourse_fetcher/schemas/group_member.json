@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Generated schema for Root",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": ["null", "number"]
+    },
+    "username": {
+      "type": ["null", "string"]
+    },
+    "name": {
+      "type": ["null", "string"]
+    },
+    "avatar_template": {
+      "type": ["null", "string"]
+    },
+    "title": {
+      "type": ["null", "string"]
+    },
+    "last_posted_at": {
+      "type": ["null", "string"]
+    },
+    "last_seen_at": {
+      "type": ["null", "string"]
+    },
+    "added_at": {
+      "type": ["null", "string"]
+    },
+    "timezone": {
+      "type": ["null", "string"]
+    }
+  }}

@@ -1,0 +1,122 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": ["null","number"]
+    },
+    "title": {
+      "type": ["null","string"]
+    },
+    "fancy_title": {
+      "type": ["null","string"]
+    },
+    "slug": {
+      "type": ["null","string"]
+    },
+    "posts_count": {
+      "type": ["null","number"]
+    },
+    "reply_count": {
+      "type": ["null","number"]
+    },
+    "highest_post_number": {
+      "type": ["null","number"]
+    },
+    "image_url": {
+      "type": ["null","string"]
+    },
+    "created_at": {
+      "type": ["null","string"]
+    },
+    "last_posted_at": {
+      "type": ["null","string"]
+    },
+    "bumped": {
+      "type": ["null","boolean"]
+    },
+    "bumped_at": {
+      "type": ["null","string"]
+    },
+    "archetype": {
+      "type": ["null","string"]
+    },
+    "unseen": {
+      "type": ["null","boolean"]
+    },
+    "last_read_post_number": {
+      "type": ["null","number"]
+    },
+    "unread_posts": {
+      "type": ["null","number"]
+    },
+    "pinned": {
+      "type": ["null","boolean"]
+    },
+    "unpinned": {
+      "type": ["null","string"]
+    },
+    "visible": {
+      "type": ["null","boolean"]
+    },
+    "closed": {
+      "type": ["null","boolean"]
+    },
+    "archived": {
+      "type": ["null","boolean"]
+    },
+    "notification_level": {
+      "type": ["null","number"]
+    },
+    "bookmarked": {
+      "type": ["null","boolean"]
+    },
+    "liked": {
+      "type": ["null","boolean"]
+    },
+    "views": {
+      "type": ["null","number"]
+    },
+    "like_count": {
+      "type": ["null","number"]
+    },
+    "has_summary": {
+      "type": ["null", "boolean"]
+    },
+    "last_poster_username": {
+      "type": ["null", "string"]
+    },
+    "category_id": {
+      "type": ["null", "number"]
+    },
+    "op_like_count": {
+      "type": ["null", "number"]
+    },
+    "pinned_globally": {
+      "type": ["null", "boolean"]
+    },
+    "featured_link": {
+      "type": ["null", "string"]
+    },
+    "posters": {
+      "type": ["null", "array"],
+      "items": {
+        "type": "object",
+        "properties": {
+          "extras": {
+            "type": ["null", "string"]
+          },
+          "description": {
+            "type": ["null", "string"]
+          },
+          "user_id": {
+            "type": ["null", "number"]
+          },
+          "primary_group_id": {
+            "type": ["null", "string"]
+          }
+        } 
+      }
+    }
+  }
+}

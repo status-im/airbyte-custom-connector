@@ -11,6 +11,9 @@
     "username": {
       "type": ["null", "string"]
     },
+    "email": {
+      "type": ["null", "string"]
+    },
     "active": {
       "type": ["null", "string"]
     },
