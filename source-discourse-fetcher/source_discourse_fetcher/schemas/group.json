@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": ["null", "number"]
+    },
+    "automatic": {
+      "type": ["null", "boolean"]
+    },
+    "name": {
+      "type": ["null", "string"]
+    },
+    "display_name": {
+      "type": ["null", "string"]
+    },
+    "user_count": {
+      "type": ["null", "number"]
+    },
+    "mentionable_level": {
+      "type": ["null", "number"]
+    },
+    "messageable_level": {
+      "type": ["null", "number"]
+    },
+    "visibility_level": {
+      "type": ["null", "number"]
+    },
+    "primary_group": {
+      "type": ["null", "boolean"]
+    },
+    "title": {
+      "type": ["null", "string"]
+    },
+    "grant_trust_level": {
+      "type": ["null", "string"]
+    },
+    "incoming_email": {
+      "type": ["null", "string"]
+    },
+    "has_messages": {
+      "type": ["null", "boolean"]
+    },
+    "flair_url": {
+      "type": ["null", "string"]
+    },
+    "flair_bg_color": {
+      "type": ["null", "string"]
+    },
+    "flair_color": {
+      "type": ["null", "string"]
+    },
+    "bio_raw": {
+      "type": ["null", "string"]
+    },
+    "bio_cooked": {
+      "type": ["null", "string"]
+    },
+    "bio_excerpt": {
+      "type": ["null", "string"]
+    },
+    "public_admission": {
+      "type": ["null", "boolean"]
+    },
+    "public_exit": {
+      "type": ["null", "boolean"]
+    },
+    "allow_membership_requests": {
+      "type": ["null", "boolean"]
+    },
+    "full_name": {
+      "type": ["null", "string"]
+    },
+    "default_notification_level": {
+      "type": ["null", "number"]
+    },
+    "membership_request_template": {
+      "type": ["null", "string"]
+    },
+    "is_group_user": {
+      "type": ["null", "boolean"]
+    },
+    "is_group_owner": {
+      "type": ["null", "boolean"]
+    },
+    "members_visibility_level": {
+      "type": ["null", "number"]
+    },
+    "can_see_members": {
+      "type": ["null", "boolean"]
+    },
+    "can_admin_group": {
+      "type": ["null", "boolean"]
+    },
+    "can_edit_group": {
+      "type": ["null", "boolean"]
+    },
+    "publish_read_state": {
+      "type": ["null", "boolean"]
+    }
+  }
+}
