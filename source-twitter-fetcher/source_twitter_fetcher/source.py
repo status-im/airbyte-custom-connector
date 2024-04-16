@@ -71,7 +71,7 @@ class Tweet(HttpSubStream, Account):
     ) -> str:
         account_id = stream_slice.get("parent").get("id")
         logger.info("Account id %s", account_id)
-        return f"users/{account_id}/tweets?tweet.fields=text,public_metrics,non_public_metrics,organic_metrics,author_id,referenced_tweets,created_at"
+        return f"users/{account_id}/tweets?tweet.fields=text,public_metrics,non_public_metrics,organic_metrics,author_id,referenced_tweets,promoted_metrics,created_at"
     
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         logger.debug("Twtter Response: %s", response.json())
