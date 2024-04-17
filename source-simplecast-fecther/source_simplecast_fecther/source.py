@@ -7,6 +7,7 @@ from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 import logging
 import requests
+import time
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
@@ -22,9 +23,27 @@ TECH_KEY=["rank", "name", "downloads_total", "downloads_percent"]
 # Basic full refresh stream
 class SimplecastFectherStream(HttpStream):
     url_base = "https://api.simplecast.com/"
+    primary_key = None
+
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
-        return None
+        pages =  response.json().get('pages')
+        if pages and pages.get('next'):
+            time.sleep(2)
+            return {
+                'limit': pages.get('limit'),
+                'offset': pages.get('limit')* pages.get('current')
+            }
+
+    def request_params(
+        self,
+        stream_state: Optional[Mapping[str, Any]],
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        next_page_token: Optional[Mapping[str, Any]] = None,
+    ) -> MutableMapping[str, Any]:
+        if next_page_token:
+            return  next_page_token
+
 
 class Podcast(SimplecastFectherStream):
 
@@ -55,11 +74,12 @@ class Podcast(SimplecastFectherStream):
             }
             yield podcast
 
-class Episode(HttpSubStream, Podcast):
+class Episode(HttpSubStream, SimplecastFectherStream):
     primary_key="episode_id"
 
-    def __init__(self, **kwargs):
-        super().__init__(Podcast(**kwargs), **kwargs)
+    @property
+    def use_cache(self) -> bool:
+        return True
 
     def path(
         self, 
@@ -89,11 +109,11 @@ class Episode(HttpSubStream, Podcast):
             }
             yield episode
 
-class AnalyticSubStream(HttpSubStream, Podcast, ABC):
+class AnalyticSubStream(HttpSubStream, SimplecastFectherStream, ABC):
     primary_key=None
 
     def __init__(self, endpoint:str, keys_dict:dict, collection_name:str, **kwargs):
-        super().__init__(Podcast(**kwargs), **kwargs)
+        super().__init__(**kwargs)
         self.endpoint=endpoint
         self.keys_dict=keys_dict
         self.collection_name = collection_name
@@ -151,7 +171,7 @@ class AnalyticEpisode(AnalyticSubStream):
             }
             yield analytic_episode
 
-class AnalyticDownload(AnalyticSubStream, Podcast):
+class AnalyticDownload(AnalyticSubStream):
 
     def __init__(self, **kwargs):
         super().__init__(endpoint="downloads", keys_dict=DOWNLOADS_KEY, collection_name="by_interval", **kwargs)
@@ -171,6 +191,37 @@ class TechnologyListeningMethod(AnalyticSubStream):
     def __init__(self, **kwargs):
         super().__init__(endpoint="technology/listening_methods", keys_dict=TECH_KEY, collection_name="collection", **kwargs)
 
+class AnalyticEpisodeV2(HttpSubStream,SimplecastFectherStream):
+    def path(
+        self, 
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        episode_id=stream_slice.get("parent").get("id")
+        return f"analytics?episode={episode_id}"
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        data=response.json()
+        logger.debug("Response: %s", data)
+        yield data
+
+class AnalyticPodcastV2(HttpSubStream, SimplecastFectherStream):
+    def path(
+        self, 
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        podcast_id=stream_slice.get("parent").get("id")
+        return f"analytics?podcast={podcast_id}"
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        data=response.json()
+        logger.debug("Response: %s", data)
+        yield data
+
+
 
 # Source
 class SourceSimplecastFecther(AbstractSource):
@@ -178,15 +229,19 @@ class SourceSimplecastFecther(AbstractSource):
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
-        auth = TokenAuthenticator(token=config["api_key"])  
+        auth = TokenAuthenticator(token=config["api_key"])
+        podcasts=Podcast(authenticator=auth)
+        episodes=Episode(authenticator=auth, parent=podcasts)
         return [
-                Podcast(authenticator=auth),
-                Episode(authenticator=auth),
-                AnalyticLocation(authenticator=auth),
-                AnalyticTimeOfWeek(authenticator=auth),
-                AnalyticEpisode(authenticator=auth),
-                AnalyticDownload(authenticator=auth),
-                TechnologyApplication(authenticator=auth),
-                TechnologyDeviceClass(authenticator=auth),
-                TechnologyListeningMethod(authenticator=auth)
+                podcasts,
+                episodes,
+                AnalyticLocation(authenticator=auth, parent=podcasts),
+                AnalyticTimeOfWeek(authenticator=auth, parent=podcasts),
+                AnalyticEpisode(authenticator=auth, parent=podcasts),
+                AnalyticDownload(authenticator=auth,parent=podcasts),
+                TechnologyApplication(authenticator=auth, parent=podcasts),
+                TechnologyDeviceClass(authenticator=auth, parent=podcasts),
+                TechnologyListeningMethod(authenticator=auth, parent=podcasts),
+                AnalyticEpisodeV2(authenticator=auth, parent=episodes),
+                AnalyticPodcastV2(authenticator=auth, parent=podcasts)
             ]
