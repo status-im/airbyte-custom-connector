@@ -47,7 +47,7 @@ class SimplecastFectherStream(HttpStream):
 
 class Podcast(SimplecastFectherStream):
 
-    primary_key = "podcast_id"
+    primary_key = "id"
 
 
     @property
@@ -75,7 +75,7 @@ class Podcast(SimplecastFectherStream):
             yield podcast
 
 class Episode(HttpSubStream, SimplecastFectherStream):
-    primary_key="episode_id"
+    primary_key="id"
 
     @property
     def use_cache(self) -> bool:
@@ -141,7 +141,7 @@ class AnalyticSubStream(HttpSubStream, SimplecastFectherStream, ABC):
             yield analytic
 
 class AnalyticLocation(AnalyticSubStream):
-    primary_key="analytic_location_id"
+    primary_key=None
 
     def __init__(self, **kwargs):
         super().__init__(endpoint="location", keys_dict=LOCATION_KEYS, collection_name="countries", **kwargs)

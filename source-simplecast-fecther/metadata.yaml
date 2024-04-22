@@ -14,7 +14,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: 464a7cea-0317-485e-9a9c-bcd06155bfff
-  dockerImageTag: 1.1.0
+  dockerImageTag: 1.1.1
   dockerRepository: harbor.status.im/status-im/airbyte/source-simplecast-fetcher
   githubIssueLabel: source-simplecast-fecther
   icon: simplecast-fecther.svg
