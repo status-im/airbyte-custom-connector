@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Generated schema for Root",
+  "type": "object",
+  "properties": {
+    "href": {
+      "type": ["null", "string"]
+    },
+    "total": {
+      "type": ["null", "number"]
+    },
+    "interval": {
+      "type": ["null", "string"]
+    },
+    "id": {
+      "type": ["null", "string"]
+    },
+    "by_interval": {
+      "type": "array",
+      "items": {
+        "type": ["null", "object"],
+        "properties": {
+          "interval": {
+            "type": ["null", "string"]
+          },
+          "downloads_total": {
+            "type": ["null", "number"]
+          },
+          "downloads_percent": {
+            "type": ["null", "number"]
+          }
+        }
+      }
+    }
+  }
+}

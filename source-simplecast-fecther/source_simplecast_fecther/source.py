@@ -152,25 +152,6 @@ class AnalyticTimeOfWeek(AnalyticSubStream):
     def __init__(self, **kwargs):
         super().__init__(endpoint="time_of_week", keys_dict=TIME_OF_WEEK_KEYS, collection_name="collection", **kwargs)
 
-class AnalyticEpisode(AnalyticSubStream):
-    primary_key=None
-
-    def __init__(self, **kwargs):
-        super().__init__(endpoint="episodes", keys_dict=[], collection_name="", **kwargs)
-
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-        data=response.json()
-        logger.debug("Response: %s", data)
-        for elt in data.get('collection'):
-            analytic_episode={
-                "id": elt.get("id"),
-                "type": elt.get("type"),
-                "title": elt.get("title"),
-                "downloads": elt.get("downloads").get("total"),
-                "number": elt.get("number")
-            }
-            yield analytic_episode
-
 class AnalyticDownload(AnalyticSubStream):
 
     def __init__(self, **kwargs):
@@ -221,8 +202,20 @@ class AnalyticPodcastV2(HttpSubStream, SimplecastFectherStream):
         logger.debug("Response: %s", data)
         yield data
 
+class AnalyticEpisodeDownload(HttpSubStream, SimplecastFectherStream):
+    def path(
+        self, 
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        episode_id=stream_slice.get("parent").get("id")
+        return f"analytics/downloads?episode={episode_id}"
 
-
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        data=response.json()
+        logger.debug("Response: %s", data)
+        yield data
 # Source
 class SourceSimplecastFecther(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
@@ -237,11 +230,11 @@ class SourceSimplecastFecther(AbstractSource):
                 episodes,
                 AnalyticLocation(authenticator=auth, parent=podcasts),
                 AnalyticTimeOfWeek(authenticator=auth, parent=podcasts),
-                AnalyticEpisode(authenticator=auth, parent=podcasts),
                 AnalyticDownload(authenticator=auth,parent=podcasts),
                 TechnologyApplication(authenticator=auth, parent=podcasts),
                 TechnologyDeviceClass(authenticator=auth, parent=podcasts),
                 TechnologyListeningMethod(authenticator=auth, parent=podcasts),
                 AnalyticEpisodeV2(authenticator=auth, parent=episodes),
-                AnalyticPodcastV2(authenticator=auth, parent=podcasts)
+                AnalyticPodcastV2(authenticator=auth, parent=podcasts),
+                AnalyticEpisodeDownload(authenticator=auth, parent=episodes)
             ]

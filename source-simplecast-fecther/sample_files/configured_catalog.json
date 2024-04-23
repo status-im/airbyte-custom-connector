@@ -58,20 +58,6 @@
     },
     {
       "stream": {
-        "name": "analytic_episode",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh",  "incremental"
-        ]
-      },
-      "sync_mode":  "incremental",
-      "destination_sync_mode": "overwrite"
-    },
-    {
-      "stream": {
         "name": "analytic_download",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
@@ -143,6 +129,20 @@
     {
       "stream": {
         "name": "analytic_episode_v2",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object"
+        },
+        "supported_sync_modes": [
+          "full_refresh",  "incremental"
+        ]
+      },
+      "sync_mode":  "incremental",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "analytic_episode_download",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
