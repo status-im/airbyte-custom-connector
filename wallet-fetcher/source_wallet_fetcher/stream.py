@@ -13,9 +13,10 @@ class BlockchainStream(HttpStream):
    primary_key = None
 
 
-   def __init__(self, wallets:  List['str'], **kwargs):
+   def __init__(self, wallets: List['str'], api_key: str='freekey', **kwargs):
         super().__init__(**kwargs)
         self.wallets = wallets
+        self.api_key = api_key
 
    def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
         for wallet in self.wallets:
@@ -74,7 +75,7 @@ class EthereumToken(BlockchainStream):
     url_base = "https://api.ethplorer.io/getAddressInfo/"
 
     def path(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> str:
-        return f"{stream_slice['address']}?apiKey=freekey"
+        return f"{stream_slice['address']}?apiKey={self.api_key}"
 
     def parse_response(self,
         response: requests.Response,

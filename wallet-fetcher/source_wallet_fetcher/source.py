@@ -24,7 +24,9 @@ class SourceWalletFetcher(AbstractSource):
                 bitcoin_wallets.append(wallet)
             if 'ETH' in wallet['blockchain']:
                 ethereum_wallets.append(wallet)
-
+        api_key='freekey'
+        if "api_key" in config:
+            api_key=config["api_key"]
         return [
             BitcoinToken(wallets=bitcoin_wallets),
-            EthereumToken(wallets=ethereum_wallets)]
+            EthereumToken(wallets=ethereum_wallets, api_key=api_key)]
