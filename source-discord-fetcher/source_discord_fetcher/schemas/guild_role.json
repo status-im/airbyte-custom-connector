@@ -8,71 +8,60 @@
         "number"
       ]
     },
-    "username": {
+    "name": {
       "type": [
         "null",
         "string"
       ]
     },
-    "discriminator": {
+    "color": {
       "type": [
         "null",
-        "string"
+        "number"
       ]
     },
-    "global_name": {
-      "type": [
-        "null",
-        "string"
-      ]
-    },
-    "bot": {
+    "hoist": {
       "type": [
         "null",
         "boolean"
       ]
     },
-      "mfa_enabled": {
+    "position": {
       "type": [
         "null",
-        "boolean"
+        "number"
       ]
     },
-    "verified":{
-      "type": [
-        "null",
-        "boolean"
-      ]
-    },
-    "email":{
+    "permissions": {
       "type": [
         "null",
         "string"
       ]
     },
-    "prenium_type":{
+    "managed": {
+      "type": [
+        "null",
+        "boolean"
+      ]
+    },
+    "mentionable": {
+      "type": [
+        "null",
+        "boolean"
+      ]
+    },
+    "flags": {
       "type": [
         "null",
         "integer"
       ]
     },
-    "public_flags":{
+    "guild_id": {
       "type": [
         "null",
         "integer"
       ]
-    },
-    "guild_id":{
-      "type": [
-        "null",
-        "integer"
-      ]
-    },
-    "roles":{
-      "type": "array",
-      "items": {
-        "type": ["null", "number"]
-      }
     }
+
   }
 }

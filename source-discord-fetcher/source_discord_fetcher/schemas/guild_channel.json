@@ -43,6 +43,9 @@
     },
     "total_message_sent":{
       "type": ["null", "number"]
+    },
+    "guild_id":{
+      "type": ["null", "number"]
     }
   }
 }

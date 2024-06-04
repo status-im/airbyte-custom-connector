@@ -15,6 +15,7 @@ logger = logging.getLogger("airbyte")
 GUILD_KEYS = ["id", "name", "owner_id", "roles", "description", "chain", "max_members"]
 CHANNEL_KEYS = ["id", "type", "guild_id", "position", "name", "topic", "last_message_id", "managed", "parent_id", "last_pin_timestamp", "message_count", "member_count", "falgs", "total_message_sent"]
 USER_KEYS = [ "id", "username", "discriminator", "global_name", "bot", "mfa_enabled", "verified", "email", "premium_type", "public_flags"]
+ROLES_KEYS = ["id", "name", "color", "hoist", "position", "permissions", "managed", "mentionable", "falgs", "guild_id"]
 
 MAX_USERS = 1000
 # Basic full refresh stream
@@ -44,7 +45,7 @@ class DiscordFetcherStream(HttpStream, ABC):
        return None
 
 class Guild(DiscordFetcherStream):
-    primary_key = "guild_id"
+    primary_key = "id"
 
     def parse_response(
         self, response: requests.Response, stream_slice: Mapping[str, Any] = None, **kwargs
@@ -56,7 +57,7 @@ class Guild(DiscordFetcherStream):
 
 
 class GuildChannel(DiscordFetcherStream):
-    primary_key="channel_id"
+    primary_key="id"
 
     use_cache=True
 
@@ -71,7 +72,7 @@ class GuildChannel(DiscordFetcherStream):
 
 
 class Channel(HttpSubStream, DiscordFetcherStream):
-    primary_key="channel_id"
+    primary_key="id"
 
     def path(
         self, 
@@ -92,7 +93,7 @@ class Channel(HttpSubStream, DiscordFetcherStream):
         yield channel
 
 class Member(DiscordFetcherStream):
-    primary_key="member_id"
+    primary_key="id"
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         # if the response doesn't contain the maximum number of user then there is no more to fetch
@@ -121,7 +122,24 @@ class Member(DiscordFetcherStream):
         for elt in data:
             user = { key : elt.get('user').get(key) for key in USER_KEYS }
             user['guild_id']=stream_slice['guild_id']
+            user['roles']=elt.get('roles')
             yield user 
+
+class GuildRole(DiscordFetcherStream):
+    primary_key=None
+    
+    def parse_response(
+        self, response: requests.Response, stream_slice: Mapping[str, Any] = None, **kwargs
+    ) -> Iterable[Mapping]:
+        logger.debug("Response: %s", response.json())
+        data=response.json()
+        for elt in data:
+            logger.info('Role : %s',  elt)
+            role = { key : elt.get(key) for key in ROLES_KEYS }
+            role['guild_id']=stream_slice['guild_id']
+            yield role 
+
+ 
 
 # Source
 class SourceDiscordFetcher(AbstractSource):
@@ -135,5 +153,6 @@ class SourceDiscordFetcher(AbstractSource):
             Guild(guilds_id=config["guilds_id"],  authenticator=auth),
             guildChannel,
             Channel(guilds_id=config["guilds_id"], authenticator=auth, parent=guildChannel),
-            Member(guilds_id=config["guilds_id"], endpoint="/members", authenticator=auth)
+            Member(guilds_id=config["guilds_id"], endpoint="/members", authenticator=auth),
+            GuildRole(guilds_id=config["guilds_id"], endpoint="/roles", authenticator=auth)
         ]
