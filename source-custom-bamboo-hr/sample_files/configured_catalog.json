@@ -1,0 +1,32 @@
+{
+  "streams": [
+    {
+      "stream": {
+        "name": "employees",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object"
+        },
+        "supported_sync_modes": [
+          "full_refresh",  "incremental"
+        ]
+      },
+      "sync_mode":  "incremental",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "employees_details",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object"
+        },
+        "supported_sync_modes": [
+          "full_refresh",  "incremental"
+        ]
+      },
+      "sync_mode":  "incremental",
+      "destination_sync_mode": "overwrite"
+     }
+  ]
+}

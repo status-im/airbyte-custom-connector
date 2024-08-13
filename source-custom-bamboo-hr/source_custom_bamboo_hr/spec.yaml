@@ -1,0 +1,15 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Custom Bamboo Hr Spec
+  type: object
+  required:
+    - token
+  properties:
+    organisation:
+      type: string
+      description: 'describe me'
+    token:
+      type: string
+      description: 'Token for authentication'
+      airbyte_secret: true
