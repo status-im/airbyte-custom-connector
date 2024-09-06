@@ -8,13 +8,55 @@
     "text": {
       "type": ["null", "string"]
     },
+    "created_at": {
+      "type": ["null", "string"]
+    },
     "author_id": {
       "type": ["null", "string"]
+    },
+    "conversation_id": {
+      "type": ["null", "string"]
+    },
+    "reply_settings": {
+      "type": ["null", "string"]
+    },
+
+    "public_metrics": {
+      "type": ["null", "object"],
+      "properties":  {
+        "retweet_count": {
+          "type": ["null", "number"]
+        },
+        "reply_count": {
+          "type": ["null", "number"]
+        },
+        "like_count": {
+          "type": ["null", "number"]
+        },
+        "quote_count": {
+          "type": ["null", "number"]
+        },
+        "impression_count": {
+           "type": ["null", "number"]
+        },
+        "bookmark_count":  {
+          "type": ["null", "number"]
+        }
+      }
     },
     "non_public_metrics": {
       "type": ["null", "object" ],
       "properties":  {
         "impression_count": {
+          "type": ["null", "number"]
+        },
+        "like_count": {
+          "type": ["null", "number"]
+        },
+        "reply_count": {
+          "type": ["null", "number"]
+        },
+        "retweet_count": {
           "type": ["null", "number"]
         },
         "url_link_clicks": {
@@ -48,7 +90,7 @@
         }
       }
     },
-    "promoted_metrics": : {
+    "promoted_metrics": {
       "type": ["null", "object" ],
       "properties":  {
         "impression_count": {
