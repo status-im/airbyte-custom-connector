@@ -18,7 +18,7 @@ logger = logging.getLogger("airbyte")
 
 class TwitterStream(HttpStream):
 
-    url_base = "https://api.twitter.com/2/"
+    url_base = "https://api.x.com/2/"
 
     def __init__(self, start_time: str = None, account_id: str = None, **kwargs):
         super().__init__(**kwargs)
@@ -123,11 +123,11 @@ class SourceTwitterFetcher(AbstractSource):
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         auth=SingleUseRefreshTokenOauth2Authenticator(
-                config, token_refresh_endpoint="https://api.twitter.com/2/oauth2/token")
+                config, token_refresh_endpoint="https://api.x.com/2/oauth2/token")
         tweet = Tweet(
                 authenticator=auth,
                 account_id=config["account_id"],
-                start_time=datetime.strptime(config['start_time'], "%Y-%m-%dT%H:%M:%SZ""),
+                start_time=datetime.strptime(config['start_time'], "%Y-%m-%dT%H:%M:%SZ"),
             )
         tweetMetrics = TweetMetrics(
                 authenticator=auth,
