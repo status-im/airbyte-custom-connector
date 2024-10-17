@@ -2,7 +2,7 @@
   "streams": [
     {
       "stream": {
-        "name": "account",
+        "name": "tweet",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
@@ -16,7 +16,7 @@
     },
     {
       "stream": {
-        "name": "tweet",
+        "name": "tweet_metrics",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
