@@ -14,6 +14,8 @@ from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from airbyte_cdk.sources.streams.http.auth.core import HttpAuthenticator
 from airbyte_cdk.sources.streams.http.requests_native_auth import SingleUseRefreshTokenOauth2Authenticator
 
+from .auth import TwitterOAuth
+
 logger = logging.getLogger("airbyte")
 
 class TwitterStream(HttpStream):
@@ -122,7 +124,7 @@ class SourceTwitterFetcher(AbstractSource):
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
-        auth=SingleUseRefreshTokenOauth2Authenticator(
+        auth=TwitterOAuth(
                 config, token_refresh_endpoint="https://api.x.com/2/oauth2/token")
         tweet = Tweet(
                 authenticator=auth,
