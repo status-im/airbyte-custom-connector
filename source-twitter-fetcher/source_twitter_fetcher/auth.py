@@ -2,6 +2,7 @@
 from typing import Any, Mapping, Union
 
 import requests
+import logging
 from airbyte_cdk.models import FailureType
 from airbyte_cdk.sources.streams.http.requests_native_auth import (
     BasicHttpAuthenticator,
@@ -10,12 +11,15 @@ from airbyte_cdk.sources.streams.http.requests_native_auth import (
 )
 from airbyte_cdk.utils import AirbyteTracedException
 
+logger = logging.getLogger("airbyte")
+
 class TwitterOAuth(SingleUseRefreshTokenOauth2Authenticator):
     """
     https://developer.x.com/en/docs/authentication/oauth-2-0/user-access-token
     """
 
     def build_refresh_request_headers(self) -> Mapping[str, Any]:
+        logger.info("Refreshing token")
         return {
             "Authorization": BasicHttpAuthenticator(self.get_client_id(), self.get_client_secret()).token,
             "Content-Type": "application/x-www-form-urlencoded",
@@ -35,7 +39,9 @@ class TwitterOAuth(SingleUseRefreshTokenOauth2Authenticator):
             headers=self.build_refresh_request_headers(),
         )
         content = response.json()
-        if response.status_code == 400 and content.get("error") == "invalid_grant":
+        logger.info("Refresh - response status code %s", response.status_code)
+        if response.status_code == 400 and content.get("error") == "invalid_request":
+            logger.error("Error when refreshing token: %s", content)
             raise AirbyteTracedException(
                 internal_message=content.get("error_description"),
                 message="Refresh token is invalid or expired. Please re-authenticate to restore access to Twitter API.",

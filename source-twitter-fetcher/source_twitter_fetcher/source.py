@@ -13,6 +13,7 @@ from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from airbyte_cdk.sources.streams.http.auth.core import HttpAuthenticator
 from airbyte_cdk.sources.streams.http.requests_native_auth import SingleUseRefreshTokenOauth2Authenticator
+from airbyte_cdk.models import ConfiguredAirbyteCatalog, FailureType, SyncMode
 
 from .auth import TwitterOAuth
 
@@ -63,14 +64,13 @@ class Tweet(TwitterStream):
           stream_slice: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
         params = {
-                "tweet.fields" : "text,public_metrics,non_public_metrics,organic_metrics,author_id,referenced_tweets,created_at",
+                "tweet.fields" : "text,public_metrics,author_id,referenced_tweets,created_at",
                 "max_results": 100
             }
         # Add condition later:
         params.update({"start_time": self.start_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
         if next_page_token:
             params.update(**next_page_token)
-        logger.info(f"DBG - query params: %s", params)
         return params
 
 
@@ -82,7 +82,6 @@ class Tweet(TwitterStream):
         if 'data' in response.json():
             data=response.json()['data']
             for t in data:
-                logger.debug("DBG-T: id %s", t.get('id'))
                 yield t
         time.sleep(2)
 
@@ -94,9 +93,18 @@ class TweetMetrics(HttpSubStream, Tweet):
           stream_slice: Mapping[str, Any] = None,
           next_page_token: Mapping[str, Any] = None
     ) -> str:
-        tweet_id = stream_slice.get("parent").get("id")
+        tweet_id = stream_slice.get("id")
         logger.debug("Fetching tweet %s from Account id %s", tweet_id, self.account_id)
         return f"tweets/{tweet_id}"
+
+    def stream_slices(self, stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
+        limit_date = datetime.today()- timedelta(31)
+        for parent_slice in super().stream_slices(sync_mode=SyncMode.full_refresh):
+            tweet = parent_slice["parent"]
+            if datetime.strptime(tweet.get("created_at"), "%Y-%m-%dT%H:%M:%S.%fZ") > limit_date:
+                yield {"id": tweet.get('id') }
+            else:
+                logger.info("Not calling full metrics endpoint for tweet %s, tweet too old", tweet.get('id'))
 
     def request_params(
             self, stream_state: Optional[Mapping[str, Any]],
@@ -111,7 +119,6 @@ class TweetMetrics(HttpSubStream, Tweet):
         return params
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-        logger.info("Twtter Response: %s", response.json())
         if 'data' in response.json():
             data=response.json()['data']
             logger.debug("DBG-FULL-T: id %s", data.get('id'))
