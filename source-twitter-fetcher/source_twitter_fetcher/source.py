@@ -144,6 +144,48 @@ class TweetMetrics(HttpSubStream, Tweet):
             yield data
         time.sleep(2)
 
+class TweetPromoted(HttpSubStream, Tweet):
+    primary_key = "id"
+
+    def path(
+          self, stream_state: Mapping[str, Any] = None,
+          stream_slice: Mapping[str, Any] = None,
+          next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        tweet_id = stream_slice.get("id")
+        logger.debug("Fetching tweet %s from Account id %s", tweet_id, self.account_id)
+        return f"tweets/{tweet_id}"
+
+    def stream_slices(self, stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
+        limit_date = datetime.today()- timedelta(31)
+        for parent_slice in super().stream_slices(sync_mode=SyncMode.full_refresh):
+            tweet = parent_slice["parent"]
+            if datetime.strptime(tweet.get("created_at"), "%Y-%m-%dT%H:%M:%S.%fZ") > limit_date:
+                yield {"id": tweet.get('id') }
+            else:
+                logger.info("Not calling promoted_metrics endpoint for tweet %s, tweet too old", tweet.get('id'))
+
+    def request_params(
+            self, stream_state: Optional[Mapping[str, Any]],
+            stream_slice: Optional[Mapping[str, Any]] = None,
+            next_page_token: Optional[Mapping[str, Any]] = None,
+    ) -> MutableMapping[str, Any]:
+        params = {
+                "tweet.fields" : "promoted_metrics",
+            }
+        # Add condition later:
+        logger.debug(f"DBG-FULL - query params: %s", params)
+        return params
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+        if 'data' in response.json():
+            data=response.json()['data']
+            yield data
+        elif 'error' in response.json():
+            logger.info("No promoted Metrics for this tweet")
+        time.sleep(2)
+
+
 # Source
 class SourceTwitterFetcher(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
@@ -162,8 +204,14 @@ class SourceTwitterFetcher(AbstractSource):
                 account_id=config['account_id'],
                 parent=tweet
             )
+        tweetPromoted = TweetPromoted(
+                authenticator=auth,
+                account_id=config['account_id'],
+                parent=tweet
+                )
         return [
             Account(authenticator=auth, account_id=config["account_id"]),
             tweet,
-            tweetMetrics
+            tweetMetrics,
+            tweetPromoted
         ]

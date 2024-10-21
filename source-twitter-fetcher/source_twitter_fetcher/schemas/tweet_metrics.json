@@ -23,7 +23,7 @@
 
     "public_metrics": {
       "type": ["null", "object"],
-      "properties":  {
+      "properties": {
         "retweet_count": {
           "type": ["null", "number"]
         },
@@ -39,14 +39,14 @@
         "impression_count": {
            "type": ["null", "number"]
         },
-        "bookmark_count":  {
+        "bookmark_count": {
           "type": ["null", "number"]
         }
       }
     },
     "non_public_metrics": {
       "type": ["null", "object" ],
-      "properties":  {
+      "properties": {
         "impression_count": {
           "type": ["null", "number"]
         },
@@ -69,30 +69,7 @@
     },
     "organic_metrics": {
       "type": ["null", "object" ],
-      "properties":  {
-        "impression_count": {
-          "type": ["null", "number"]
-        },
-        "url_link_clicks": {
-          "type": ["null", "number"]
-        },
-        "user_profile_clicks": {
-          "type": ["null", "number"]
-        },
-        "retweet_count": {
-          "type": ["null", "number"]
-        },
-        "reply_count": {
-          "type": ["null", "number"]
-        },
-        "like_count": {
-          "type": ["null", "number"]
-        }
-      }
-    },
-    "promoted_metrics": {
-      "type": ["null", "object" ],
-      "properties":  {
+      "properties": {
         "impression_count": {
           "type": ["null", "number"]
         },

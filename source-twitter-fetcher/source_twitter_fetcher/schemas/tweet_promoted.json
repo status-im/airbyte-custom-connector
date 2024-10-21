@@ -20,23 +20,18 @@
     "reply_settings": {
       "type": ["null", "string"]
     },
-    "referenced_tweets": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["object"],
-        "properties":{
-          "type": {
-            "type": ["null", "string"]
-          },
-          "id": {
-            "type": ["null", "number"]
-          }
-        }
-      }
-    },
-    "public_metrics": {
-      "type": ["null", "object"],
+    "promoted_metrics": {
+      "type": ["null", "object" ],
       "properties": {
+        "impression_count": {
+          "type": ["null", "number"]
+        },
+        "url_link_clicks": {
+          "type": ["null", "number"]
+        },
+        "user_profile_clicks": {
+          "type": ["null", "number"]
+        },
         "retweet_count": {
           "type": ["null", "number"]
         },
@@ -44,15 +39,6 @@
           "type": ["null", "number"]
         },
         "like_count": {
-          "type": ["null", "number"]
-        },
-        "quote_count": {
-          "type": ["null", "number"]
-        },
-        "impression_count": {
-           "type": ["null", "number"]
-        },
-        "bookmark_count": {
           "type": ["null", "number"]
         }
       }

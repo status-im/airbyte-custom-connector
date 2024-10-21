@@ -26,6 +26,10 @@
     "verified_type": {
         "type": [ "null", "string" ]
     },
+    "created_at": {
+        "type": [ "null", "string" ],
+        "format": "date-time"
+    },
     "public_metrics": {
       "type": ["null", "object" ],
       "properties": {
