@@ -39,6 +39,25 @@ class TwitterStream(HttpStream):
         if delay_time:
             return int(delay_time)
 
+class Account(TwitterStream):
+    primary_key= "id"
+
+    def path(
+          self, stream_state: Mapping[str, Any] = None,
+          stream_slice: Mapping[str, Any] = None,
+          next_page_token: Mapping[str, Any] = None) -> str:
+        return f"users/me?user.fields=public_metrics,protected,description,url,most_recent_tweet_id,pinned_tweet_id,created_at,verified_type"
+
+    def parse_response(
+          self,
+          response: requests.Response,
+          stream_slice: Mapping[str, Any] = None,
+          **kwargs
+    ) -> Iterable[Mapping]:
+        logger.debug("Response: %s", response.json())
+        data=response.json()['data']
+        yield data
+
 class Tweet(TwitterStream):
     primary_key = "id"
 
@@ -144,6 +163,7 @@ class SourceTwitterFetcher(AbstractSource):
                 parent=tweet
             )
         return [
+            Account(authenticator=auth, account_id=config["account_id"]),
             tweet,
             tweetMetrics
         ]
