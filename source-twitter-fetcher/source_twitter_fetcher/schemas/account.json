@@ -42,7 +42,7 @@
         "following_count": {
           "type": [ "null", "number" ]
         },
-        "follower_count": {
+        "followers_count": {
           "type": [ "null", "number" ]
         },
         "listed_count": {
