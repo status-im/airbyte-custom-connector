@@ -1,0 +1,25 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": ["null", "string"]
+      },
+      "promoted_tweet_id": {
+        "type": ["null", "string"]
+      },
+      "billed_engagements": {
+        "type": ["null", "array"],
+        "items": {
+          "type": "integer"
+    }
+      },
+      "billed_charge_local_micro": {
+        "type": ["null", "array"],
+        "items": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+  
