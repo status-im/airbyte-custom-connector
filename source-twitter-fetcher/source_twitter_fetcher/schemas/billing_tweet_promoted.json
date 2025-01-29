@@ -5,8 +5,13 @@
       "id": {
         "type": ["null", "string"]
       },
-      "promoted_tweet_id": {
-        "type": ["null", "string"]
+      "activity_start_time": {
+        "type": ["null", "string"],
+        "format": "date-time"
+      },
+      "activity_end_time": {
+        "type": ["null", "string"],
+        "format": "date-time"
       },
       "billed_engagements": {
         "type": ["null", "array"],
@@ -19,7 +24,16 @@
         "items": {
           "type": "integer"
         }
-      }
+      },
+      "date": {
+        "type": ["null", "string"],
+        "format": "date"
+      },
+      "placement": {
+        "type": ["null", "string"]
+      },
+      "granularity": {
+        "type": ["null", "string"]
     }
-  }
+  }}
   
