@@ -1,10 +1,13 @@
 # SimpleCast Fetcher Source
 
-This is the repository for fetching  SimpleCast data, written in Python.
+This is the repository for fetching SimpleCast data, written in Python.
 
 ## Usage
 
 The connector fetch the list of podcasts, episodes and analytics metrics from [SimpleCast](https://www.simplecast.com/).
+
+For more information on the endpoints available: https://apidocs.simplecast.com/
+
 
 ### Configuration
 
@@ -14,17 +17,18 @@ The connector takes the following input:
 - api_key
 ```
 
+> SimpleCast provide a public test api key: `eyJhcGlfa2V5IjoiYWIwMDI3NDMzZDUyMzNmYWFhMTcwZjI4ZDBjNjY2ODIifQ==` 
+
+
 ### Output
 
 The connector will return the following objects:
 - [podcast](./source_simplecast_fecther/schemas/podcast.json)
 - [episode](./source_simplecast_fecther/schemas/episode.json)
-- [analytics/download](./source_simplecast_fecther/schemas/analytic_download.json)
-- [analytics/episode](./source_simplecast_fecther/schemas/analytic_episode.json)
-- [analytics/location](./source_simplecast_fecther/schemas/analytic_location.json)
-- [analytics/time of week](./source_simplecast_fecther/schemas/analytic_time_of_week.json)
-- [analytics/technology/application](./source_simplecast_fecther/schemas/technology_application.json)
-- [analytics/technology/device class](./source_simplecast_fecther/schemas/technology_device_class.json)
+- [EpisodeDownload](./source_simplecast_fecther/schemas/episode_download.json)
+- [PodcastListeningLocation](./source_simplecast_fecther/schemas/podcast_listening_location.json)
+- [PodcastListeningDevice](./source_simplecast_fecther/schemas/podcast_listening_device.json)
+- [PodcastListeningMethod](./source_simplecast_fecther/schemas/podcast_listening_method.json)
 
 
 ## Local development
