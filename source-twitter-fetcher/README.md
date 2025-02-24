@@ -25,9 +25,9 @@ twitter:
     client_id: "Id from the Twitter Developer Account"
     client_secret: "Secret from the Twitter Developer Account"
     access_token: "Token generated from the generated Twitter account"
-    refresh_token: "Refresh token obtain from the Twitter Account" 
+    refresh_token: "Refresh token obtain from the Twitter Account"
   account_id: "Id of the Twitter account"
-  start_time: 'AAAA-MM-DD"  # Start of the period of tweets sync 
+  start_time: 'AAAA-MM-DDTHH:mm:SSZ"  # Start of the period of tweets sync
 ```
 
 To obtain the `account_id`, run the following command:
