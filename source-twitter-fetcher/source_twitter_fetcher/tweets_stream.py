@@ -31,7 +31,7 @@ class Account(TwitterStream):
     primary_key = "id"
 
     def path(
-        self, 
+        self,
         stream_state: Mapping[str, Any] = None,
         stream_slice: Mapping[str, Any] = None,
         next_page_token: Mapping[str, Any] = None
