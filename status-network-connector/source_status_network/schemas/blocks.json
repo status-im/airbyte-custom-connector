@@ -1,0 +1,162 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Block Data Schema",
+    "type": "object",
+    "properties": {
+      "base_fee_per_gas": {
+        "type": "string"
+      },
+      "burnt_fees": {
+        "type": "string"
+      },
+      "burnt_fees_percentage": {
+        "type": "number"
+      },
+      "difficulty": {
+        "type": "string"
+      },
+      "gas_limit": {
+        "type": "string"
+      },
+      "gas_target_percentage": {
+        "type": "number"
+      },
+      "gas_used": {
+        "type": "string"
+      },
+      "gas_used_percentage": {
+        "type": "number"
+      },
+      "hash": {
+        "type": "string"
+      },
+      "height": {
+        "type": "integer"
+      },
+      "miner": {
+        "type": "object",
+        "properties": {
+          "ens_domain_name": {
+            "type": ["null", "string"]
+          },
+          "hash": {
+            "type": "string"
+          },
+          "implementations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_contract": {
+            "type": "boolean"
+          },
+          "is_scam": {
+            "type": "boolean"
+          },
+          "is_verified": {
+            "type": "boolean"
+          },
+          "metadata": {
+            "type": ["null", "object"]
+          },
+          "name": {
+            "type": ["null", "string"]
+          },
+          "private_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "proxy_type": {
+            "type": ["null", "string"]
+          },
+          "public_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "watchlist_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "ens_domain_name",
+          "hash",
+          "implementations",
+          "is_contract",
+          "is_scam",
+          "is_verified",
+          "metadata",
+          "name",
+          "private_tags",
+          "proxy_type",
+          "public_tags",
+          "watchlist_names"
+        ]
+      },
+      "nonce": {
+        "type": "string"
+      },
+      "parent_hash": {
+        "type": "string"
+      },
+      "priority_fee": {
+        "type": "string"
+      },
+      "rewards": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "reward": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "required": ["reward", "type"]
+        }
+      },
+      "size": {
+        "type": "integer"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "total_difficulty": {
+        "type": "string"
+      },
+      "transaction_count": {
+        "type": "integer"
+      },
+      "transaction_fees": {
+        "type": "string"
+      },
+      "tx_count": {
+        "type": "integer"
+      },
+      "tx_fees": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      },
+      "uncles_hashes": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "withdrawals_count": {
+        "type": ["null", "integer"]
+      }
+    }
+  }  
