@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
-from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from . import constants
 import requests
 import logging
@@ -37,7 +37,7 @@ class Blocks(ApiStream):
     def next_page_token(self, response: requests.Response) -> Optional[dict[str, Any]]:
         data: dict = response.json()
         next_page_params = data.get("next_page_params")
-        
+        return None
         items = data.get("items")
         if not items:
             return None
@@ -57,7 +57,6 @@ class Blocks(ApiStream):
 
 
     def request_params(self, stream_state: Optional[dict[str, Any]], stream_slice: Optional[dict[str, Any]] = None, next_page_token: Optional[dict[str, Any]] = None):
-        
         # TO DO: Add stream_state when backlog finishes
         return next_page_token
 
@@ -66,9 +65,37 @@ class Blocks(ApiStream):
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         data: dict[str, Any] = response.json()
         items: Optional[list[dict]] = data.get("items")
-
+        
         for item in items:
             yield item
+
+
+
+class Transactions(HttpSubStream, ApiStream):
+    
+
+    def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
+        
+        block = stream_slice.get("parent")
+        logger.info(f"Transaction -> path: {block}")
+
+        block_id = block["hash"]
+        url = f"{self.url_base}/blocks/{block_id}/transactions"
+        return url
+    
+    def parse_response(self, 
+                       response: requests.Response, 
+                       *, 
+                       stream_state: Optional[dict[str, Any]], 
+                       stream_slice: Optional[dict[str, Any]] = None, 
+                       **kwargs
+                    ) -> Iterable[Mapping]:
+        logger.info(f"Transactions -> parse_response: {stream_state}")
+        
+        yield {}
+
+
+
 
 
 class SourceStatusNetworkStats(AbstractSource):
@@ -87,4 +114,5 @@ class SourceStatusNetworkStats(AbstractSource):
         return success, message
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
-        return [Stats(), Blocks()]
+        blocks = Blocks()
+        return [Stats(), blocks, Transactions(parent=blocks)]
