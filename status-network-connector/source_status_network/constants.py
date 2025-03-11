@@ -1,1 +1,0 @@
-URL_BASE = "https://sepoliascan.status.network/api/v2"

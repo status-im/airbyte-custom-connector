@@ -3,3 +3,17 @@ connectionSpecification:
   $schema: http://json-schema.org/draft-07/schema#
   title: Status Network Fetcher
   type: object
+  required:
+    - url_base
+    - starting_block
+  properties:
+    url_base:
+      type: string
+      description: The Status Network URL
+    starting_block:
+      type: integer
+      description: Data will be extracted from the given block number onwards
+      examples:
+        - 100000
+        - 123456
+        - 789101
