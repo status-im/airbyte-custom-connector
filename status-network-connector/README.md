@@ -1,6 +1,6 @@
-# Twitter Fetcher Source
+# Status Network Source
 
-This is the repository for fetching Twitter information, written in Python.
+This is the repository for fetching Status Network API information, written in Python.
 
 ## Usage
 
@@ -53,9 +53,19 @@ docker run airbyte/source-status-network-connector:dev spec
 
 #### Run
 Then run any of the connector commands as follows:
+
+#### Linux / MAC OS
 ```
 docker run --rm airbyte/source-status-network-connector:dev spec
 docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-status-network-connector:dev check --config /sample_files/config-example.json
 docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-status-network-connector:dev discover --config /sample_files/config-example.json
 docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files airbyte/source-status-network-connector:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
+```
+
+### Windows
+```
+docker run --rm airbyte/source-status-network-connector:dev spec
+docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-status-network-connector:dev check --config /sample_files/config-example.json
+docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-status-network-connector:dev discover --config /sample_files/config-example.json
+docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-status-network-connector:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
 ```
