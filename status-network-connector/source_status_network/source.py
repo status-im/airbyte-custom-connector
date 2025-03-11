@@ -21,7 +21,6 @@ class ApiStream(HttpStream):
         return None
 
 
-
 class Stats(ApiStream):
 
     def path(self, *args, **kwargs):
@@ -30,44 +29,46 @@ class Stats(ApiStream):
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         data: dict[str, Any] = response.json()
         yield data
-    
 
 
 
 class Blocks(ApiStream):
 
+    def next_page_token(self, response: requests.Response) -> Optional[dict[str, Any]]:
+        data: dict = response.json()
+        next_page_params = data.get("next_page_params")
+        
+        items = data.get("items")
+        if not items:
+            return None
+        
+        smallest_block = items[-1]["height"]
+        if smallest_block == 0:
+            return None
+        
+        return next_page_params
+
+
+
     def path(self, **kwargs):
         url = f"{self.url_base}/blocks"
         return url
-    
-    def parse_response(self, response: requests.Response, **kwargs):
+
+
+
+    def request_params(self, stream_state: Optional[dict[str, Any]], stream_slice: Optional[dict[str, Any]] = None, next_page_token: Optional[dict[str, Any]] = None):
+        
+        # TO DO: Add stream_state when backlog finishes
+        return next_page_token
+
+
+
+    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         data: dict[str, Any] = response.json()
+        items: Optional[list[dict]] = data.get("items")
 
-        items = data.get("items")
-        next_page_params = data.get("next_page_params")
-        counter = 0
-        smallest_block = -1
-
-        while smallest_block != 0:
-            
-            for item in items:
-                yield item
-            
-            smallest_block = item["height"]
-            logger.info(f"Current smallest block height:\t{smallest_block}")
-
-            url = self.path() + f"?block_number={next_page_params['block_number']}"
-            logger.info(f"Fetching data for {url}")
-            data = requests.get(url).json()
-
-            items: Optional[list[dict]] = data.get("items")
-            next_page_params: Optional[dict] = data.get("next_page_params")
-
-            # Used for quick testing
-            counter += 1
-            if counter == 1:
-                break
-
+        for item in items:
+            yield item
 
 
 class SourceStatusNetworkStats(AbstractSource):
