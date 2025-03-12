@@ -46,9 +46,9 @@ python main.py read --config sample_files/config-example.json --catalog sample_f
 ### Locally running the connector docker image
 
 ```bash
-docker build -t airbyte/source-status-network-connector:dev .
+docker build -t airbyte/source-blockchain-explorer:dev .
 # Running the spec command against your patched connector
-docker run airbyte/source-status-network-connector:dev spec
+docker run airbyte/source-blockchain-explorer:dev spec
 ````
 
 #### Run
@@ -56,16 +56,16 @@ Then run any of the connector commands as follows:
 
 #### Linux / MAC OS
 ```
-docker run --rm airbyte/source-status-network-connector:dev spec
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-status-network-connector:dev check --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-status-network-connector:dev discover --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files airbyte/source-status-network-connector:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
+docker run --rm airbyte/source-blockchain-explorer:dev spec
+docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-blockchain-explorer:dev check --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-blockchain-explorer:dev discover --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files airbyte/source-blockchain-explorer:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
 ```
 
 ### Windows
 ```
-docker run --rm airbyte/source-status-network-connector:dev spec
-docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-status-network-connector:dev check --config /sample_files/config-example.json
-docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-status-network-connector:dev discover --config /sample_files/config-example.json
-docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-status-network-connector:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
+docker run --rm airbyte/source-blockchain-explorer:dev spec
+docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-blockchain-explorer:dev check --config /sample_files/config-example.json
+docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-blockchain-explorer:dev discover --config /sample_files/config-example.json
+docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-blockchain-explorer:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
 ```

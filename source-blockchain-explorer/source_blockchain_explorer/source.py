@@ -82,6 +82,10 @@ class Blocks(ApiStream):
         items: Optional[list[dict]] = data.get("items")
         
         for item in items:
+
+            if item["height"] < self.__starting_block:
+                break
+
             yield item
 
 
@@ -129,5 +133,5 @@ class SourceStatusNetworkStats(AbstractSource):
         params = {
             "url": config["url_base"]
         }
-        blocks = Blocks(**params)
+        blocks = Blocks(**params, starting_block=config["starting_block"])
         return [Stats(**params), blocks, Transactions(parent=blocks, **params)]
