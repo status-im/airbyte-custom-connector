@@ -42,11 +42,14 @@ class Stats(ApiStream):
 
 class Blocks(ApiStream):
 
-    def __init__(self, url: str, starting_block: Optional[int] = None):
+    def __init__(self, url: str, starting_block: int):
         super().__init__(url)
         self.__starting_block = starting_block
-        
+        logger.info(f"starting_block: {self.starting_block}")
 
+    @property
+    def starting_block(self) -> int:
+        return self.__starting_block
 
     def next_page_token(self, response: requests.Response) -> Optional[dict[str, Any]]:
         data: dict = response.json()
@@ -80,13 +83,18 @@ class Blocks(ApiStream):
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         data: dict[str, Any] = response.json()
         items: Optional[list[dict]] = data.get("items")
+        largest_block: int = items[0]["height"]
         
         for item in items:
 
-            if item["height"] < self.__starting_block:
+            if item["height"] <= self.__starting_block:
                 break
 
             yield item
+
+        if self.__starting_block < largest_block:
+            logger.info(f"Updated starting_block from {self.__starting_block} to {largest_block} ({largest_block - self.__starting_block} blocks difference)")
+            self.__starting_block = largest_block 
 
 
 
@@ -106,13 +114,42 @@ class Transactions(HttpSubStream, ApiStream):
         
         data: dict = response.json()
         items: Optional[list[dict]] = data.get("items")
-        
+
+        logger.info(f"URL: {response.url}")
         for item in items:
             yield item 
 
 
 
 class SourceStatusNetworkStats(AbstractSource):
+
+
+    def __init__(self):
+        super().__init__()
+        self.__blocks: Optional[Blocks] = None
+        self.__config: Optional[Mapping[str, Any]] = None
+
+
+
+    @property
+    def blocks(self) -> Blocks:
+
+        if not self.__blocks:
+            raise Exception("Variable cannot be used before airbyte_cdk.entrypoint.launch runs")
+        
+        return self.__blocks
+
+
+
+    @property
+    def config_path(self) -> str:
+        
+        if not self.__config:
+            raise Exception(f"Variable cannot be used before airbyte_cdk.entrypoint.launch runs / Config file empty")
+        
+        return self.__config["config_path"]
+
+
 
     def check_connection(self, logger: logging.Logger, config: dict) -> Tuple[bool, Any]:
         
@@ -128,10 +165,14 @@ class SourceStatusNetworkStats(AbstractSource):
 
         return success, message
 
+
+
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
 
+        self.__config = config
         params = {
             "url": config["url_base"]
         }
-        blocks = Blocks(**params, starting_block=config["starting_block"])
-        return [Stats(**params), blocks, Transactions(parent=blocks, **params)]
+        
+        self.__blocks = Blocks(**params, starting_block=config["starting_block"])
+        return [Stats(**params), self.__blocks, Transactions(parent=self.__blocks, **params)]
