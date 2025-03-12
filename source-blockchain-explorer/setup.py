@@ -17,7 +17,7 @@ TEST_REQUIREMENTS = [
 ]
 
 setup(
-    name="status-network-connector",
+    name="source-blockchain-connector",
     description="Source implementation for Status Network.",
     author="Status",
     author_email="devops@status.im",
@@ -29,7 +29,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "status-network-connector=status_network_connector.run:run",
+            "source-blockchain-connector=source_blockchain_connector.run:run",
         ],
     },
 )
