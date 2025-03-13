@@ -1,18 +1,21 @@
 import sys
 import logging
-from typing import Mapping, Any
 from airbyte_cdk.entrypoint import launch
 from .source import SourceStatusNetworkStats
-from airbyte_cdk.connector import BaseConnector
 
 def run():
+
+    logger = logging.getLogger("airbyte")
+    args = sys.argv[1:]
+    
     source = SourceStatusNetworkStats()
     launch(source, sys.argv[1:])
 
-    logger = logging.getLogger("airbyte")
-    config: Mapping[str, Any] = BaseConnector.read_config(source.config_path)
-    logger.info(f"Opened {source.config_path}")
-    config["starting_block"] = source.blocks.starting_block
+    if "read" not in args:
+        return
 
-    BaseConnector.write_config(config, config["config_path"])
-    logger.info(f"Updated config {config}")
+    logger.info(f"Opened {source.config_file_path}")
+    source.config["starting_block"] = source.blocks.starting_block
+
+    source.write_config(source.config, source.config_file_path)
+    logger.info(f"{__name__}(): Updated config {source.config}")

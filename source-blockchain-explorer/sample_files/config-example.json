@@ -1,5 +1,4 @@
 {
-    "starting_block": 0,
-    "url_base": "https://sepoliascan.status.network",
-    "config_path": "/sample_files/config-example.json"
+    "starting_block": 0, 
+    "url_base": "https://sepoliascan.status.network"
 }
