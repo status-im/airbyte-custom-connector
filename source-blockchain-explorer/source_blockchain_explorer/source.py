@@ -2,6 +2,7 @@ from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream, CheckpointMixin
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
+from airbyte_cdk.models.airbyte_protocol import SyncMode
 import requests
 import logging
 import os
@@ -46,7 +47,6 @@ class Blocks(ApiStream):
         self.__starting_block = starting_block
         self.__highest_block = starting_block       
         self.__class_name = self.__class__.__name__
-
         self.completed = 0
         
 
@@ -138,11 +138,23 @@ class Transactions(HttpSubStream, ApiStream):
 
 
     def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
-        
+        logger.info(f"{self.__class_name} path: {stream_slice}")
         block: dict = stream_slice.get("parent")
         block_id = block["hash"]        
         url = f"{self.url_base}/blocks/{block_id}/transactions"
         return url
+
+
+
+    def stream_slices(self, sync_mode: SyncMode, cursor_field: Optional[list[str]] = None, stream_state: Optional[Mapping[str, Any]] = None) -> Iterable[Mapping]:
+        # Re-iterate over parent's records to capture new blocks
+        parent_records = self.parent.read_records(
+            sync_mode = sync_mode, 
+            stream_state = stream_state
+        )
+        for parent_record in parent_records:
+            logger.info(f"{self.__class_name}.get_stream_slices: {parent_record}")
+            yield {"parent": parent_record}
 
 
 
@@ -151,7 +163,6 @@ class Transactions(HttpSubStream, ApiStream):
         data: dict = response.json()
         items: Optional[list[dict]] = data.get("items", [])
 
-        logger.info(f"{self.__class_name} parent: completed {self.parent.completed}")
         logger.info(f"{self.__class_name} URL: {response.url}")
         logger.info(f"{self.__class_name} transactions: {len(items)}")
 
