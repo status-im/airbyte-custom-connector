@@ -157,6 +157,9 @@
       },
       "withdrawals_count": {
         "type": ["null", "integer"]
+      },
+      "block_batch": {
+        "type": "number"
       }
     }
   }  

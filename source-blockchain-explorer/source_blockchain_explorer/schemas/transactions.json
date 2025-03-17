@@ -264,6 +264,9 @@
       },
       "has_error_in_internal_transactions": {
         "type": ["boolean", "null"]
+      },
+      "block_id": {
+        "type": "string"
       }
     }
   }
