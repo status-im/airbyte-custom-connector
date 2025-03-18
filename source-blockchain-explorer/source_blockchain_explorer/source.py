@@ -181,7 +181,7 @@ class Transactions(HttpSubStream, ApiStream):
 
 
 
-class SourceStatusNetworkStats(AbstractSource):
+class SourceBlockchainExplorer(AbstractSource):
 
     # Store the current state of Airbyte
     config_file_path: str = "/data/overwrite-config.json"

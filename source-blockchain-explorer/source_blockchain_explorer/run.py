@@ -1,14 +1,14 @@
 import sys
 import logging
 from airbyte_cdk.entrypoint import launch
-from .source import SourceStatusNetworkStats
+from .source import SourceBlockchainExplorer
 
 def run():
 
     logger = logging.getLogger("airbyte")
     args = sys.argv[1:]
     
-    source = SourceStatusNetworkStats()
+    source = SourceBlockchainExplorer()
     launch(source, sys.argv[1:])
 
     if "read" not in args:

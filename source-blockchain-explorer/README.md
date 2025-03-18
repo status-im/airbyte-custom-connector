@@ -17,9 +17,9 @@ The connector takes the following input:
 ### Output
 
 The connector will return the following:
-* [Stats](./source_status_network/schemas/stats.json)
-* [Block](./source_status_network/schemas/blocks.json)
-* [Transaction](./source_status_network/schemas/transactions.json)
+* [Stats](./source-blockchain-explorer/schemas/stats.json)  
+* [Block](./source-blockchain-explorer/schemas/blocks.json)  
+* [Transaction](./source-blockchain-explorer/schemas/transactions.json)
 
 ## Local development
 
