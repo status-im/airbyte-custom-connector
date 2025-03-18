@@ -49,7 +49,9 @@ class Blocks(ApiStream):
         self.__class_name = self.__class__.__name__
         self.completed = 0
         
-
+    @property  
+    def use_cache(self) -> bool:  
+        return True 
 
     @property
     def starting_block(self) -> int:
