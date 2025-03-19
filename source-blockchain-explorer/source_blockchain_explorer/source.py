@@ -133,8 +133,9 @@ class Blocks(ApiStream):
 
 class Transactions(HttpSubStream, ApiStream):
     
-    def __init__(self, url: str, parent: Blocks):
-        super().__init__(parent=parent, url=url)
+    def __init__(self, **kwargs):
+        super().__init__(parent=Blocks, **kwargs)
+        self.parent = Blocks(**kwargs)
         self.__class_name = self.__class__.__name__
 
 
@@ -245,4 +246,4 @@ class SourceBlockchainExplorer(AbstractSource):
         logger.info(f"{self.__class__.__name__} config: {config}")
 
         self.__blocks = Blocks(**params)
-        return [Stats(**params), self.__blocks, Transactions(parent=self.__blocks, **params)]
+        return [Stats(**params), self.__blocks, Transactions(**params)]
