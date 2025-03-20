@@ -265,7 +265,7 @@
       "has_error_in_internal_transactions": {
         "type": ["boolean", "null"]
       },
-      "block_id": {
+      "block_hash": {
         "type": "string"
       }
     }

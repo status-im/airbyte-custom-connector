@@ -5,15 +5,12 @@ connectionSpecification:
   type: object
   required:
     - url_base
-    - starting_block
+    - blocks_to_do
   properties:
     url_base:
       type: string
       description: The Status Network URL
-    starting_block:
+    blocks_to_do:
       type: integer
-      description: Data will be extracted from the given block number onwards
-      examples:
-        - 100000
-        - 123456
-        - 789101
+      default: 0
+      description: "The number of block pages that will be fetched. If 0 then all the missing blocks will be fetched."

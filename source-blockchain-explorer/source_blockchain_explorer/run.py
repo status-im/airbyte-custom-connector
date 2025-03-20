@@ -1,6 +1,6 @@
 import sys
 import logging
-from airbyte_cdk.entrypoint import launch
+from airbyte_cdk.entrypoint import launch, AirbyteEntrypoint
 from .source import SourceBlockchainExplorer
 
 def run():
@@ -13,9 +13,15 @@ def run():
 
     if "read" not in args:
         return
+    
+    config_path = AirbyteEntrypoint(source).extract_config(args)
+    config = source.read_config(config_path)
 
-    logger.info(f"Opened {source.config_file_path}")
-    source.config["starting_block"] = source.blocks.starting_block
+    debug_mode = config["blocks_to_do"] > 0
 
-    source.write_config(source.config, source.config_file_path)
-    logger.info(f"{__name__}(): Updated config {source.config}")
+    if debug_mode:
+        logger.info(f"Processed {config['blocks_to_do']} block pages")
+        return
+    
+    source.set_block(source.blocks.starting_block)
+    logger.info(f"{__name__}(): Updated text file {source.starting_block_path}")

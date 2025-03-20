@@ -1,6 +1,6 @@
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Iterable, List, Mapping, Optional, Tuple
 from airbyte_cdk.sources import AbstractSource
-from airbyte_cdk.sources.streams import Stream, CheckpointMixin
+from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from airbyte_cdk.models.airbyte_protocol import SyncMode
 import requests
@@ -28,7 +28,7 @@ class ApiStream(HttpStream):
 
 class Stats(ApiStream):
 
-    def __init__(self, url: str):
+    def __init__(self, url: str, **kwargs):
         super().__init__(url)
 
     def path(self, **kwargs):
@@ -42,25 +42,45 @@ class Stats(ApiStream):
 
 class Blocks(ApiStream):
     
-    def __init__(self, url: str, starting_block: int = 0):
+    def __init__(self, url: str, starting_block: int, blocks_to_do: int = 0):
+        """
+        Parameters:
+            - `url` - the base URL of the API
+            - `starting_block` - the block that will terminate the REST API pagination.
+                                 NOTE: You start from the current block on the blockchain 
+                                 and go traverse backwards until `starting_block` is reached
+            - `blocks_to_do` - number of block pages that will be fetched. If 0, then all missing
+                               blocks will be fetched. Put a POSITIVE value to
+        """
         super().__init__(url)
         self.__starting_block = starting_block
         self.__highest_block = starting_block       
         self.__class_name = self.__class__.__name__
         self.completed = 0
-        
+        self.blocks_to_do = blocks_to_do
+
+
+
     @property  
     def use_cache(self) -> bool:  
         return True 
 
+
+
     @property
     def starting_block(self) -> int:
+        """
+        Custom Airibyte variable
+        """
         return self.__starting_block
 
 
 
     @property
     def highest_block(self) -> int:
+        """
+        Custom Airibyte variable
+        """
         return self.__highest_block
 
 
@@ -71,8 +91,10 @@ class Blocks(ApiStream):
         next_page_params = data.get("next_page_params")        
         items = data.get("items")
 
-        if not items or self.completed == 3:
-            logger.info(f"{self.__class_name}: self.completed = {self.completed}")
+        debug_mode = self.completed > self.blocks_to_do and self.blocks_to_do > 0
+        if not items or debug_mode:
+            message = f"no 'items' in 'next_page_params' to process" if not debug_mode else f"DEBUG MODE. Completed {self.blocks_to_do} blocks"
+            logger.info(f"{self.__class_name}: {message}")
             return None
         
         self.completed += 1
@@ -80,9 +102,7 @@ class Blocks(ApiStream):
         biggest_block = items[0]["height"]
         smallest_block = items[-1]["height"]
 
-        if smallest_block == 0 or (isinstance(self.__starting_block, int) and biggest_block <= self.starting_block):
-            logger.info(f"smallest_block: {smallest_block}")
-            logger.info(f"biggest_block: {biggest_block}")
+        if smallest_block == 0 or biggest_block <= self.__starting_block:
             logger.info(f"starting_block: {self.starting_block}")
             logger.info(f"highest_block: {self.highest_block}")
             self.__starting_block = self.__highest_block
@@ -99,11 +119,6 @@ class Blocks(ApiStream):
 
 
     def request_params(self, stream_state: Optional[dict[str, Any]], stream_slice: Optional[dict[str, Any]] = None, next_page_token: Optional[dict[str, Any]] = None):
-        
-        logger.info(f"{self.__class_name}: stream_state: {stream_state}")
-        logger.info(f"{self.__class_name}: stream_slice: {stream_slice}")
-        logger.info(f"{self.__class_name}: next_page_token: {next_page_token}")
-
         return next_page_token
 
 
@@ -119,11 +134,10 @@ class Blocks(ApiStream):
                 logger.info(f"Stopping execution - item[\"height\"] is  {item['height']} and the starting_block is {self.__starting_block}")
                 break
 
-            item = {**item, "block_batch": self.completed}
             yield item
 
         smallest_block = items[-1]['height']
-        logger.info(f"Uploaded block range {smallest_block} to {largest_block}")
+        logger.info(f"Processed {largest_block - smallest_block} blocks ({smallest_block} to {largest_block})")
         
         if self.__highest_block < largest_block:
             logger.info(f"Updated highest_block from {self.highest_block} to {largest_block} ({largest_block - self.__highest_block} blocks difference)")
@@ -134,14 +148,13 @@ class Blocks(ApiStream):
 class Transactions(HttpSubStream, ApiStream):
     
     def __init__(self, **kwargs):
-        super().__init__(parent=Blocks, **kwargs)
+        super().__init__(parent=Blocks, url=kwargs["url"])
         self.parent = Blocks(**kwargs)
         self.__class_name = self.__class__.__name__
 
 
 
     def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
-        logger.info(f"{self.__class_name} path: {stream_slice}")
         block: dict = stream_slice.get("parent")
         block_id = block["hash"]        
         url = f"{self.url_base}/blocks/{block_id}/transactions"
@@ -149,25 +162,10 @@ class Transactions(HttpSubStream, ApiStream):
 
 
 
-    def stream_slices(self, sync_mode: SyncMode, cursor_field: Optional[list[str]] = None, stream_state: Optional[Mapping[str, Any]] = None) -> Iterable[Mapping]:
-        # Re-iterate over parent's records to capture new blocks
-        parent_records = self.parent.read_records(
-            sync_mode = sync_mode, 
-            stream_state = stream_state
-        )
-        for parent_record in parent_records:
-            logger.info(f"{self.__class_name}.get_stream_slices: {parent_record}")
-            yield {"parent": parent_record}
-
-
-
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         
         data: dict = response.json()
         items: Optional[list[dict]] = data.get("items", [])
-
-        logger.info(f"{self.__class_name} URL: {response.url}")
-        logger.info(f"{self.__class_name} transactions: {len(items)}")
 
         url = response.url
         start_prefix = "/blocks/"
@@ -177,40 +175,35 @@ class Transactions(HttpSubStream, ApiStream):
         end = url.index(end_prefix)
 
         block_id = url[start:end]
+        logger.info(f"{self.__class_name}: Block {block_id} has {len(items)} transactions")
+
         for item in items:
-            yield {**item, "block_id": block_id}
+            yield {**item, "block_hash": block_id}
 
 
 
 class SourceBlockchainExplorer(AbstractSource):
 
-    # Store the current state of Airbyte
-    config_file_path: str = "/data/overwrite-config.json"
+    # Store the current block for the next Airbyte run
+    starting_block_path: str = "/data/starting_block.txt"
 
     def __init__(self):
         super().__init__()
         self.__blocks: Optional[Blocks] = None
-        self.__config: Optional[Mapping[str, Any]] = None
+        
 
 
     @property
     def blocks(self) -> Blocks:
-
+        """
+        Custom Airibyte variable
+        """
         if not self.__blocks:
             raise Exception("Variable cannot be used before airbyte_cdk.entrypoint.launch runs")
         
         return self.__blocks
 
 
-
-    @property
-    def config(self) -> Mapping[str, Any]:
-
-        if not self.__config:
-            raise Exception("Variable cannot be used before airbyte_cdk.entrypoint.launch run. Please check if a config file has been created")
-
-        return self.__config
-    
 
     def check_connection(self, logger: logging.Logger, config: dict) -> Tuple[bool, Any]:
         
@@ -234,16 +227,55 @@ class SourceBlockchainExplorer(AbstractSource):
             "url": config["url_base"]
         }
         
-        if not os.path.exists(self.config_file_path):
-            os.makedirs(os.path.dirname(self.config_file_path), exist_ok=True)
-            self.write_config(config, self.config_file_path)
-            logger.info(f"Created config in {self.config_file_path}")
+        starting_block = 0
+        if not os.path.exists(self.starting_block_path):            
+            self.set_block(starting_block)
+            logger.info(f"Created text file {self.starting_block_path}")
         else:
-            config = self.read_config(self.config_file_path)
-            logger.info(f"Loaded config file from volume - {self.config_file_path}")
+            starting_block = self.get_block()            
+            logger.info(f"Loaded text file from volume - {self.starting_block_path}")
 
-        self.__config = config
-        logger.info(f"{self.__class__.__name__} config: {config}")
+        logger.info(f"starting_block: {starting_block}")
 
-        self.__blocks = Blocks(**params)
-        return [Stats(**params), self.__blocks, Transactions(**params)]
+        blocks_params = {
+            **params,
+            "starting_block": starting_block, 
+            "blocks_to_do": config["blocks_to_do"]
+        }
+        self.__blocks = Blocks(**blocks_params)
+        return [Stats(**params), self.__blocks, Transactions(**blocks_params)]
+    
+
+
+    def get_block(self) -> int:
+        """
+        Custom Airbyte function. Get the latest block that 
+        has been completed uploaded from the previous Airbyte run
+
+        Output:
+            - The last processed block
+        """
+
+        if not os.path.exists(self.starting_block_path):
+            return 0
+
+        with open(self.starting_block_path, "r") as f:
+            starting_block = int(f.read())
+
+        return starting_block
+    
+
+
+    def set_block(self, value: int):
+        """
+        Custom Airbyte function. Write the given value (highest processed block)
+        so the next Airbyte run can pick up from where the current run finished.
+
+        Parameters:
+            - `value` - the highest processed block within the current Airbyte run
+        """
+        # So local Docker development / new instance runs do not break
+        os.makedirs(os.path.dirname(self.starting_block_path), exist_ok=True)
+
+        with open(self.starting_block_path, "w") as f:
+            f.write(str(value))
