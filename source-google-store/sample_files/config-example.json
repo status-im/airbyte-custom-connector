@@ -1,0 +1,7 @@
+{
+    "client_email": "airbyte@airbyte-prod-450908.iam.gserviceaccount.com",
+    "credentials_json": "secrets/json_key.json",
+    "package_name": "im.status.ethereum",
+    "bucket": "pubsite_prod_rev_02031333952851015344"
+  }
+  
