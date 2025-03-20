@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "Review Date": {
+      "type": ["string", "null"]
+    },
+    "App Version Code": {
+      "type": ["string", "integer", "null"]
+    },
+    "App Version Name": {
+      "type": ["string", "null"]
+    },
+    "Reviewer Language": {
+      "type": ["string", "null"]
+    },
+    "Device": {
+      "type": ["string", "null"]
+    },
+    "Review": {
+      "type": ["string", "null"]
+    },
+    "Star Rating": {
+      "type": ["integer", "null"]
+    },
+    "_metadata": {
+      "type": "object",
+      "properties": {
+        "package_name": {
+          "type": "string"
+        },
+        "report_path": {
+          "type": "string"
+        },
+        "extracted_at": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
