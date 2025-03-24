@@ -3,6 +3,7 @@ from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from airbyte_cdk.models.airbyte_protocol import SyncMode
+import time
 import requests
 import logging
 import os
@@ -42,7 +43,7 @@ class Stats(ApiStream):
 
 class Blocks(ApiStream):
     
-    def __init__(self, url: str, starting_block: int, blocks_to_do: int = 0):
+    def __init__(self, url: str, starting_block: int, blocks_to_do: int = 0, limit: int = 9):
         """
         Parameters:
             - `url` - the base URL of the API
@@ -51,6 +52,7 @@ class Blocks(ApiStream):
                                  and go traverse backwards until `starting_block` is reached
             - `blocks_to_do` - number of block pages that will be fetched. If 0, then all missing
                                blocks will be fetched. Put a POSITIVE value to
+            - `limit` - the number of REST API requests that can be made before a small pause is put
         """
         super().__init__(url)
         self.__starting_block = starting_block
@@ -58,6 +60,12 @@ class Blocks(ApiStream):
         self.__class_name = self.__class__.__name__
         self.completed = 0
         self.blocks_to_do = blocks_to_do
+        
+        if blocks_to_do > 0:
+            logger.info(f"Blocks to do: {blocks_to_do}")
+        
+        self.limit = limit
+        self.count = 0
 
 
 
@@ -143,6 +151,13 @@ class Blocks(ApiStream):
             logger.info(f"Updated highest_block from {self.highest_block} to {largest_block} ({largest_block - self.__highest_block} blocks difference)")
             self.__highest_block = largest_block 
 
+        self.count += 1
+
+        if self.count == self.limit:
+            logger.info(f"Made {self.count} requests. Sleeping for 1s")
+            self.count = 0
+            time.sleep(1)
+
 
 
 class Transactions(HttpSubStream, ApiStream):
@@ -151,7 +166,8 @@ class Transactions(HttpSubStream, ApiStream):
         super().__init__(parent=Blocks, url=kwargs["url"])
         self.parent = Blocks(**kwargs)
         self.__class_name = self.__class__.__name__
-
+        self.limit = kwargs["limit"]
+        self.count = 0
 
 
     def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
@@ -180,6 +196,12 @@ class Transactions(HttpSubStream, ApiStream):
         for item in items:
             yield {**item, "block_hash": block_id}
 
+        self.count += 1
+
+        if self.count == self.limit:
+            logger.info(f"Made {self.count} requests. Sleeping for 1s")
+            self.count = 0
+            time.sleep(1)
 
 
 class SourceBlockchainExplorer(AbstractSource):
@@ -224,7 +246,8 @@ class SourceBlockchainExplorer(AbstractSource):
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         
         params = {
-            "url": config["url_base"]
+            "url": config["url_base"],
+            "limit": 9 # Based on https://docs.blockscout.com/setup/env-variables/backend-env-variables#api-rate-limits (API_RATE_LIMIT)
         }
         
         starting_block = 0
