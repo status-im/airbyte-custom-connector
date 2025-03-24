@@ -18,7 +18,7 @@ data:
   connectorType: source
   definitionId: a02261a4-413f-46a3-990b-f9260dfda049
   dockerImageTag: 0.1.0
-  dockerRepository: harbor.status.im/status-im/airbyte/source-custom-bamboo-hr
+  dockerRepository: harbor.status.im/bi/airbyte/source-custom-bamboo-hr
   githubIssueLabel: source-custom-bamboo-hr
   icon: custom-bamboo-hr.svg
   license: MIT

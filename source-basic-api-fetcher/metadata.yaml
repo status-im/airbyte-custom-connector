@@ -11,7 +11,7 @@ data:
   connectorType: source
   definitionId: 1c448bfb-8950-478c-9ae0-f03aaaf4e920
   dockerImageTag: 0.0.1
-  dockerRepository: harbor.status.im/status-im/airbyte/source-basic-api-fetcher
+  dockerRepository: harbor.status.im/bi/airbyte/source-basic-api-fetcher
   githubIssueLabel: source-basic-api-fetcher
   icon: basic-api-fetcher.svg
   license: MIT
