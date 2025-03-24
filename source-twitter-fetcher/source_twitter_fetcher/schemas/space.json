@@ -51,7 +51,7 @@
       "type": ["null", "string"]
     },
     "subscriber_count": {
-      "type": ["null", "string"]
+      "type": ["null", "integer"]
     },
     "title": {
       "type": ["null", "string"]

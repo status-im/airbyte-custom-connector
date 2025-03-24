@@ -11,7 +11,7 @@ data:
   connectorType: source
   definitionId: 1c448bfb-8950-478c-9ae0-f03aaaf4e920
   dockerImageTag: '1.0.0'
-  dockerRepository: status-im/airbyte/source-twitter-fetcher
+  dockerRepository: harbor.status.im/bi/airbyte/source-twitter-fetcher
   githubIssueLabel: source-twitter-fetcher
   icon: twitter-fetcher.svg
   license: MIT
