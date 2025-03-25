@@ -26,7 +26,9 @@ connectionSpecification:
       airbyte_secret: true
     dates:
       type: array
-      description: List of dates to fetch reports for, in YYYYMM format (e.g., 202301). Defaults to previous month if not provided.
+      description: List of dates to fetch reports for, in YYYYMM format (e.g., 202301). If not provided, defaults to previous month.
       items:
         type: string
-        pattern: "^[0-9]{6}$" 
+        pattern: "^[0-9]{6}$"
+      default: []  # use default (last month)
+   

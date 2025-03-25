@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "Date": {
+        "type": "string",
+        "description": "The date of the GCM data"
+      },
+      "Package Name": {
+        "type": "string",
+        "description": "The package name of the app"
+      },
+      "Daily Average Rating": {
+        "type": "number",
+        "description": "The average rating of the app"
+      },
+      "Total Average Rating": {
+        "type": "number",
+        "description": "The number of ratings of the app"
+      },
+ 
+      "_metadata": {
+        "type": "object",
+        "properties": {
+          "package_name": {
+            "type": "string"
+          },
+          "report_path": {
+            "type": "string"
+          },
+          "extracted_at": {
+            "type": "string"
+          },
+          "stats_type": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "required": ["Date", "Package Name", "_metadata"]
+  }

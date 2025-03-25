@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "Date": {
+      "type": "string",
+      "description": "The date of the rating data"
+    },
+    "Package Name": {
+      "type": "string",
+      "description": "The package name of the app"
+    },
+    "Country": {
+      "type": "string",
+      "description": "The country code"
+    },
+    "Daily Average Rating": {
+      "type": "number",
+      "description": "Average rating for this country"
+    },
+    "Total Average Rating": {
+      "type": "number",
+      "description": "Total number of ratings for this country"
+    },
+    "_metadata": {
+      "type": "object",
+      "properties": {
+        "package_name": {
+          "type": "string",
+          "description": "The package name of the app"
+        },
+        "report_path": {
+          "type": "string",
+          "description": "The path to the report file"
+        },
+        "extracted_at": {
+          "type": "string",
+          "description": "Timestamp when the data was extracted"
+        },
+        "stats_type": {
+          "type": "string",
+          "description": "Type of stats (country)"
+        }
+      },
+      "required": ["package_name", "report_path", "extracted_at", "stats_type"]
+    }
+  },
+  "required": ["Date", "Package Name", "Country", "_metadata"]
+} 
