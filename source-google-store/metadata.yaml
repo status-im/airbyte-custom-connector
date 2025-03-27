@@ -1,0 +1,29 @@
+data:
+  allowedHosts:
+  registries:
+    oss:
+      enabled: true
+    cloud:
+      enabled: false
+  remoteRegistries:
+    pypi:
+      enabled: true
+      packageName: airbyte-source-google-store
+  connectorBuildOptions:
+    baseImage: docker.io/airbyte/python-connector-base:1.0.0@sha256:dd17e347fbda94f7c3abff539be298a65af2d7fc27a307d89297df1081a45c27
+  connectorSubtype: api
+  connectorType: source
+  definitionId: 464a7cea-0317-485e-9a9c-bcd06155bfff
+  dockerImageTag: 1.0.0
+  dockerRepository: harbor.status.im/bi/airbyte/source-google-store
+  githubIssueLabel: source-google-store
+  icon: google-store.svg
+  license: MIT
+  name: Google Store
+  releaseDate: TODO
+  supportLevel: community
+  releaseStage: alpha
+  documentationUrl: https://docs.airbyte.com/integrations/sources/source-google-store
+  githubIssueLabel: source-google-store
+    - language:python
+metadataSpecVersion: "1.0"

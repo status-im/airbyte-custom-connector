@@ -1,0 +1,7 @@
+{
+    "client_email": "serviceaccount",
+    "credentials_json": "json creds of service account",
+    "package_name": "packeage name of your app",
+    "bucket": "bucket id"
+  }
+  
