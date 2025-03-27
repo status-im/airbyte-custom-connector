@@ -1,7 +1,6 @@
 """
 Source implementation for Google Play Store Reviews.
 """
-import csv
 import logging
 from datetime import datetime
 from typing import Dict, Generator, Any, List, Mapping, MutableMapping, Optional, Iterable, Tuple, Iterator
@@ -12,16 +11,18 @@ from googleapiclient.discovery import build
 
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
-from airbyte_cdk.models import SyncMode
+from airbyte_cdk.models import SyncMode, AirbyteCatalog, AirbyteMessage, ConfiguredAirbyteCatalog
+from airbyte_cdk.models import Type as MessageType
+from airbyte_cdk.models import AirbyteStream
 
 import json
 import os
 from io import BytesIO, TextIOWrapper
-from datetime import datetime
+import csv
 from tempfile import NamedTemporaryFile
+from .utils import clean_report
 
 logger = logging.getLogger("airbyte")
-
 
 class SourceGoogleStore(AbstractSource):
     def check_connection(self, logger: logging.Logger, config: Mapping[str, Any]) -> Tuple[bool, Any]:
@@ -41,7 +42,6 @@ class SourceGoogleStore(AbstractSource):
                 scopes=['https://www.googleapis.com/auth/devstorage.read_only']
             )
             
-      
             os.unlink(temp_file_path)
             
             storage = build('storage', 'v1', http=credentials.authorize(httplib2.Http()))
@@ -53,43 +53,46 @@ class SourceGoogleStore(AbstractSource):
         except Exception as e:
             return False, f"Error connecting to Google Play Store: {str(e)}"
 
-
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         return [
             ReviewsStream(config=config),
-            InstallsOverviewStream(config=config),
-            InstallsAndroidVersionStream(config=config),
-            InstallsAppVersionStream(config=config),
-            InstallsCountryStream(config=config),
-            CrashesOverviewStream(config=config),
-            CrashesAndroidVersionStream(config=config),
-            CrashesAppVersionStream(config=config),
-            CrashesDeviceStream(config=config),
-            CrashesCountryStream(config=config),
-            RatingsOverviewStream(config=config),
-            RatingAndroidVersionStream(config=config),
-            RatingAppVersionStream(config=config),
-            RatingCountryStream(config=config)
+            InstallsBaseStream(config=config, name="installs_overview", schema_file="installs_overview.json", stats_suffix="overview", stats_type="overview"),
+            InstallsBaseStream(config=config, name="installs_android_version", schema_file="installs_android_version.json", stats_suffix="os_version", stats_type="os_version"),
+            InstallsBaseStream(config=config, name="installs_app_version", schema_file="installs_app_version.json", stats_suffix="app_version", stats_type="app_version"),
+            InstallsBaseStream(config=config, name="installs_country", schema_file="installs_country.json", stats_suffix="country", stats_type="country"),
+            CrashesBaseStream(config=config, name="crashes_overview", schema_file="crashes_overview.json", stats_suffix="overview", stats_type="overview"),
+            CrashesBaseStream(config=config, name="crashes_android_version", schema_file="crashes_android_version.json", stats_suffix="os_version", stats_type="os_version"),
+            CrashesBaseStream(config=config, name="crashes_app_version", schema_file="crashes_app_version.json", stats_suffix="app_version", stats_type="app_version"),
+            RatingsBaseStream(config=config, name="ratings_overview", schema_file="ratings_overview.json", stats_suffix="overview", stats_type="overview"),
+            RatingsBaseStream(config=config, name="rating_android_version", schema_file="rating_android_version.json", stats_suffix="os_version", stats_type="os_version"),
+            RatingsBaseStream(config=config, name="rating_app_version", schema_file="rating_app_version.json", stats_suffix="app_version", stats_type="app_version"),
+            RatingsBaseStream(config=config, name="rating_country", schema_file="rating_country.json", stats_suffix="country", stats_type="country")
         ]
 
 class BaseGooglePlayStream(Stream):
     """Base stream class for all Google Play Store streams"""
     primary_key = None
     
-    def __init__(self, config: Mapping[str, Any], **kwargs):
+    def __init__(self, config: Mapping[str, Any], name: str = None, schema_file: str = None, 
+                 stats_suffix: str = None, stats_type: str = None, **kwargs):
         super().__init__(**kwargs)
         self.config = config
         self.credentials_json = config.get("credentials_json")
         self.bucket = config.get("bucket")
         self.package_name = config.get("package_name")
         
+        if name:
+            self._name = name
+        self.schema_file = schema_file
+        self.stats_suffix = stats_suffix
+        self.stats_type = stats_type
 
         self.dates = config.get("dates", [])
         if not self.dates:
             current_date = datetime.now()
   
             dates_list = []
-            start_year, start_month = 2024, 8
+            start_year, start_month = 2024, 8 # start to fetch data from August 2024
             
             while (start_year, start_month) <= (current_date.year, current_date.month):
                 date_str = f"{start_year}{start_month:02d}"
@@ -103,7 +106,46 @@ class BaseGooglePlayStream(Stream):
             self.dates = dates_list
             logging.info(f"Automatically generated dates from August 2024: {self.dates}")
 
-    
+    @property
+    def name(self) -> str:
+        return self._name if hasattr(self, '_name') else self.__class__.__name__.lower()
+
+    def get_json_schema(self) -> Mapping[str, Any]:
+        schema_path = os.path.join(os.path.dirname(__file__), "schemas", self.schema_file)
+        logging.info(f"Looking for schema file at: {schema_path}")
+        
+        if not os.path.exists(schema_path):
+            logging.error(f"Schema file does not exist: {schema_path}")
+
+            schema_dir = os.path.join(os.path.dirname(__file__), "schemas")
+            if os.path.exists(schema_dir):
+                logging.info(f"Available schema files: {os.listdir(schema_dir)}")
+            else:
+                logging.error(f"Schema directory does not exist: {schema_dir}")
+            
+            # Return a default schema as fallback
+            return {
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "properties": {
+                    "Date": {"type": "string"},
+                    "Package Name": {"type": "string"},
+                    "_metadata": {"type": "object"}
+                }
+            }
+            
+        try:
+            with open(schema_path, "r") as file:
+                schema = json.load(file)
+                logging.info(f"Successfully loaded schema from {schema_path}")
+                return schema
+        except json.JSONDecodeError as e:
+            logging.error(f"JSON parsing error in schema file {schema_path}: {str(e)}")
+            raise
+        except Exception as e:
+            logging.error(f"Error loading schema from {schema_path}: {str(e)}")
+            raise
+
     def get_storage_client(self):
         credentials_json = self.config.get("credentials_json")
         
@@ -130,45 +172,7 @@ class BaseGooglePlayStream(Stream):
             )
             
             content = request.execute()
-            
-            binary_stream = BytesIO(content)
-            text_stream = TextIOWrapper(binary_stream, encoding='utf-16')
-            
-            csv_reader = csv.reader(text_stream)
-            headers = next(csv_reader)
-            if headers and headers[0].startswith('\ufeff'):
-                headers[0] = headers[0].replace('\ufeff', '')
-            
-            json_data = []
-            for row in csv_reader:
-                record = {}
-                for i, header in enumerate(headers):
-                    clean_header = header.strip().strip('\x00')
-                    value = row[i].strip().strip('\x00') if i < len(row) else ""
-                    try:
-                        if '.' in value:
-                            value = float(value)
-                        elif value.isdigit():
-                            value = int(value)
-                    except (ValueError, TypeError):
-                        pass
-                    
-                    record[clean_header] = value
-                
-                metadata = {
-                    'package_name': self.package_name,
-                    'report_path': report_path,
-                    'extracted_at': datetime.now().isoformat()
-                }
-                
-                if stats_type:
-                    metadata['stats_type'] = stats_type
-                
-                record['_metadata'] = metadata
-                
-                json_data.append(record)
-            
-            return json_data
+            return clean_report(content, self.package_name, report_path, stats_type)
             
         except Exception as e:
             logging.error(f"Error downloading report {report_path}: {str(e)}")
@@ -179,12 +183,12 @@ class BaseGooglePlayStream(Stream):
         if stream_slice:
             path = stream_slice.get("path")
             if path:
-                for record in self.get_report_data(path, self.get_stats_type()):
+                logging.info(f"Processing {self.name} report: {path}")
+                for record in self.get_report_data(path, self.stats_type):
                     yield record
     
     def get_stats_type(self) -> str:
-        """Return the stats_type for this stream"""
-        return None
+        return self.stats_type
                     
     def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
         """one file is a month of data"""
@@ -206,11 +210,13 @@ class BaseGooglePlayStream(Stream):
         raise NotImplementedError("Subclasses must implement get_path_pattern")
 
 class ReviewsStream(BaseGooglePlayStream):
-    name = "reviews"
-    schema_file = "reviews.json"
-    
     def __init__(self, config: Mapping[str, Any], **kwargs):
-        super().__init__(config, **kwargs)
+        super().__init__(
+            config=config,
+            name="reviews",
+            schema_file="reviews.json",
+            **kwargs
+        )
         self.json_key_file = config.get("json_key_file")
     
     def get_path_pattern(self) -> str:
@@ -226,181 +232,12 @@ class ReviewsStream(BaseGooglePlayStream):
 
 class InstallsBaseStream(BaseGooglePlayStream):
     def get_path_pattern(self) -> str:
-        return f"stats/installs/installs_{{package_name}}_{{date}}_{self.get_stats_suffix()}.csv"
-    
-    def get_stats_suffix(self) -> str:
-        raise NotImplementedError("Subclasses must implement get_stats_suffix")
-        
-    def read_records(self, sync_mode: SyncMode, stream_slice: Optional[Mapping[str, Any]] = None, 
-                     stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping[str, Any]]:
-        if stream_slice:
-            path = stream_slice.get("path")
-            if path:
-                logging.info(f"Processing installs {self.get_stats_suffix()} report: {path}")
-                for record in self.get_report_data(path, self.get_stats_type()):
-                    yield record
+        return f"stats/installs/installs_{{package_name}}_{{date}}_{self.stats_suffix}.csv"
 
 class CrashesBaseStream(BaseGooglePlayStream):
     def get_path_pattern(self) -> str:
-        return f"stats/crashes/crashes_{{package_name}}_{{date}}_{self.get_stats_suffix()}.csv"
-    
-    def get_stats_suffix(self) -> str:
-        raise NotImplementedError("Subclasses must implement get_stats_suffix")
-        
-    def read_records(self, sync_mode: SyncMode, stream_slice: Optional[Mapping[str, Any]] = None, 
-                     stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping[str, Any]]:
-        if stream_slice:
-            path = stream_slice.get("path")
-            if path:
-                logging.info(f"Processing crashes {self.get_stats_suffix()} report: {path}")
-                for record in self.get_report_data(path, self.get_stats_type()):
-                    yield record
+        return f"stats/crashes/crashes_{{package_name}}_{{date}}_{self.stats_suffix}.csv"
 
 class RatingsBaseStream(BaseGooglePlayStream):
     def get_path_pattern(self) -> str:
-        return f"stats/ratings/ratings_{{package_name}}_{{date}}_{self.get_stats_suffix()}.csv"
-    
-    def get_stats_suffix(self) -> str:
-        raise NotImplementedError("Subclasses must implement get_stats_suffix")
-        
-    def read_records(self, sync_mode: SyncMode, stream_slice: Optional[Mapping[str, Any]] = None, 
-                     stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping[str, Any]]:
-        if stream_slice:
-            path = stream_slice.get("path")
-            if path:
-                logging.info(f"Processing ratings {self.get_stats_suffix()} report: {path}")
-                for record in self.get_report_data(path, self.get_stats_type()):
-                    yield record
-
-# Install streams
-class InstallsOverviewStream(InstallsBaseStream):
-    name = "installs_overview"
-    schema_file = "installs_overview.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "overview"
-    
-    def get_stats_type(self) -> str:
-        return "overview"
-
-class InstallsAndroidVersionStream(InstallsBaseStream):
-    name = "installs_android_version"
-    schema_file = "installs_android_version.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "os_version"
-    
-    def get_stats_type(self) -> str:
-        return "os_version"
-
-class InstallsAppVersionStream(InstallsBaseStream):
-    name = "installs_app_version"
-    schema_file = "installs_app_version.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "app_version"
-    
-    def get_stats_type(self) -> str:
-        return "app_version"
-
-class InstallsCountryStream(InstallsBaseStream):
-    name = "installs_country"
-    schema_file = "installs_country.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "country"
-    
-    def get_stats_type(self) -> str:
-        return "country"
-
-# Crashes streams
-class CrashesOverviewStream(CrashesBaseStream):
-    name = "crashes_overview"
-    schema_file = "crashes_overview.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "overview"
-    
-    def get_stats_type(self) -> str:
-        return "overview"
-
-class CrashesAndroidVersionStream(CrashesBaseStream):
-    name = "crashes_android_version"
-    schema_file = "crashes_android_version.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "os_version"
-    
-    def get_stats_type(self) -> str:
-        return "os_version"
-
-class CrashesAppVersionStream(CrashesBaseStream):
-    name = "crashes_app_version"
-    schema_file = "crashes_app_version.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "app_version"
-    
-    def get_stats_type(self) -> str:
-        return "app_version"
-
-class CrashesDeviceStream(CrashesBaseStream):
-    name = "crashes_device"
-    schema_file = "crashes_device.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "device"
-    
-    def get_stats_type(self) -> str:
-        return "device"
-
-class CrashesCountryStream(CrashesBaseStream):
-    name = "crashes_country"
-    schema_file = "crashes_country.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "country"
-    
-    def get_stats_type(self) -> str:
-        return "country"
-
-# Ratings streams
-class RatingsOverviewStream(RatingsBaseStream):
-    name = "ratings_overview"
-    schema_file = "ratings_overview.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "overview"
-    
-    def get_stats_type(self) -> str:
-        return "overview"
-
-class RatingAndroidVersionStream(RatingsBaseStream):
-    name = "rating_android_version"
-    schema_file = "rating_android_version.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "os_version"
-    
-    def get_stats_type(self) -> str:
-        return "os_version"
-
-class RatingAppVersionStream(RatingsBaseStream):
-    name = "rating_app_version"
-    schema_file = "rating_app_version.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "app_version"
-    
-    def get_stats_type(self) -> str:
-        return "app_version"
-
-class RatingCountryStream(RatingsBaseStream):
-    name = "rating_country"
-    schema_file = "rating_country.json"
-    
-    def get_stats_suffix(self) -> str:
-        return "country"
-    
-    def get_stats_type(self) -> str:
-        return "country"
+        return f"stats/ratings/ratings_{{package_name}}_{{date}}_{self.stats_suffix}.csv"

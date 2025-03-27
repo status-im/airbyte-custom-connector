@@ -74,8 +74,18 @@
           "description": "Type of stats (country)"
         }
       },
-      "required": ["package_name", "report_path", "extracted_at", "stats_type"]
+      "required": [
+        "package_name",
+        "report_path",
+        "extracted_at",
+        "stats_type"
+      ]
     }
   },
-  "required": ["Date", "Package Name", "Country", "_metadata"]
-} 
+  "required": [
+    "Date",
+    "Package Name",
+    "Country",
+    "_metadata"
+  ]
+}

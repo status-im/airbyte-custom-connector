@@ -42,8 +42,18 @@
           "description": "Type of stats (os_version)"
         }
       },
-      "required": ["package_name", "report_path", "extracted_at", "stats_type"]
+      "required": [
+        "package_name",
+        "report_path",
+        "extracted_at",
+        "stats_type"
+      ]
     }
   },
-  "required": ["Date", "Package Name", "Android Version", "_metadata"]
-} 
+  "required": [
+    "Date",
+    "Package Name",
+    "Android Version",
+    "_metadata"
+  ]
+}

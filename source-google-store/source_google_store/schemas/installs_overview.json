@@ -70,8 +70,18 @@
           "description": "Type of stats (overview, country, device, etc.)"
         }
       },
-      "required": ["package_name", "report_path", "extracted_at", "stats_type"]
+      "required": [
+        "package_name",
+        "report_path",
+        "extracted_at",
+        "stats_type"
+      ]
     }
   },
-  "required": ["Date", "Package Name", "Daily Device Installs", "_metadata"]
+  "required": [
+    "Date",
+    "Package Name",
+    "Daily Device Installs",
+    "_metadata"
+  ]
 }

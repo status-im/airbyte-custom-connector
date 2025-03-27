@@ -3,29 +3,54 @@
   "type": "object",
   "properties": {
     "Review Submit Date and Time": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "description": "The date and time when the review was submitted"
     },
     "App Version Code": {
-      "type": ["string", "integer", "null"]
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
     },
     "App Version Name": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "Reviewer Language": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "Device": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "Review Title": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "Review Text": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "Star Rating": {
-      "type": ["integer", "null"]
+      "type": [
+        "integer",
+        "null"
+      ]
     },
     "_metadata": {
       "type": "object",

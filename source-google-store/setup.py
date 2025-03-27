@@ -16,10 +16,13 @@ setup(
         "oauth2client>=4.1.3",
         "httplib2>=0.20.0",
     ],
-    package_data={"": ["*.json", "*.yaml", "schemas/*.json", "schemas/shared/*.json"]},
+    #package_data={"": ["*.json", "*.yaml", "schemas/*.json", "schemas/shared/*.json"]},
+    package_data={
+        "source_google_store": ["schemas/*.json", "*.yaml"],
+    },
     entry_points={
         "console_scripts": [
-            "source-discord-fetcher=source_discord_fetcher.run:run",
+            "source-google-store=source_google_store.run:run",
         ],
     },
 ) 

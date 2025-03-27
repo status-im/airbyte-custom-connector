@@ -13,5 +13,189 @@
         },
         "sync_mode": "incremental",
         "destination_sync_mode": "overwrite"
-      }]}
+      },
+      {
+        "stream": {
+          "name": "installs_overview",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "installs_android_version",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "installs_app_version",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "installs_country",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "crashes_overview",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "crashes_android_version",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "crashes_app_version",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "crashes_device",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "crashes_country",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "ratings_overview",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "rating_android_version",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "rating_app_version",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      },
+      {
+        "stream": {
+          "name": "rating_country",
+          "json_schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object"
+          },
+          "supported_sync_modes": [
+            "full_refresh", "incremental"
+          ]
+        },
+        "sync_mode": "incremental",
+        "destination_sync_mode": "overwrite"
+      }
+    ]
+}
       
