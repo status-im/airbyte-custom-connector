@@ -24,11 +24,9 @@ connectionSpecification:
       type: string
       description: The Google Cloud Storage bucket containing the Play Store reports
       airbyte_secret: true
-    dates:
-      type: array
-      description: List of dates to fetch reports for, in YYYYMM format (e.g., 202301). If not provided, defaults to previous month.
-      items:
-        type: string
-        pattern: "^[0-9]{6}$"
-      default: []  # use default (last month)
+    start_date:
+      type: string
+      description: Start date to fetch reports from, in YYYYMM format (e.g., 202301). If not provided, defaults to previous month.
+      pattern: "^[0-9]{6}$"
+      examples: ["202401"]
    

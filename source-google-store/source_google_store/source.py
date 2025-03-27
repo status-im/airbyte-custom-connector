@@ -87,24 +87,7 @@ class BaseGooglePlayStream(Stream):
         self.stats_suffix = stats_suffix
         self.stats_type = stats_type
 
-        self.dates = config.get("dates", [])
-        if not self.dates:
-            current_date = datetime.now()
-  
-            dates_list = []
-            start_year, start_month = 2024, 8 # start to fetch data from August 2024
-            
-            while (start_year, start_month) <= (current_date.year, current_date.month):
-                date_str = f"{start_year}{start_month:02d}"
-                dates_list.append(date_str)
-
-                start_month += 1
-                if start_month > 12:
-                    start_month = 1
-                    start_year += 1
-            
-            self.dates = dates_list
-            logging.info(f"Automatically generated dates from August 2024: {self.dates}")
+        self.dates = self._generate_dates()
 
     @property
     def name(self) -> str:
@@ -208,6 +191,36 @@ class BaseGooglePlayStream(Stream):
     
     def get_path_pattern(self) -> str:
         raise NotImplementedError("Subclasses must implement get_path_pattern")
+
+    def _generate_dates(self) -> List[str]:
+        """Generate list of dates from start_date until current month"""
+        start_date = self.config.get("start_date")
+        if not start_date:
+            # Default to last month if no start date provided
+            current_date = datetime.now()
+            if current_date.month == 1:
+                start_date = f"{current_date.year-1}12"
+            else:
+                start_date = f"{current_date.year}{current_date.month-1:02d}"
+        
+        # Parse start date
+        start_year = int(start_date[:4])
+        start_month = int(start_date[4:])
+        
+        # Generate all dates until current month
+        current_date = datetime.now()
+        dates_list = []
+        
+        while (start_year, start_month) <= (current_date.year, current_date.month):
+            dates_list.append(f"{start_year}{start_month:02d}")
+            
+            start_month += 1
+            if start_month > 12:
+                start_month = 1
+                start_year += 1
+        
+        logging.info(f"Generated dates from {dates_list[0]} to {dates_list[-1]}")
+        return dates_list
 
 class ReviewsStream(BaseGooglePlayStream):
     def __init__(self, config: Mapping[str, Any], **kwargs):
