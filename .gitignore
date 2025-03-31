@@ -160,7 +160,8 @@ cython_debug/
 #.idea/
 
 # Ignore reports examples with sensitive data
-reports_examples/ 
+reports_examples/
 
 *.ps1
 
+*/*/config.json

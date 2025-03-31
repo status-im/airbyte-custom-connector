@@ -1,0 +1,174 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AdvertisementCampaign",
+  "type": "object",
+  "properties": {
+    "advertiser_user_id": {
+      "type": "string",
+      "description": "The unique identifier for the advertiser user."
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the advertisement campaign."
+    },
+    "placements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The placements for the advertisement."
+    },
+    "start_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The start time of the campaign."
+    },
+    "bid_amount_local_micro": {
+      "type": ["number", "null"],
+      "description": "The bid amount in local micro currency, or null if not set."
+    },
+    "advertiser_domain": {
+      "type": ["string", "null"],
+      "description": "The domain of the advertiser, or null if not set."
+    },
+    "target_cpa_local_micro": {
+      "type": ["number", "null"],
+      "description": "The target cost per acquisition in local micro currency, or null if not set."
+    },
+    "primary_web_event_tag": {
+      "type": ["string", "null"],
+      "description": "The primary web event tag, or null if not set."
+    },
+    "goal": {
+      "type": "string",
+      "enum": ["MAX_REACH", "MAX_CLICKS", "MAX_ENGAGEMENT"],
+      "description": "The goal of the campaign."
+    },
+    "daily_budget_amount_local_micro": {
+      "type": ["number", "null"],
+      "description": "The daily budget amount in local micro currency, or null if not set."
+    },
+    "product_type": {
+      "type": "string",
+      "enum": ["PROMOTED_TWEETS", "PROMOTED_TRENDS", "PROMOTED_ACCOUNT"],
+      "description": "The type of product being promoted."
+    },
+    "end_time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The end time of the campaign."
+    },
+    "funding_instrument_id": {
+      "type": "string",
+      "description": "The unique identifier for the funding instrument."
+    },
+    "bid_strategy": {
+      "type": "string",
+      "enum": ["AUTO", "MANUAL"],
+      "description": "The bidding strategy for the campaign."
+    },
+    "duration_in_days": {
+      "type": ["integer", "null"],
+      "description": "The duration of the campaign in days, or null if not set."
+    },
+    "standard_delivery": {
+      "type": ["boolean", "null"],
+      "description": "Whether standard delivery is used, or null if not set."
+    },
+    "total_budget_amount_local_micro": {
+      "type": ["number", "null"],
+      "description": "The total budget amount in local micro currency, or null if not set."
+    },
+    "objective": {
+      "type": "string",
+      "enum": ["REACH", "CLICKS", "ENGAGEMENT"],
+      "description": "The objective of the campaign."
+    },
+    "id": {
+      "type": "string",
+      "description": "The unique identifier for the campaign."
+    },
+    "entity_status": {
+      "type": "string",
+      "enum": ["ACTIVE", "PAUSED", "DELETED"],
+      "description": "The status of the campaign entity."
+    },
+    "automatic_tweet_promotion": {
+      "type": ["boolean", "null"],
+      "description": "Whether automatic tweet promotion is enabled, or null if not set."
+    },
+    "frequency_cap": {
+      "type": ["integer", "null"],
+      "description": "The frequency cap for the campaign, or null if not set."
+    },
+    "android_app_store_identifier": {
+      "type": ["string", "null"],
+      "description": "The Android app store identifier, or null if not set."
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The categories associated with the campaign."
+    },
+    "currency": {
+      "type": "string",
+      "description": "The currency used for the campaign."
+    },
+    "pay_by": {
+      "type": "string",
+      "enum": ["IMPRESSION", "CLICK", "ENGAGEMENT"],
+      "description": "The payment method for the campaign."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the campaign was created."
+    },
+    "ios_app_store_identifier": {
+      "type": ["string", "null"],
+      "description": "The iOS app store identifier, or null if not set."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the campaign was last updated."
+    },
+    "campaign_id": {
+      "type": "string",
+      "description": "The unique identifier for the campaign."
+    },
+    "creative_source": {
+      "type": "string",
+      "enum": ["MANUAL", "AUTOMATED"],
+      "description": "The source of the creative for the campaign."
+    },
+    "deleted": {
+      "type": "boolean",
+      "description": "A flag indicating if the campaign is deleted."
+    }
+  },
+  "required": [
+    "advertiser_user_id",
+    "name",
+    "placements",
+    "start_time",
+    "goal",
+    "product_type",
+    "end_time",
+    "funding_instrument_id",
+    "bid_strategy",
+    "objective",
+    "id",
+    "entity_status",
+    "currency",
+    "pay_by",
+    "created_at",
+    "updated_at",
+    "campaign_id",
+    "creative_source",
+    "deleted"
+  ]
+}
+
