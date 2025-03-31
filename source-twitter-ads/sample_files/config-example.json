@@ -1,0 +1,10 @@
+{
+  "credentials":{
+    "consumer_key": "CONSUMER-KEY",
+    "consumer_secret": "CONSUMER-SECRET-KEY",
+    "access_key": "ACESS-KEY",
+    "access_secret": "ACESS-SECRET-KEY"
+  },
+  "account_ids": ["ids"],
+  "start_time": "2025-03-24T00:00:00Z"
+}
