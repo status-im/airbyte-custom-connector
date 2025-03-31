@@ -1,20 +1,10 @@
 # Twitter Fetcher Source
 
-This is the repository for fetching Twitter information, written in Python.
-
-## Todos
-
-* [ ] Implements first version based on original script
-  * [ ] Fetch the Data users of each count.
-  * [ ] Fetch Tweets details 
-* [ ] Improve version:
-  * limit the data fetching based on input date
-
+This is the repository for fetching Twitter Ads Analytics information, written in Python.
 
 ## Usage
 
-This connector fetch information from Twitter based on their API: https://developer.twitter.com/en/docs/twitter-api
-
+This connector fetch information from Twitter Ads based on their API: https://docs.x.com/x-ads-api/
 ### Configuration
 
 The connector takes the following input:
@@ -22,11 +12,11 @@ The connector takes the following input:
 ```yaml
 twitter:
   credientials:
-    client_id: "Id from the Twitter Developer Account"
-    client_secret: "Secret from the Twitter Developer Account"
-    access_token: "Token generated from the generated Twitter account"
-    refresh_token: "Refresh token obtain from the Twitter Account"
-  account_id: "Id of the Twitter account"
+    consumer_key: ''
+    consumer_secret: ''
+    access_key: ''
+    access_secret: ''
+  account_ids: "List of Twitter account IDs"
   start_time: 'AAAA-MM-DDTHH:mm:SSZ" # Start of the period of tweets sync
 ```
 
@@ -66,16 +56,16 @@ python main.py read --config sample_files/config-example.json --catalog sample_f
 ### Locally running the connector docker image
 
 ```bash
-docker build -t airbyte/twitter-fetcher:dev .
+docker build -t airbyte/source-twitter-ads:dev .
 # Running the spec command against your patched connector
-docker run airbyte/twitter-fetcher:dev spec
+docker run airbyte/source-twitter-ads:dev spec
 ````
 
 #### Run
 Then run any of the connector commands as follows:
 ```
-docker run --rm airbyte/twitter-fetcher:dev spec
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/twitter-fetcher:dev check --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/twitter-fetcher:dev discover --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files airbyte/twitter-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
+docker run --rm airbyte/source-twitter-ads:dev spec
+docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-twitter-ads:dev check --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-twitter-ads:dev discover --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files airbyte/source-twitter-ads:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
 ```
