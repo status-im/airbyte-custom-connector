@@ -1,11 +1,11 @@
-# Airbyte Custom  Connector
+# Airbyte Custom Connector
 
-Repository holding the custom Airbyte connector using in  Status-im.
+Repository holding the custom Airbyte connector using in Status-im.
 
 
 ## Connectors
 
-### Crypto related 
+### Crypto related
 
 * `wallet-fetcher`: Source connector allowing to wallet data from Ethereum blockchain.
 * `source-basic-api-fetcher`: Source connector to call a custom REST endpoint
@@ -17,10 +17,10 @@ Repository holding the custom Airbyte connector using in  Status-im.
 * `source-discourse-fetcher`: Source connector to fetch data from Discourse API
 * `source-simplecast-fetcher`: Source connector to fetch data from Simplecast API
 * `source-twitter-fetcher`: Source connector to fetch data from Twitter API
+* `source-twitter-ads`: Source connector to fetch data from Twitter Ads API
 
 ### Status Analytics related
 
 * `source-app-store`: Source connector to fetch data from Apple App Store
 * `source-google-play`: Source connector to fetch data from Google Play Store
-
 
