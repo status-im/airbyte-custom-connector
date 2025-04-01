@@ -3,11 +3,12 @@ import logging
 import requests
 from requests_oauthlib import OAuth1
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 
 logger = logging.getLogger("airbyte")
-
+DATE_FORMAT="%Y-%m-%dT%H:%M:%SZ"
+DATE_FORMAT_2="%Y-%m-%d"
 class TwitterAdsStream(HttpStream):
     url_base = "https://ads-api.x.com/12/"
     accounts = []
@@ -63,8 +64,8 @@ class PromotedTweetActive(TwitterAdsStream):
     ) -> MutableMapping[str, Any]:
         return {
             "entity": "PROMOTED_TWEET",
-            "start_time": self.start_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "end_time": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
+            "start_time": self.start_time.strftime(DATE_FORMAT),
+            "end_time": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).strftime(DATE_FORMAT)
         }
 
     def parse_response(
@@ -121,8 +122,8 @@ class PromotedTweetBilling(HttpSubStream, PromotedTweetActive):
             "granularity": "DAY",
             "placement": "ALL_ON_TWITTER",
             "metric_groups": "BILLING",
-            "start_time": self.start_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "end_time": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "start_time": (datetime.now() - timedelta(days=7)).strftime(DATE_FORMAT_2),
+            "end_time": datetime.now().strftime(DATE_FORMAT_2),
 
         }
 
@@ -188,8 +189,8 @@ class PromotedTweetEngagement(HttpSubStream, PromotedTweetActive):
             "granularity": "TOTAL",
             "placement": "ALL_ON_TWITTER",
             "metric_groups": "ENGAGEMENT",
-            "start_time": self.start_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "end_time": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
+            "start_time": (datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=7)).strftime(DATE_FORMAT),
+            "end_time": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).strftime(DATE_FORMAT)
         }
 
     def parse_response(
@@ -200,6 +201,7 @@ class PromotedTweetEngagement(HttpSubStream, PromotedTweetActive):
     ) -> Iterable[Mapping]:
         if 'data' in response.json():
             data = response.json()['data']
+            logger.info(data)
             for record in data:
                 id_data = record.get("id_data", [])
                 for data_point in id_data:
@@ -208,19 +210,19 @@ class PromotedTweetEngagement(HttpSubStream, PromotedTweetActive):
                         "id": stream_slice.get("promoted_tweet_id"),
                         "activity_start_time": stream_slice.get("activity_start_time"),
                         "activity_end_time": stream_slice.get("activity_end_time"),
-                        "impressions": metrics.get("impressions", [None])[0],
-                        "likes": metrics.get("likes", [None])[0],
-                        "engagements": metrics.get("engagements", [None])[0],
-                        "clicks": metrics.get("clicks", [None])[0],
-                        "retweets": metrics.get("retweets", [None])[0],
-                        "replies": metrics.get("replies", [None])[0],
-                        "follows": metrics.get("follows", [None])[0],
-                        "app_clicks": metrics.get("app_clicks", [None])[0],
-                        "card_engagements": metrics.get("card_engagements", [None])[0],
-                        "qualified_impressions": metrics.get("qualified_impressions", [None])[0],
-                        "tweets_send": metrics.get("tweets_send", [None])[0],
-                        "poll_card_vote": metrics.get("poll_card_vote", [None])[0],
-                        "carousel_swipes": metrics.get("carousel_swipes", [None])[0],
+                        "impressions": None if metrics.get("impressions") == None else metrics.get("impressions")[0],
+                        "likes": None if  metrics.get("likes") == None else metrics.get("likes")[0],
+                        "engagements": None if  metrics.get("engagements") == None else metrics.get("engagements")[0],
+                        "clicks": None if metrics.get("clicks") == None else metrics.get("clicks")[0],
+                        "retweets": None if metrics.get("retweets") == None else metrics.get("retweets")[0],
+                        "replies": None if metrics.get("replies") == None else metrics.get("replies")[0],
+                        "follows": None if metrics.get("follows") == None else metrics.get("follows")[0],
+                        "app_clicks": None if metrics.get("app_clicks") == None else metrics.get("app_clicks")[0],
+                        "card_engagements": None if metrics.get("card_engagements") == None else metrics.get("card_engagements")[0],
+                        "qualified_impressions": None if metrics.get("qualified_impressions") == None else metrics.get("qualified_impressions")[0],
+                        "tweets_send": None if metrics.get("tweets_send") == None else metrics.get("tweets_send")[0],
+                        "poll_card_vote": None if metrics.get("poll_card_vote") == None else metrics.get("poll_card_vote")[0],
+                        "carousel_swipes": None if metrics.get("carousel_swipes") == None else metrics.get("carousel_swipes")[0],
                         "account_id": stream_slice['account_id']
                     }
                     yield engagement_data
