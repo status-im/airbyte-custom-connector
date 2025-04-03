@@ -2,7 +2,7 @@
   "streams": [
     {
       "stream": {
-        "name": "promoted_tweet_active",
+        "name": "account",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
@@ -16,21 +16,7 @@
     },
     {
       "stream": {
-        "name": "promoted_tweet_billing",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh", "incremental"
-        ]
-      },
-      "sync_mode": "incremental",
-      "destination_sync_mode": "overwrite"
-    },
-    {
-      "stream": {
-        "name": "promoted_tweet_engagement",
+        "name": "advertisement_campaign",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
