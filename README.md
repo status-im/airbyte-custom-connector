@@ -17,3 +17,10 @@ Repository holding the custom Airbyte connector using in  Status-im.
 * `source-discourse-fetcher`: Source connector to fetch data from Discourse API
 * `source-simplecast-fetcher`: Source connector to fetch data from Simplecast API
 * `source-twitter-fetcher`: Source connector to fetch data from Twitter API
+
+### Status Analytics related
+
+* `source-app-store`: Source connector to fetch data from Apple App Store
+* `source-google-play`: Source connector to fetch data from Google Play Store
+
+

@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "Date": {
+      "type": ["string", "null"],
+      "description": "Date of the app discovery and engagement report"
+    },
+    "App Name": {
+      "type": ["string", "null"],
+      "description": "Name of the application"
+    },
+    "App Apple Identifier": {
+      "type": ["integer", "null"],
+      "description": "Unique identifier for the app in the App Store"
+    },
+    "Event": {
+      "type": ["string", "null"],
+      "description": "Type of event (Impression, Tap, Page view, etc.)"
+    },
+    "Page Type": {
+      "type": ["string", "null"],
+      "description": "Type of page where the event occurred"
+    },
+    "Page Title": {
+      "type": ["string", "null"],
+      "description": "Title of the page where the event occurred"
+    },
+    "Source Type": {
+      "type": ["string", "null"],
+      "description": "Source of the app discovery (App Store search, App Store browse, etc.)"
+    },
+    "Source Info": {
+      "type": ["string", "null"],
+      "description": "Additional information about the discovery source"
+    },
+    "Campaign": {
+      "type": ["string", "null"],
+      "description": "Marketing campaign associated with the engagement"
+    },
+    "Engagement Type": {
+      "type": ["string", "null"],
+      "description": "Type of engagement (Update, Open, Get, etc.)"
+    },
+    "Device": {
+      "type": ["string", "null"],
+      "description": "Device type (iPhone, iPad, etc.)"
+    },
+    "Platform Version": {
+      "type": ["string", "null"],
+      "description": "iOS/iPadOS version"
+    },
+    "Territory": {
+      "type": ["string", "null"],
+      "description": "Geographic territory of the data"
+    },
+    "Counts": {
+      "type": ["integer", "null"],
+      "description": "Number of events"
+    },
+    "Unique Counts": {
+      "type": ["integer", "null"],
+      "description": "Number of unique users/devices"
+    },
+    "_ab_source_file_url": {
+      "type": ["string", "null"],
+      "description": "Source file URL"
+    },
+    "processed_date": {
+      "type": ["string", "null"],
+      "description": "Date when the record was processed"
+    }
+  }
+} 
