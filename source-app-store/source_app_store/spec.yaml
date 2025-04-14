@@ -44,3 +44,34 @@ connectionSpecification:
       examples:
         - "2023-04-30"
       order: 4
+    report_ids:
+      type: object
+      title: Report IDs
+      description: Custom report IDs to use for fetching data (optional). If not provided, default IDs will be used.
+      order: 5
+      properties:
+        app_install_performance:
+          type: string
+          title: App Install Performance Report ID
+          description: Report ID for App Install Performance
+          default: "r5-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
+        app_downloads_detailed:
+          type: string
+          title: App Downloads Detailed Report ID
+          description: Report ID for App Downloads Detailed
+          default: "r4-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
+        app_installation_deletion_detailed:
+          type: string
+          title: App Installation & Deletion Report ID
+          description: Report ID for App Installation and Deletion Detailed
+          default: "r7-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
+        app_sessions_detailed:
+          type: string
+          title: App Sessions Detailed Report ID
+          description: Report ID for App Sessions Detailed
+          default: "r9-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
+        app_discovery_engagement_detailed:
+          type: string
+          title: App Discovery & Engagement Report ID
+          description: Report ID for App Discovery and Engagement Detailed
+          default: "r15-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"

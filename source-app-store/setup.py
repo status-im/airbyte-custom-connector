@@ -13,8 +13,7 @@ setup(
     install_requires=[
         "airbyte-cdk~=0.2",
         "google-api-python-client>=2.0.0",
-        "oauth2client>=4.1.3",
-        "httplib2>=0.20.0",
+    
     ],
     #package_data={"": ["*.json", "*.yaml", "schemas/*.json", "schemas/shared/*.json"]},
     package_data={

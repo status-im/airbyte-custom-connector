@@ -76,7 +76,9 @@ The connector requires the following configuration parameters:
     end_date (optional):
       description: The date to sync data until, in YYYY-MM-DD format. If not provided, defaults to the current date.
       examples:
-        - "2023-04-30"  
+        - "2023-04-30"
+    report_ids (optional):
+      description: Custom report IDs to use for fetching data. If not provided, default IDs will be used.
 
 ```
 

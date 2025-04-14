@@ -9,19 +9,22 @@ from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.models import SyncMode, AirbyteCatalog, AirbyteStream
 
-# Report IDs for App Store Analytics API (see reports.csv for more details)
-APP_INSTALL_PERFORMANCE_REPORT_ID = "r5-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
-APP_DOWNLOADS_DETAILED_REPORT_ID = "r4-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
-APP_INSTALLATION_DELETION_DETAILED_REPORT_ID = "r7-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
-APP_SESSIONS_DETAILED_REPORT_ID = "r9-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
-APP_DISCOVERY_ENGAGEMENT_DETAILED_REPORT_ID = "r15-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
-
 from .utils import (
     create_jwt_token,
     get_report_instances,
     download_report_instance,
     read_and_filter_report
 )
+
+# Constants
+DATE_FORMAT = "%Y-%m-%d"
+DEFAULT_REPORT_IDS = {
+    "app_install_performance": "r5-1032fee7-dfb3-4a4a-b24d-e603c95f5b09",
+    "app_downloads_detailed": "r4-1032fee7-dfb3-4a4a-b24d-e603c95f5b09",
+    "app_installation_deletion_detailed": "r7-1032fee7-dfb3-4a4a-b24d-e603c95f5b09",
+    "app_sessions_detailed": "r9-1032fee7-dfb3-4a4a-b24d-e603c95f5b09",
+    "app_discovery_engagement_detailed": "r15-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
+}
 
 logger = logging.getLogger("airbyte")
 
@@ -35,14 +38,39 @@ class SourceAppStore(AbstractSource):
             if not all([key_id, issuer_id, private_key]):
                 return False, "Missing required fields: key_id, issuer_id, or private_key"
             
+            start_date = config.get("start_date")
+            end_date = config.get("end_date")
+            
+            if start_date:
+                try:
+                    datetime.strptime(start_date, DATE_FORMAT)
+                except ValueError:
+                    return False, f"Invalid start_date format: {start_date}. Expected format: YYYY-MM-DD"
+            
+            if end_date:
+                try:
+                    datetime.strptime(end_date, DATE_FORMAT)
+                except ValueError:
+                    return False, f"Invalid end_date format: {end_date}. Expected format: YYYY-MM-DD"
+                
+            if start_date and end_date:
+                if datetime.strptime(start_date, DATE_FORMAT) > datetime.strptime(end_date, DATE_FORMAT):
+                    return False, f"start_date ({start_date}) cannot be later than end_date ({end_date})"
+            
             # Create token to verify credentials are valid
             token = create_jwt_token(key_id, issuer_id, private_key)
             if not token:
                 return False, "Failed to create JWT token with provided credentials"
             
+            # Test the API connection using default report ID
+            test_report_id = config.get("report_ids", {}).get(
+                "app_install_performance", 
+                DEFAULT_REPORT_IDS["app_install_performance"]
+            )
+            
             # Test the API connection
             api_config = {"key_id": key_id, "issuer_id": issuer_id, "private_key": private_key}
-            instances = get_report_instances(APP_INSTALL_PERFORMANCE_REPORT_ID, api_config)
+            instances = get_report_instances(test_report_id, api_config)
             
             if instances and "data" in instances:
                 return True, None
@@ -53,36 +81,43 @@ class SourceAppStore(AbstractSource):
             return False, f"Error connecting to App Store Connect: {str(e)}"
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
-        # Define stream configurations
+        # Get report IDs from config or use defaults
+        report_ids = config.get("report_ids", {})
+        
+        # Define stream configurations using the DEFAULT_REPORT_IDS constant
         stream_configs = [
             {
                 "name": "app_install_performance",
-                "report_id": APP_INSTALL_PERFORMANCE_REPORT_ID,
+                "report_id": report_ids.get("app_install_performance", 
+                                           DEFAULT_REPORT_IDS["app_install_performance"]),
                 "report_name": "App Install Performance"
             },
             {
                 "name": "app_downloads_detailed",
-                "report_id": APP_DOWNLOADS_DETAILED_REPORT_ID,
+                "report_id": report_ids.get("app_downloads_detailed", 
+                                          DEFAULT_REPORT_IDS["app_downloads_detailed"]),
                 "report_name": "App Downloads Detailed"
             },
             {
                 "name": "app_installation_deletion_detailed",
-                "report_id": APP_INSTALLATION_DELETION_DETAILED_REPORT_ID,
+                "report_id": report_ids.get("app_installation_deletion_detailed", 
+                                          DEFAULT_REPORT_IDS["app_installation_deletion_detailed"]),
                 "report_name": "App Store Installation and Deletion Detailed"
             },
             {
                 "name": "app_sessions_detailed", 
-                "report_id": APP_SESSIONS_DETAILED_REPORT_ID,
+                "report_id": report_ids.get("app_sessions_detailed", 
+                                          DEFAULT_REPORT_IDS["app_sessions_detailed"]),
                 "report_name": "App Sessions Detailed"
             },
             {
                 "name": "app_discovery_engagement_detailed",
-                "report_id": APP_DISCOVERY_ENGAGEMENT_DETAILED_REPORT_ID,
+                "report_id": report_ids.get("app_discovery_engagement_detailed", 
+                                          DEFAULT_REPORT_IDS["app_discovery_engagement_detailed"]),
                 "report_name": "App Store Discovery and Engagement Detailed"
             }
         ]
         
-        # Create stream instances using the configurations
         return [AppReportStream(config, stream_config) for stream_config in stream_configs]
 
     def discover(self, logger: logging.Logger, config: Mapping[str, Any]) -> AirbyteCatalog:
@@ -113,10 +148,8 @@ class AppReportStream(Stream):
         self.start_date = config.get("start_date") 
         self.end_date = config.get("end_date")
         
-        # Create a temporary directory for downloads
         self.temp_dir = tempfile.mkdtemp(prefix="app_store_")
         
-        # Set stream-specific properties if provided
         if stream_config:
             self._name = stream_config["name"]
             self.report_id = stream_config["report_id"]
@@ -168,18 +201,11 @@ class AppReportStream(Stream):
         # Calculate date range
         end_date = datetime.now()
         if self.end_date:
-            try:
-                end_date = datetime.strptime(self.end_date, "%Y-%m-%d")
-            except ValueError:
-                logger.warning(f"Invalid end_date format: {self.end_date}, using current date")
-                
+            end_date = datetime.strptime(self.end_date, DATE_FORMAT)
+            
         # Default to 3 days before end_date if start_date not provided
         if self.start_date:
-            try:
-                start_date = datetime.strptime(self.start_date, "%Y-%m-%d")
-            except ValueError:
-                logger.warning(f"Invalid start_date format: {self.start_date}, using end_date - 1 day")
-                start_date = end_date - timedelta(days=3)
+            start_date = datetime.strptime(self.start_date, DATE_FORMAT)
         else:
             start_date = end_date - timedelta(days=3)
 
@@ -187,7 +213,7 @@ class AppReportStream(Stream):
         slices = []
         current_date = start_date
         while current_date <= end_date:
-            slices.append({"date": current_date.strftime("%Y-%m-%d")})
+            slices.append({"date": current_date.strftime(DATE_FORMAT)})
             current_date += timedelta(days=1)
             
         return slices
@@ -199,7 +225,7 @@ class AppReportStream(Stream):
         stream_slice: Optional[Dict[str, Any]] = None,
         stream_state: Optional[Dict[str, Any]] = None,
     ) -> Iterable[Dict[str, Any]]:
-        date = stream_slice.get("date", datetime.now().strftime("%Y-%m-%d")) if stream_slice else datetime.now().strftime("%Y-%m-%d")
+        date = stream_slice.get("date", datetime.now().strftime(DATE_FORMAT)) if stream_slice else datetime.now().strftime(DATE_FORMAT)
         logger.info(f"Processing date: {date}")
         
         api_config = {"key_id": self.key_id, "issuer_id": self.issuer_id, "private_key": self.private_key}
@@ -217,7 +243,6 @@ class AppReportStream(Stream):
         if not instances_for_date:
             return
         
-        # Process each matching instance
         for instance in instances_for_date:
             instance_id = instance["id"]
             processing_date = instance["attributes"]["processingDate"]
