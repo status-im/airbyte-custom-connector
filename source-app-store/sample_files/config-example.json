@@ -1,0 +1,6 @@
+{
+  "key_id": "key_id",
+  "issuer_id": "issuer_id",
+  "private_key": "private_key written in one line with \n as line break"
+}
+

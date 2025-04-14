@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "Date": {
+      "type": ["string", "null"],
+      "description": "The date of the app installation/deletion report"
+    },
+    "App Name": {
+      "type": ["string", "null"],
+      "description": "The name of the app"
+    },
+    "App Apple Identifier": {
+      "type": ["integer", "null"],
+      "description": "The unique identifier for the app in the App Store"
+    },
+    "Event": {
+      "type": ["string", "null"],
+      "description": "The type of event (Install, Delete, etc.)"
+    },
+    "Download Type": {
+      "type": ["string", "null"],
+      "description": "The type of download (Manual update, etc.)"
+    },
+    "App Version": {
+      "type": ["string", "null"],
+      "description": "The version of the app"
+    },
+    "Device": {
+      "type": ["string", "null"],
+      "description": "The device type (iPhone, iPad, etc.)"
+    },
+    "Platform Version": {
+      "type": ["string", "null"],
+      "description": "The iOS/iPadOS version"
+    },
+    "Source Type": {
+      "type": ["string", "null"],
+      "description": "The source of the installation/deletion"
+    },
+    "Source Info": {
+      "type": ["string", "null"],
+      "description": "Additional information about the source"
+    },
+    "Campaign": {
+      "type": ["string", "null"],
+      "description": "The marketing campaign associated with the event"
+    },
+    "Page Type": {
+      "type": ["string", "null"],
+      "description": "The type of page where the event originated"
+    },
+    "Page Title": {
+      "type": ["string", "null"],
+      "description": "The title of the page where the event originated"
+    },
+    "App Download Date": {
+      "type": ["string", "null"],
+      "description": "The date when the app was originally downloaded"
+    },
+    "Territory": {
+      "type": ["string", "null"],
+      "description": "The country or region where the event occurred"
+    },
+    "Counts": {
+      "type": ["integer", "null"],
+      "description": "The number of events"
+    },
+    "Unique Devices": {
+      "type": ["integer", "null"],
+      "description": "The number of unique devices"
+    },
+    "_ab_source_file_url": {
+      "type": ["string", "null"],
+      "description": "The path to the source file"
+    },
+    "processed_date": {
+      "type": ["string", "null"],
+      "description": "The date when this record was processed"
+    }
+  }
+} 
