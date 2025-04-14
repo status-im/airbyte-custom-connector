@@ -18,13 +18,6 @@ from .utils import (
 
 # Constants
 DATE_FORMAT = "%Y-%m-%d"
-DEFAULT_REPORT_IDS = {
-    "app_install_performance": "r5-1032fee7-dfb3-4a4a-b24d-e603c95f5b09",
-    "app_downloads_detailed": "r4-1032fee7-dfb3-4a4a-b24d-e603c95f5b09",
-    "app_installation_deletion_detailed": "r7-1032fee7-dfb3-4a4a-b24d-e603c95f5b09",
-    "app_sessions_detailed": "r9-1032fee7-dfb3-4a4a-b24d-e603c95f5b09",
-    "app_discovery_engagement_detailed": "r15-1032fee7-dfb3-4a4a-b24d-e603c95f5b09"
-}
 
 logger = logging.getLogger("airbyte")
 
@@ -34,9 +27,22 @@ class SourceAppStore(AbstractSource):
             key_id = config.get("key_id")
             issuer_id = config.get("issuer_id")
             private_key = config.get("private_key")
+            report_ids = config.get("report_ids")
             
-            if not all([key_id, issuer_id, private_key]):
-                return False, "Missing required fields: key_id, issuer_id, or private_key"
+            if not all([key_id, issuer_id, private_key, report_ids]):
+                return False, "Missing required fields: key_id, issuer_id, private_key, or report_ids"
+            
+            required_report_ids = [
+                "app_install_performance",
+                "app_downloads_detailed",
+                "app_installation_deletion_detailed",
+                "app_sessions_detailed",
+                "app_discovery_engagement_detailed"
+            ]
+            
+            missing_report_ids = [rid for rid in required_report_ids if rid not in report_ids]
+            if missing_report_ids:
+                return False, f"Missing required report IDs: {', '.join(missing_report_ids)}"
             
             start_date = config.get("start_date")
             end_date = config.get("end_date")
@@ -62,11 +68,8 @@ class SourceAppStore(AbstractSource):
             if not token:
                 return False, "Failed to create JWT token with provided credentials"
             
-            # Test the API connection using default report ID
-            test_report_id = config.get("report_ids", {}).get(
-                "app_install_performance", 
-                DEFAULT_REPORT_IDS["app_install_performance"]
-            )
+            # Test the API connection using the provided report ID
+            test_report_id = report_ids["app_install_performance"]
             
             # Test the API connection
             api_config = {"key_id": key_id, "issuer_id": issuer_id, "private_key": private_key}
@@ -81,39 +84,32 @@ class SourceAppStore(AbstractSource):
             return False, f"Error connecting to App Store Connect: {str(e)}"
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
-        # Get report IDs from config or use defaults
-        report_ids = config.get("report_ids", {})
+        report_ids = config["report_ids"]
         
-        # Define stream configurations using the DEFAULT_REPORT_IDS constant
         stream_configs = [
             {
                 "name": "app_install_performance",
-                "report_id": report_ids.get("app_install_performance", 
-                                           DEFAULT_REPORT_IDS["app_install_performance"]),
+                "report_id": report_ids["app_install_performance"],
                 "report_name": "App Install Performance"
             },
             {
                 "name": "app_downloads_detailed",
-                "report_id": report_ids.get("app_downloads_detailed", 
-                                          DEFAULT_REPORT_IDS["app_downloads_detailed"]),
+                "report_id": report_ids["app_downloads_detailed"],
                 "report_name": "App Downloads Detailed"
             },
             {
                 "name": "app_installation_deletion_detailed",
-                "report_id": report_ids.get("app_installation_deletion_detailed", 
-                                          DEFAULT_REPORT_IDS["app_installation_deletion_detailed"]),
+                "report_id": report_ids["app_installation_deletion_detailed"],
                 "report_name": "App Store Installation and Deletion Detailed"
             },
             {
                 "name": "app_sessions_detailed", 
-                "report_id": report_ids.get("app_sessions_detailed", 
-                                          DEFAULT_REPORT_IDS["app_sessions_detailed"]),
+                "report_id": report_ids["app_sessions_detailed"],
                 "report_name": "App Sessions Detailed"
             },
             {
                 "name": "app_discovery_engagement_detailed",
-                "report_id": report_ids.get("app_discovery_engagement_detailed", 
-                                          DEFAULT_REPORT_IDS["app_discovery_engagement_detailed"]),
+                "report_id": report_ids["app_discovery_engagement_detailed"],
                 "report_name": "App Store Discovery and Engagement Detailed"
             }
         ]
