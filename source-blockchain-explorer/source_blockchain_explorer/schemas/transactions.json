@@ -1,0 +1,273 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "AirbyteTransaction",
+    "type": "object",
+    "properties": {
+      "priority_fee": {
+        "type": ["string", "null"]
+      },
+      "tx_burnt_fee": {
+        "type": ["string", "null"]
+      },
+      "raw_input": {
+        "type": "string"
+      },
+      "result": {
+        "type": "string"
+      },
+      "hash": {
+        "type": "string"
+      },
+      "max_fee_per_gas": {
+        "type": ["string", "null"]
+      },
+      "revert_reason": {
+        "type": ["string", "null"]
+      },
+      "confirmation_duration": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+      },
+      "type": {
+        "type": "integer"
+      },
+      "token_transfers_overflow": {
+        "type": ["string", "null"]
+      },
+      "confirmations": {
+        "type": "integer"
+      },
+      "position": {
+        "type": "integer"
+      },
+      "max_priority_fee_per_gas": {
+        "type": ["string", "null"]
+      },
+      "transaction_tag": {
+        "type": ["string", "null"]
+      },
+      "created_contract": {
+        "type": ["string", "null"]
+      },
+      "value": {
+        "type": "string"
+      },
+      "tx_types": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "from": {
+        "type": "object",
+        "properties": {
+          "ens_domain_name": {
+            "type": ["string", "null"]
+          },
+          "hash": {
+            "type": "string"
+          },
+          "implementations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_contract": {
+            "type": "boolean"
+          },
+          "is_scam": {
+            "type": "boolean"
+          },
+          "is_verified": {
+            "type": "boolean"
+          },
+          "metadata": {
+            "type": ["object", "null"]
+          },
+          "name": {
+            "type": ["string", "null"]
+          },
+          "private_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "proxy_type": {
+            "type": ["string", "null"]
+          },
+          "public_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "watchlist_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "hash",
+          "is_contract",
+          "is_scam",
+          "is_verified",
+          "implementations",
+          "private_tags",
+          "public_tags",
+          "watchlist_names"
+        ]
+      },
+      "gas_used": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "to": {
+        "type": "object",
+        "properties": {
+          "ens_domain_name": {
+            "type": ["string", "null"]
+          },
+          "hash": {
+            "type": "string"
+          },
+          "implementations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_contract": {
+            "type": "boolean"
+          },
+          "is_scam": {
+            "type": "boolean"
+          },
+          "is_verified": {
+            "type": "boolean"
+          },
+          "metadata": {
+            "type": ["object", "null"]
+          },
+          "name": {
+            "type": ["string", "null"]
+          },
+          "private_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "proxy_type": {
+            "type": ["string", "null"]
+          },
+          "public_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "watchlist_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "hash",
+          "is_contract",
+          "is_scam",
+          "is_verified",
+          "implementations",
+          "private_tags",
+          "public_tags",
+          "watchlist_names"
+        ]
+      },
+      "authorization_list": {
+        "type": "array",
+        "items": {}
+      },
+      "method": {
+        "type": ["string", "null"]
+      },
+      "fee": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ]
+      },
+      "tx_tag": {
+        "type": ["string", "null"]
+      },
+      "actions": {
+        "type": "array",
+        "items": {}
+      },
+      "gas_limit": {
+        "type": "string"
+      },
+      "gas_price": {
+        "type": "string"
+      },
+      "decoded_input": {
+        "type": ["string", "null"]
+      },
+      "has_error_in_internal_txs": {
+        "type": ["boolean", "null"]
+      },
+      "token_transfers": {
+        "type": ["array", "null"],
+        "items": {}
+      },
+      "base_fee_per_gas": {
+        "type": "string"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "nonce": {
+        "type": "integer"
+      },
+      "block": {
+        "type": "integer"
+      },
+      "transaction_types": {
+        "type": "array",
+        "items": {}
+      },
+      "exchange_rate": {
+        "type": ["string", "null"]
+      },
+      "block_number": {
+        "type": "integer"
+      },
+      "has_error_in_internal_transactions": {
+        "type": ["boolean", "null"]
+      },
+      "block_hash": {
+        "type": "string"
+      }
+    }
+  }
+  

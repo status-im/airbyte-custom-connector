@@ -8,10 +8,10 @@
           "type": "object"
         },
         "supported_sync_modes": [
-          "full_refresh",  "incremental"
+          "full_refresh", "incremental"
         ]
       },
-      "sync_mode":  "incremental",
+      "sync_mode": "incremental",
       "destination_sync_mode": "overwrite"
     },
     {
@@ -22,136 +22,66 @@
           "type": "object"
         },
         "supported_sync_modes": [
-          "full_refresh",  "incremental"
+          "full_refresh", "incremental"
         ]
       },
-      "sync_mode":  "incremental",
+      "sync_mode": "incremental",
       "destination_sync_mode": "overwrite"
     },
     {
       "stream": {
-        "name": "analytic_location",
+        "name": "podcast_listening_location",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
         },
         "supported_sync_modes": [
-          "full_refresh",  "incremental"
+          "full_refresh", "incremental"
         ]
       },
-      "sync_mode":  "incremental",
+      "sync_mode": "incremental",
       "destination_sync_mode": "overwrite"
     },
     {
       "stream": {
-        "name": "analytic_time_of_week",
+        "name": "episode_download",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
         },
         "supported_sync_modes": [
-          "full_refresh",  "incremental"
+          "full_refresh", "incremental"
         ]
       },
-      "sync_mode":  "incremental",
+      "sync_mode": "incremental",
       "destination_sync_mode": "overwrite"
     },
     {
       "stream": {
-        "name": "analytic_download",
+        "name": "podcast_listening_device",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
         },
         "supported_sync_modes": [
-          "full_refresh",  "incremental"
+          "full_refresh", "incremental"
         ]
       },
-      "sync_mode":  "incremental",
-      "destination_sync_mode": "overwrite"
-    },
-        {
-      "stream": {
-        "name": "technology_application",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh",  "incremental"
-        ]
-      },
-      "sync_mode":  "incremental",
+      "sync_mode": "incremental",
       "destination_sync_mode": "overwrite"
     },
     {
       "stream": {
-        "name": "technology_device_class",
+        "name": "podcast_listening_method",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
         },
         "supported_sync_modes": [
-          "full_refresh",  "incremental"
+          "full_refresh", "incremental"
         ]
       },
-      "sync_mode":  "incremental",
-      "destination_sync_mode": "overwrite"
-    },
-    {
-      "stream": {
-        "name": "technology_listening_method",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh",  "incremental"
-        ]
-      },
-      "sync_mode":  "incremental",
-      "destination_sync_mode": "overwrite"
-    },
-    {
-      "stream": {
-        "name": "analytic_podcast_v2",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh",  "incremental"
-        ]
-      },
-      "sync_mode":  "incremental",
-      "destination_sync_mode": "overwrite"
-    },
-    {
-      "stream": {
-        "name": "analytic_episode_v2",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh",  "incremental"
-        ]
-      },
-      "sync_mode":  "incremental",
-      "destination_sync_mode": "overwrite"
-    },
-    {
-      "stream": {
-        "name": "analytic_episode_download",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh",  "incremental"
-        ]
-      },
-      "sync_mode":  "incremental",
+      "sync_mode": "incremental",
       "destination_sync_mode": "overwrite"
     }
   ]

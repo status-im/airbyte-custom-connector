@@ -1,0 +1,77 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "average_block_time": {
+        "type": ["string", "null", "number"]
+      },
+      "coin_image": {
+        "type": ["null", "string"]
+      },
+      "coin_price": {
+        "type": ["null", "number"]
+      },
+      "coin_price_change_percentage": {
+        "type": ["null", "number"]
+      },
+      "gas_price_updated_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "gas_prices": {
+        "type": "object",
+        "properties": {
+          "slow": {
+            "type": "number"
+          },
+          "average": {
+            "type": "number"
+          },
+          "fast": {
+            "type": "number"
+          }
+        },
+        "required": ["slow", "average", "fast"]
+      },
+      "gas_prices_update_in": {
+        "type": ["integer"]
+      },
+      "gas_used_today": {
+        "type": ["string"]
+      },
+      "market_cap": {
+        "type": "string"
+      },
+      "network_utilization_percentage": {
+        "type": "number"
+      },
+      "secondary_coin_image": {
+        "type": ["null", "string"]
+      },
+      "secondary_coin_price": {
+        "type": ["null", "number"]
+      },
+      "static_gas_price": {
+        "type": ["null", "number"]
+      },
+      "total_addresses": {
+        "type": "string"
+      },
+      "total_blocks": {
+        "type": "string"
+      },
+      "total_gas_used": {
+        "type": "string"
+      },
+      "total_transactions": {
+        "type": "string"
+      },
+      "transactions_today": {
+        "type": "string"
+      },
+      "tvl": {
+        "type": ["null", "number"]
+      }
+    }
+  }
+  

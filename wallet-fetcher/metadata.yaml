@@ -11,7 +11,7 @@ data:
   connectorType: source
   definitionId: 1e55cfe0-f591-4281-9a20-18d89d45f685
   dockerImageTag: 1.0.1
-  dockerRepository: status-im/airbyte/wallet-fetcher
+  dockerRepository: harbor.status.im/bi/airbyte/wallet-fetcher
   githubIssueLabel: source-wallet-fetcher
   icon: icon.svg
   license: MIT

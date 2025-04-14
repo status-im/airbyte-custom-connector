@@ -1,0 +1,16 @@
+documentationUrl: https://sepoliascan.status.network/api-docs
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Status Network Fetcher
+  type: object
+  required:
+    - url_base
+    - blocks_to_do
+  properties:
+    url_base:
+      type: string
+      description: The Status Network URL
+    blocks_to_do:
+      type: integer
+      default: 0
+      description: "The number of block pages that will be fetched. If 0 then all the missing blocks will be fetched."

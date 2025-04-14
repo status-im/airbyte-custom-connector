@@ -10,3 +10,7 @@ connectionSpecification:
       type: string
       description: Key to authentify to the API
       airbyte_secret: true
+    full_download_sync:
+      type: boolean
+      description: Sync all episode download data of just the latest
+      default: false
