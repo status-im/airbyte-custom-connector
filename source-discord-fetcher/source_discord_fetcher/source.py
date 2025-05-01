@@ -9,6 +9,10 @@ from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpSubStream, HttpStream
 from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
+import time
+import os
+import json
+from datetime import datetime, timezone
 
 logger = logging.getLogger("airbyte")
 
@@ -139,7 +143,72 @@ class GuildRole(DiscordFetcherStream):
             role['guild_id']=stream_slice['guild_id']
             yield role 
 
- 
+class ChannelMessagesStream(DiscordFetcherStream):
+    """
+    Stream for extracting all messages from a specific Discord channel.
+    """
+    
+    primary_key = "id"
+    
+    def __init__(self, config: Mapping[str, Any], channel_id: str, **kwargs):
+        super().__init__(guilds_id=config["guilds_id"], endpoint="/messages", **kwargs)
+        self.channel_id = channel_id
+        self.start_date = config.get("start_date")
+        
+    @property
+    def name(self) -> str:
+        return f"channel_messages_{self.channel_id}"
+
+    def path(
+        self, 
+        stream_state: Mapping[str, Any] = None, 
+        stream_slice: Mapping[str, Any] = None, 
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        return f"channels/{self.channel_id}/messages"
+
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        messages = response.json()
+        if messages and len(messages) == 100:  # Discord's max limit
+            return {"before": messages[-1]["id"]}
+        return None
+
+    def request_params(
+        self,
+        stream_state: Optional[Mapping[str, Any]],
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        next_page_token: Optional[Mapping[str, Any]] = None,
+    ) -> MutableMapping[str, Any]:
+        params = {"limit": 100}
+        
+        # If we have a state, use it to fetch only new messages
+        if stream_state and "last_message_id" in stream_state:
+            params["after"] = stream_state["last_message_id"]
+        # If no state but we have a start_date, use that
+        elif self.start_date:
+            # Convert start_date to Discord snowflake ID
+            # Discord epoch (2015-01-01) in milliseconds
+            DISCORD_EPOCH = 1420070400000
+            start_date_ts = int(datetime.strptime(self.start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000)
+            # Convert timestamp to snowflake
+            snowflake = ((start_date_ts - DISCORD_EPOCH) << 22)
+            params["after"] = str(snowflake)
+            
+        if next_page_token:
+            params.update(next_page_token)
+            
+        return params
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_slice: Mapping[str, Any] = None,
+        **kwargs
+    ) -> Iterable[Mapping]:
+        messages = response.json()
+        for message in messages:
+            # Add message filtering here if needed
+            yield message
 
 # Source
 class SourceDiscordFetcher(AbstractSource):
@@ -154,5 +223,6 @@ class SourceDiscordFetcher(AbstractSource):
             guildChannel,
             Channel(guilds_id=config["guilds_id"], authenticator=auth, parent=guildChannel),
             Member(guilds_id=config["guilds_id"], endpoint="/members", authenticator=auth),
-            GuildRole(guilds_id=config["guilds_id"], endpoint="/roles", authenticator=auth)
+            GuildRole(guilds_id=config["guilds_id"], endpoint="/roles", authenticator=auth),
+            ChannelMessagesStream(config, config["channel_id"], authenticator=auth)
         ]
