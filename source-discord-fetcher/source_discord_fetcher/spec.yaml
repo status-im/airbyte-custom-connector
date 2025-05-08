@@ -21,12 +21,13 @@ connectionSpecification:
       description: "List of Discord Server IDs to fetch data from. Enable Developer Mode in Discord Settings > Advanced to copy server IDs."
       items:
         type: string
-        pattern: "^[0-9]{17,20}$"
       order: 2
     channel_id:
-      type: string
-      title: Channel ID
-      description: "The ID of the Discord channel to fetch messages from. Enable Developer Mode in Discord Settings > Advanced to copy channel ID."
+      type: array
+      title: Channel IDs
+      description: "List of Discord Channel IDs to fetch messages from. Enable Developer Mode in Discord Settings > Advanced to copy channel IDs."
+      items:
+        type: string
       order: 3
     start_date:
       type: string

@@ -145,19 +145,23 @@ class GuildRole(DiscordFetcherStream):
 
 class ChannelMessagesStream(DiscordFetcherStream):
     """
-    Stream for extracting all messages from a specific Discord channel.
+    Stream for extracting all messages from multiple Discord channels.
     """
     
     primary_key = "id"
     
-    def __init__(self, config: Mapping[str, Any], channel_id: str, **kwargs):
+    def __init__(self, config: Mapping[str, Any], **kwargs):
         super().__init__(guilds_id=config["guilds_id"], endpoint="/messages", **kwargs)
-        self.channel_id = channel_id
+        self.channel_ids = config["channel_id"]
         self.start_date = config.get("start_date")
         
     @property
     def name(self) -> str:
-        return f"channel_messages_{self.channel_id}"
+        return "channel_messages"
+
+    def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
+        for channel_id in self.channel_ids:
+            yield {"channel_id": channel_id}
 
     def path(
         self, 
@@ -165,7 +169,8 @@ class ChannelMessagesStream(DiscordFetcherStream):
         stream_slice: Mapping[str, Any] = None, 
         next_page_token: Mapping[str, Any] = None
     ) -> str:
-        return f"channels/{self.channel_id}/messages"
+        channel_id = stream_slice["channel_id"]
+        return f"channels/{channel_id}/messages"
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         messages = response.json()
@@ -207,7 +212,8 @@ class ChannelMessagesStream(DiscordFetcherStream):
     ) -> Iterable[Mapping]:
         messages = response.json()
         for message in messages:
-            # Add message filtering here if needed
+            # Add channel_id to each message for reference
+            message["channel_id"] = stream_slice["channel_id"]
             yield message
 
 # Source
@@ -218,11 +224,18 @@ class SourceDiscordFetcher(AbstractSource):
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         auth = TokenAuthenticator(token=config["api_key"], auth_method="Bot")
         guildChannel=GuildChannel(guilds_id=config["guilds_id"], endpoint="/channels", authenticator=auth)
-        return [
+        
+        # Create base streams
+        streams = [
             Guild(guilds_id=config["guilds_id"],  authenticator=auth),
             guildChannel,
             Channel(guilds_id=config["guilds_id"], authenticator=auth, parent=guildChannel),
             Member(guilds_id=config["guilds_id"], endpoint="/members", authenticator=auth),
             GuildRole(guilds_id=config["guilds_id"], endpoint="/roles", authenticator=auth),
-            ChannelMessagesStream(config, config["channel_id"], authenticator=auth)
         ]
+        
+        # Add a stream for each channel ID
+        for channel_id in config["channel_id"]:
+            streams.append(ChannelMessagesStream(config, authenticator=auth))
+            
+        return streams
