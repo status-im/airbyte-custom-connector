@@ -29,7 +29,7 @@
             "type": ["null", "string"]
           },
           "id": {
-            "type": ["null", "number"]
+            "type": ["null", "string"]
           }
         }
       }

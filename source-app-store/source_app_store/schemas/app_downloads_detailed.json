@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "Date": {
+      "type": ["string", "null"],
+      "description": "Date of the app downloads report"
+    },
+    "App Name": {
+      "type": ["string", "null"],
+      "description": "Name of the application"
+    },
+    "App Apple Identifier": {
+      "type": ["integer", "null"],
+      "description": "Unique identifier for the app in the App Store"
+    },
+    "Download Type": {
+      "type": ["string", "null"],
+      "description": "Type of download (Auto-update, first-time, redownload)"
+    },
+    "App Version": {
+      "type": ["string", "null"],
+      "description": "Version of the app"
+    },
+    "Device": {
+      "type": ["string", "null"],
+      "description": "Device type used (iPhone, iPad, etc.)"
+    },
+    "Platform Version": {
+      "type": ["string", "null"],
+      "description": "iOS/iPadOS version"
+    },
+    "Source Type": {
+      "type": ["string", "null"],
+      "description": "Source of the app download"
+    },
+    "Source Info": {
+      "type": ["string", "null"],
+      "description": "Additional information about the source"
+    },
+    "Campaign": {
+      "type": ["string", "null"],
+      "description": "Marketing campaign associated with the download"
+    },
+    "Page Type": {
+      "type": ["string", "null"],
+      "description": "Type of page where the download originated"
+    },
+    "Page Title": {
+      "type": ["string", "null"],
+      "description": "Title of the page where the download originated"
+    },
+    "Pre-Order": {
+      "type": ["string", "null"],
+      "description": "Whether the app was pre-ordered"
+    },
+    "Territory": {
+      "type": ["string", "null"],
+      "description": "Geographic territory of the data"
+    },
+    "Counts": {
+      "type": ["integer", "null"],
+      "description": "Number of downloads"
+    },
+    "_ab_source_file_url": {
+      "type": ["string", "null"],
+      "description": "Source file URL"
+    },
+    "processed_date": {
+      "type": ["string", "null"],
+      "description": "Date when the record was processed"
+    }
+  }
+} 

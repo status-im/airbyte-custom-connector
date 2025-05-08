@@ -1,0 +1,62 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "Date": {
+      "type": ["string", "null"],
+      "description": "The date of the app install performance report"
+    },
+    "App Name": {
+      "type": ["string", "null"],
+      "description": "The name of the app"
+    },
+    "App Apple Identifier": {
+      "type": ["integer", "null"],
+      "description": "The Apple identifier for the app"
+    },
+    "Download Type": {
+      "type": ["string", "null"],
+      "description": "Type of download (e.g., First Time, Redownload)"
+    },
+    "Download Info": {
+      "type": ["string", "null"],
+      "description": "Additional information about the download"
+    },
+    "Install Status": {
+      "type": ["string", "null"],
+      "description": "Status of the installation (e.g., Successful, Failed)"
+    },
+    "Install Package Type": {
+      "type": ["string", "null"],
+      "description": "Type of installation package"
+    },
+    "Device": {
+      "type": ["string", "null"],
+      "description": "Device type (e.g., iPhone, iPad)"
+    },
+    "Platform Version": {
+      "type": ["string", "null"],
+      "description": "Version of the platform"
+    },
+    "Territory": {
+      "type": ["string", "null"],
+      "description": "Territory/country of the download"
+    },
+    "Counts": {
+      "type": ["integer", "null"],
+      "description": "Number of installs/downloads"
+    },
+    "Avg Install Duration": {
+      "type": ["integer", "null"],
+      "description": "Average installation duration in milliseconds"
+    },
+    "_ab_source_file_url": {
+      "type": ["string", "null"],
+      "description": "The URL of the source file"
+    },
+    "processed_date": {
+      "type": ["string", "null"],
+      "description": "The date when the record was processed"
+    }
+  }
+} 

@@ -17,6 +17,9 @@
     "status": {
       "type": ["null", "string"]
     },
+    "scheduled_for": {
+      "type": ["null", "string"]
+    },
     "season": {
       "type": ["null", "object"],
       "properties": {

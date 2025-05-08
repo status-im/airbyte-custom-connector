@@ -53,8 +53,8 @@ docker run airbyte/twitter-fetcher:dev spec
 #### Run
 Then run any of the connector commands as follows:
 ```
-docker run --rm harbor.status.im/status-im/airbyte/source-custom-bamboohr-hr:dev spec
-docker run --rm -v $(pwd)/sample_files:/sample_files harbor.status.im/status-im/custom-banboo-hr:dev check --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files harbor.status.im/status-im/custom-banboo-hr:dev discover --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files harbor.status.im/status-im/custom-banboo-hr:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
+docker run --rm harbor.status.im/bi/airbyte/source-custom-bamboohr-hr:dev spec
+docker run --rm -v $(pwd)/sample_files:/sample_files harbor.status.im/bi/custom-banboo-hr:dev check --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files harbor.status.im/bi/custom-banboo-hr:dev discover --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files harbor.status.im/bi/custom-banboo-hr:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
 ```
