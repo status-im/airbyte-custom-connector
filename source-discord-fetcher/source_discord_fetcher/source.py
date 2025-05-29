@@ -160,8 +160,11 @@ class ChannelMessagesStream(DiscordFetcherStream):
         return "channel_messages"
 
     def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
+        logger.info("ChannelMessagesStream stream_slices - channel_ids: %s", self.channel_ids)
         for channel_id in self.channel_ids:
-            yield {"channel_id": channel_id}
+            slice_data = {"channel_id": channel_id}
+            logger.info("ChannelMessagesStream yielding slice: %s", slice_data)
+            yield slice_data
 
     def path(
         self, 
@@ -169,6 +172,7 @@ class ChannelMessagesStream(DiscordFetcherStream):
         stream_slice: Mapping[str, Any] = None, 
         next_page_token: Mapping[str, Any] = None
     ) -> str:
+        logger.info("ChannelMessagesStream path - stream_slice: %s", stream_slice)
         channel_id = stream_slice["channel_id"]
         return f"channels/{channel_id}/messages"
 
@@ -186,10 +190,11 @@ class ChannelMessagesStream(DiscordFetcherStream):
     ) -> MutableMapping[str, Any]:
         params = {"limit": 100}
         
-        # If we have a state, use it to fetch only new messages
-        if stream_state and "last_message_id" in stream_state:
+        # Only one of before, after, or around can be used at a time
+        if next_page_token:
+            params.update(next_page_token)
+        elif stream_state and "last_message_id" in stream_state:
             params["after"] = stream_state["last_message_id"]
-        # If no state but we have a start_date, use that
         elif self.start_date:
             # Convert start_date to Discord snowflake ID
             # Discord epoch (2015-01-01) in milliseconds
@@ -198,9 +203,6 @@ class ChannelMessagesStream(DiscordFetcherStream):
             # Convert timestamp to snowflake
             snowflake = ((start_date_ts - DISCORD_EPOCH) << 22)
             params["after"] = str(snowflake)
-            
-        if next_page_token:
-            params.update(next_page_token)
             
         return params
 
@@ -232,10 +234,7 @@ class SourceDiscordFetcher(AbstractSource):
             Channel(guilds_id=config["guilds_id"], authenticator=auth, parent=guildChannel),
             Member(guilds_id=config["guilds_id"], endpoint="/members", authenticator=auth),
             GuildRole(guilds_id=config["guilds_id"], endpoint="/roles", authenticator=auth),
+            ChannelMessagesStream(config, authenticator=auth),
         ]
-        
-        # Add a stream for each channel ID
-        for channel_id in config["channel_id"]:
-            streams.append(ChannelMessagesStream(config, authenticator=auth))
             
         return streams
