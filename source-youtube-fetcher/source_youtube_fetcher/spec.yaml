@@ -1,0 +1,64 @@
+documentationUrl: https://developers.google.com/youtube/v3
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: YouTube Data v3 API Source Spec
+  type: object
+  required:
+    - api_key
+    - channel_identifier
+  additionalProperties: true
+  properties:
+    api_key:
+      type: string
+      title: YouTube Data API Key
+      description: Your YouTube Data API v3 key. You can obtain this from the Google Cloud Console.
+      airbyte_secret: true
+      order: 0
+    channel_identifier:
+      type: string
+      title: Channel Identifier
+      description: YouTube channel identifier. Can be a channel ID (starts with UC), username, or handle (starts with @).
+      examples:
+        - "@channelname"
+        - "UCxxxxxxxxxxxxxxxxxxxxxxx"
+        - "username"
+      order: 1
+    max_results:
+      type: string
+      title: Maximum Results
+      description: Maximum number of videos to fetch. Use 'all' to fetch all videos or specify a number (e.g., '100'). Leave empty for all videos.
+      default: "all"
+      examples:
+        - "all"
+        - "100"
+        - "500"
+      order: 2
+    include_comments_count:
+      type: boolean
+      title: Include Comments Count
+      description: Whether to fetch detailed comment counts for each video. This makes the sync slower but provides more accurate comment data.
+      default: false
+      order: 3
+    start_date:
+      type: string
+      title: Start Date
+      description: "Start date for incremental syncs in ISO format (YYYY-MM-DD). Only videos published after this date will be synced in incremental mode."
+      format: date
+      pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+      examples:
+        - "2023-01-01"
+        - "2024-01-01"
+      order: 4
+    fetch_channel_analytics:
+      type: boolean
+      title: Fetch Channel Analytics
+      description: Whether to include channel-level analytics and metadata in the sync.
+      default: true
+      order: 5
+supportsIncremental: true
+supportsNormalization: false
+supportsDBT: false
+supported_destination_sync_modes:
+  - overwrite
+  - append
+  - append_dedup
