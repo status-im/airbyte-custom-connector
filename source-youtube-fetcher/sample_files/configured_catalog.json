@@ -1,0 +1,340 @@
+{
+  "streams": [
+    {
+      "stream": {
+        "name": "channel",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "channel_id": {
+              "type": "string",
+              "description": "YouTube channel ID"
+            },
+            "title": {
+              "type": "string",
+              "description": "Channel title"
+            },
+            "description": {
+              "type": "string",
+              "description": "Channel description"
+            },
+            "custom_url": {
+              "type": "string",
+              "description": "Channel custom URL"
+            },
+            "published_at": {
+              "type": "string",
+              "description": "Channel creation date"
+            },
+            "country": {
+              "type": "string",
+              "description": "Channel country"
+            },
+            "default_language": {
+              "type": "string",
+              "description": "Channel default language"
+            },
+            "thumbnails": {
+              "type": "object",
+              "description": "Channel thumbnail images"
+            },
+            "subscriber_count": {
+              "type": "integer",
+              "description": "Number of subscribers"
+            },
+            "video_count": {
+              "type": "integer",
+              "description": "Number of videos"
+            },
+            "view_count": {
+              "type": "integer",
+              "description": "Total channel views"
+            },
+            "hidden_subscriber_count": {
+              "type": "boolean",
+              "description": "Whether subscriber count is hidden"
+            },
+            "uploads_playlist_id": {
+              "type": "string",
+              "description": "Uploads playlist ID"
+            },
+            "likes_playlist_id": {
+              "type": "string",
+              "description": "Likes playlist ID"
+            },
+            "favorites_playlist_id": {
+              "type": "string",
+              "description": "Favorites playlist ID"
+            },
+            "watchHistory_playlist_id": {
+              "type": "string",
+              "description": "Watch history playlist ID"
+            },
+            "watchLater_playlist_id": {
+              "type": "string",
+              "description": "Watch later playlist ID"
+            },
+            "channel_keywords": {
+              "type": "string",
+              "description": "Channel keywords"
+            },
+            "channel_unsubscribed_trailer": {
+              "type": "string",
+              "description": "Unsubscribed trailer video ID"
+            },
+            "channel_featured_channels_urls": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Featured channels URLs"
+            },
+            "banner_image_url": {
+              "type": "string",
+              "description": "Banner image URL"
+            },
+            "topic_categories": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Topic categories"
+            },
+            "topic_ids": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Topic IDs"
+            },
+            "privacy_status": {
+              "type": "string",
+              "description": "Channel privacy status"
+            },
+            "is_linked": {
+              "type": "boolean",
+              "description": "Whether channel is linked"
+            },
+            "long_uploads_status": {
+              "type": "string",
+              "description": "Long uploads status"
+            },
+            "made_for_kids": {
+              "type": "boolean",
+              "description": "Whether channel is made for kids"
+            },
+            "self_declared_made_for_kids": {
+              "type": "boolean",
+              "description": "Whether self-declared made for kids"
+            },
+            "fetched_at": {
+              "type": "string",
+              "description": "Timestamp when data was fetched"
+            },
+            "channel_identifier": {
+              "type": "string",
+              "description": "Original channel identifier used for request"
+            },
+            "api_quota_used": {
+              "type": "integer",
+              "description": "API quota units used"
+            }
+          },
+          "required": ["channel_id", "title", "fetched_at"]
+        },
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_cursor": false
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "videos",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "video_id": {
+              "type": "string",
+              "description": "YouTube video ID"
+            },
+            "title": {
+              "type": "string",
+              "description": "Video title"
+            },
+            "description": {
+              "type": "string",
+              "description": "Video description"
+            },
+            "published_at": {
+              "type": "string",
+              "description": "Video publication date in ISO 8601 format"
+            },
+            "published_datetime": {
+              "type": "string",
+              "description": "Video publication datetime with timezone"
+            },
+            "channel_id": {
+              "type": "string",
+              "description": "Channel ID that uploaded the video"
+            },
+            "channel_title": {
+              "type": "string",
+              "description": "Channel title that uploaded the video"
+            },
+            "tags": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Video tags/keywords"
+            },
+            "category_id": {
+              "type": "string",
+              "description": "Video category ID"
+            },
+            "default_language": {
+              "type": "string",
+              "description": "Default language of the video"
+            },
+            "default_audio_language": {
+              "type": "string",
+              "description": "Default audio language of the video"
+            },
+            "thumbnails": {
+              "type": "object",
+              "description": "Video thumbnail images"
+            },
+            "view_count": {
+              "type": "integer",
+              "description": "Number of views"
+            },
+            "like_count": {
+              "type": "integer",
+              "description": "Number of likes"
+            },
+            "comment_count": {
+              "type": "integer",
+              "description": "Number of comments"
+            },
+            "favorite_count": {
+              "type": "integer",
+              "description": "Number of favorites"
+            },
+            "duration_iso": {
+              "type": "string",
+              "description": "Video duration in ISO 8601 format"
+            },
+            "duration_seconds": {
+              "type": "integer",
+              "description": "Video duration in seconds"
+            },
+            "duration_formatted": {
+              "type": "string",
+              "description": "Video duration in HH:MM:SS format"
+            },
+            "dimension": {
+              "type": "string",
+              "description": "Video dimension (2d or 3d)"
+            },
+            "definition": {
+              "type": "string",
+              "description": "Video definition (hd or sd)"
+            },
+            "caption": {
+              "type": "string",
+              "description": "Whether captions are available"
+            },
+            "licensed_content": {
+              "type": "boolean",
+              "description": "Whether the video contains licensed content"
+            },
+            "privacy_status": {
+              "type": "string",
+              "description": "Video privacy status"
+            },
+            "upload_status": {
+              "type": "string",
+              "description": "Video upload status"
+            },
+            "license": {
+              "type": "string",
+              "description": "Video license (youtube or creativeCommon)"
+            },
+            "embeddable": {
+              "type": "boolean",
+              "description": "Whether the video can be embedded"
+            },
+            "public_stats_viewable": {
+              "type": "boolean",
+              "description": "Whether public stats are viewable"
+            },
+            "channel_subscriber_count": {
+              "type": "integer",
+              "description": "Channel subscriber count"
+            },
+            "channel_video_count": {
+              "type": "integer",
+              "description": "Channel video count"
+            },
+            "channel_view_count": {
+              "type": "integer",
+              "description": "Channel total view count"
+            },
+            "engagement_rate": {
+              "type": "number",
+              "description": "Engagement rate percentage"
+            },
+            "views_per_subscriber": {
+              "type": "number",
+              "description": "Views per subscriber ratio"
+            },
+            "topic_categories": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "YouTube topic categories"
+            },
+            "relevant_topic_ids": {
+              "type": "array",
+              "items": {"type": "string"},
+              "description": "Relevant topic IDs"
+            },
+            "recording_date": {
+              "type": "string",
+              "description": "Video recording date"
+            },
+            "location_description": {
+              "type": "string",
+              "description": "Recording location description"
+            },
+            "recording_latitude": {
+              "type": "number",
+              "description": "Recording location latitude"
+            },
+            "recording_longitude": {
+              "type": "number",
+              "description": "Recording location longitude"
+            },
+            "recording_altitude": {
+              "type": "number",
+              "description": "Recording location altitude"
+            },
+            "fetched_at": {
+              "type": "string",
+              "description": "Timestamp when data was fetched"
+            },
+            "_airbyte_channel_identifier": {
+              "type": "string",
+              "description": "Original channel identifier used for the request"
+            },
+            "_airbyte_sync_time": {
+              "type": "string",
+              "description": "Airbyte sync timestamp"
+            }
+          },
+          "required": ["video_id", "title", "channel_id", "published_at", "fetched_at"]
+        },
+        "supported_sync_modes": ["full_refresh", "incremental"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["published_at"]
+      },
+      "sync_mode": "incremental",
+      "cursor_field": ["published_at"],
+      "destination_sync_mode": "append"
+    }
+  ]
+} 
