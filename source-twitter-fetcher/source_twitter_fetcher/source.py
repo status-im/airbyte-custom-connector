@@ -7,6 +7,7 @@ from airbyte_cdk.sources.streams import Stream
 from .tweets_stream import Account, Tweet, TweetMetrics, TweetPromoted
 from .ads_stream import PromotedTweetActive, PromotedTweetBilling, PromotedTweetEngagement
 from .spaces_stream import Space
+from .tweets_comments_stream import TweetComments
 from .auth import TwitterOAuth
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
@@ -39,6 +40,14 @@ class SourceTwitterFetcher(AbstractSource):
             parent=tweet
         )
 
+        tweet_comments = TweetComments(
+            authenticator=auth,
+            account_id=config['account_id'],
+            parent=tweet,
+            comment_days_limit=config.get('comment_days_limit', 2),
+            filtered_author_ids=config.get('filtered_author_ids', [])
+        )
+
         promoted_tweet_active = PromotedTweetActive(
             authenticator=auth,
             account_id=config['account_id'],
@@ -68,6 +77,7 @@ class SourceTwitterFetcher(AbstractSource):
             tweet,
             tweet_metrics,
             tweet_promoted,
+            tweet_comments,
             promoted_tweet_active,
             promoted_tweet_billing,
             promoted_tweet_engagement,
