@@ -112,6 +112,8 @@ class TweetComments(HttpSubStream, Tweet):
                     # Check if the tweet is within the time limit
                     tweet_date = datetime.strptime(tweet.get('created_at'), "%Y-%m-%dT%H:%M:%S.%fZ")
                     if tweet_date >= self.limit_date:
+                        # Add account_id to the tweet data
+                        tweet['account_id'] = self.account_id
                         yield tweet
         # Add rate limiting delay like other Twitter streams
         time.sleep(2) 
