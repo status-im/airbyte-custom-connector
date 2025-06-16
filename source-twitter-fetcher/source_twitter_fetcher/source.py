@@ -44,7 +44,8 @@ class SourceTwitterFetcher(AbstractSource):
             authenticator=auth,
             account_id=config['account_id'],
             parent=tweet,
-            comment_days_limit=config.get('comment_days_limit', 2)
+            comment_days_limit=config.get('comment_days_limit', 2),
+            filtered_author_ids=config.get('filtered_author_ids', [])
         )
 
         promoted_tweet_active = PromotedTweetActive(

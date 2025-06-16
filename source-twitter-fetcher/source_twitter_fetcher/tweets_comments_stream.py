@@ -14,30 +14,12 @@ class TweetComments(HttpSubStream, Tweet):
     primary_key = "id"
     cursor_field = "created_at"
     
-    # List of author IDs to filter out: these are the author IDs of our accounts (logos, waku...)
-    FILTERED_AUTHOR_IDS = [
-        "1417373828544487426",
-        "1527270456658632706",
-        "1573349900905054212",
-        "1636287274961829888",
-        "1101033576454340608",
-        "1151831284110385152",
-        "1083104775825252353",
-        "774689518767181828",
-        "1783824207631077376",
-        "18904639"
-    ]
-
-    def __init__(self, comment_days_limit: int = 2, **kwargs):
+    def __init__(self, comment_days_limit: int = 2, filtered_author_ids: List[str] = None, **kwargs):
         super().__init__(**kwargs)
         self.comment_days_limit = comment_days_limit
         self.limit_date = datetime.now() - timedelta(days=self.comment_days_limit)
-
-    @property
-    def json_schema(self) -> Mapping[str, Any]:
-        schema_path = os.path.join(os.path.dirname(__file__), "schemas", "tweet_comments.json")
-        with open(schema_path) as f:
-            return json.load(f)
+        # Use provided filtered_author_ids or default to empty list
+        self.filtered_author_ids = filtered_author_ids or []
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """Handle pagination for Twitter search API"""
@@ -107,7 +89,7 @@ class TweetComments(HttpSubStream, Tweet):
             data = response.json()['data']
             for tweet in data:
                 # Skip tweets from filtered author IDs or containing "RT"
-                if (tweet.get('author_id') not in self.FILTERED_AUTHOR_IDS and 
+                if (tweet.get('author_id') not in self.filtered_author_ids and 
                     not tweet.get('text', '').startswith('RT')): #filter out Retweets
                     # Check if the tweet is within the time limit
                     tweet_date = datetime.strptime(tweet.get('created_at'), "%Y-%m-%dT%H:%M:%S.%fZ")
