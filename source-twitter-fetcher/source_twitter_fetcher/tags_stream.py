@@ -2,7 +2,7 @@ from typing import Any, Iterable, Mapping, MutableMapping, Optional, List
 import logging
 import requests
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 
@@ -14,7 +14,14 @@ class TagsStream(HttpStream):
 
     def __init__(self, start_time: str = None, account_id: str = None, tags: List[str] = None, **kwargs):
         super().__init__(**kwargs)
-        self.start_time = start_time
+        
+        # If start_time is provided, parse it; otherwise default to 5 days ago
+        if start_time:
+            self.start_time = start_time if isinstance(start_time, datetime) else datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%SZ")
+        else:
+            # Default to 5 days before current time
+            self.start_time = datetime.utcnow() - timedelta(days=5)
+            
         self.account_id = account_id
         self.tags = tags or []
 

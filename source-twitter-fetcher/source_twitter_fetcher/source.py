@@ -28,12 +28,17 @@ class SourceTwitterFetcher(AbstractSource):
             start_time=datetime.strptime(config['start_time'], DATE_FORMAT),
         )
 
-        tags = TagsStream(
-            authenticator=auth,
-            account_id=config["account_id"],
-            start_time=datetime.strptime(config['start_time'], DATE_FORMAT),
-            tags=config["tags"]
-        )
+        tags_kwargs = {
+            "authenticator": auth,
+            "account_id": config["account_id"],
+            "tags": config["tags"]
+        }
+        
+        # Add start_time only if provided in config
+        if "start_time" in config:
+            tags_kwargs["start_time"] = datetime.strptime(config['start_time'], DATE_FORMAT)
+            
+        tags = TagsStream(**tags_kwargs)
 
         tweet_metrics = TweetMetrics(
             authenticator=auth,
