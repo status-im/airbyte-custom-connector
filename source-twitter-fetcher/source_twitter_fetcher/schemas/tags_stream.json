@@ -14,6 +14,18 @@
     "author_id": {
       "type": ["null", "string"]
     },
+    "author_username": {
+      "type": ["null", "string"],
+      "description": "The Twitter handle/username of the tweet author (e.g., 'john_doe')"
+    },
+    "author_name": {
+      "type": ["null", "string"],
+      "description": "The display name of the tweet author (e.g., 'John Doe')"
+    },
+    "author_verified": {
+      "type": ["null", "boolean"],
+      "description": "Whether the tweet author is verified"
+    },
     "conversation_id": {
       "type": ["null", "string"]
     },

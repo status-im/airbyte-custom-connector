@@ -45,6 +45,8 @@ class TagsStream(HttpStream):
         params = {
             "query": tag,
             "tweet.fields": "text,public_metrics,author_id,referenced_tweets,created_at",
+            "expansions": "author_id",
+            "user.fields": "username,name,verified,public_metrics",
             "max_results": 100
         }
         params.update({"start_time": self.start_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
@@ -59,10 +61,24 @@ class TagsStream(HttpStream):
         **kwargs
     ) -> Iterable[Mapping]:
         logger.debug("Full response %s", response.json())
-        if 'data' in response.json():
-            data = response.json()['data']
+        response_data = response.json()
+        
+        # Create a mapping of user_id to user info for quick lookup because ser data is returned separately in the includes.users array, you need to manually join them using the author_id as the key
+        users_map = {}
+        if 'includes' in response_data and 'users' in response_data['includes']:
+            for user in response_data['includes']['users']:
+                users_map[user['id']] = user
+        
+        if 'data' in response_data:
+            data = response_data['data']
             for t in data:
-                # Add the tag that matched this tweet
                 t["matched_tag"] = stream_slice["tag"]
+                
+                if t.get('author_id') and t['author_id'] in users_map:
+                    user_info = users_map[t['author_id']]
+                    t["author_username"] = user_info.get('username')
+                    t["author_name"] = user_info.get('name')
+                    t["author_verified"] = user_info.get('verified')
+                
                 yield t
         time.sleep(2)  # Rate limiting protection 
