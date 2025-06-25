@@ -7,6 +7,7 @@ from airbyte_cdk.sources.streams import Stream
 from .tweets_stream import Account, Tweet, TweetMetrics, TweetPromoted
 from .ads_stream import PromotedTweetActive, PromotedTweetBilling, PromotedTweetEngagement
 from .spaces_stream import Space
+from .tags_stream import TagsStream
 from .auth import TwitterOAuth
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
@@ -26,6 +27,18 @@ class SourceTwitterFetcher(AbstractSource):
             account_id=config["account_id"],
             start_time=datetime.strptime(config['start_time'], DATE_FORMAT),
         )
+
+        tags_kwargs = {
+            "authenticator": auth,
+            "account_id": config["account_id"],
+            "tags": config["tags"]
+        }
+        
+        # Add start_time only if provided in config
+        if "start_time" in config:
+            tags_kwargs["start_time"] = datetime.strptime(config['start_time'], DATE_FORMAT)
+            
+        tags = TagsStream(**tags_kwargs)
 
         tweet_metrics = TweetMetrics(
             authenticator=auth,
@@ -71,5 +84,6 @@ class SourceTwitterFetcher(AbstractSource):
             promoted_tweet_active,
             promoted_tweet_billing,
             promoted_tweet_engagement,
-            space
+            space,
+            tags
         ]
