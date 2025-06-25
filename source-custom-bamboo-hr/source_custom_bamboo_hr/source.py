@@ -15,7 +15,7 @@ from airbyte_cdk.sources.streams.http.auth import BasicHttpAuthenticator
 
 logger = logging.getLogger("airbyte")
 
-FIELDS_PARAMS = "id,firstName,lastName,displayedName,division,team,department,customENSUsername,customStatusPublicKey,customGitHubusername,customDiscordUsername,supervision,hireDate"
+FIELDS_PARAMS = "id,firstName,lastName,displayedName,division,team,department,customENSUsername,customStatusPublicKey,customGitHubusername,customDiscordUsername,supervision,hireDate,employeeNumber"
 
 class CustomBambooHrStream(HttpStream, ABC):
     url_base = "https://api.bamboohr.com/api/gateway.php/"
@@ -52,8 +52,8 @@ class EmployeesDetails(HttpSubStream, Employees):
     primary_key = "id"
 
     def path(
-        self, stream_state: Mapping[str, Any] = None, 
-        stream_slice: Mapping[str, Any] = None, 
+        self, stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
         next_page_token: Mapping[str, Any] = None
     ) -> str:
         employee_id = stream_slice.get("parent").get("id")
@@ -75,7 +75,7 @@ class SourceCustomBambooHr(AbstractSource):
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         auth = BasicHttpAuthenticator(username=config["token"], password="x")
         employees = Employees(organisation=config["organisation"], authenticator=auth)
-        return [ 
-                employees, 
+        return [
+                employees,
                 EmployeesDetails(organisation=config["organisation"], authenticator=auth, parent=employees)
             ]

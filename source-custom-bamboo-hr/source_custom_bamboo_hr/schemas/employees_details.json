@@ -44,6 +44,9 @@
     "hireDate":{
       "type": ["null", "string"],
       "format": "date-time"
+    },
+    "employeeNumber": {
+      "type": ["null", "string"]
     }
   }
 }
