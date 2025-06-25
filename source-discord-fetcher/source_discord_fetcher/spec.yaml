@@ -32,7 +32,7 @@ connectionSpecification:
     start_date:
       type: string
       title: Start Date
-      description: "The date from which to start fetching messages. Format YYYY-MM-DD"
+      description: "The date from which to start fetching messages. Format YYYY-MM-DD. Defaults to 4 days before current date if not specified."
       pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
       examples: ["2024-01-01"]
       order: 4

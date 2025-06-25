@@ -12,7 +12,7 @@ from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 import time
 import os
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger("airbyte")
 
@@ -153,8 +153,14 @@ class ChannelMessagesStream(DiscordFetcherStream):
     def __init__(self, config: Mapping[str, Any], **kwargs):
         super().__init__(guilds_id=config["guilds_id"], endpoint="/messages", **kwargs)
         self.channel_ids = config["channel_id"]
-        self.start_date = config.get("start_date")
-        
+        # Set default start_date to 4 days before current day if not provided
+        if config.get("start_date"):
+            self.start_date = config["start_date"]
+        else:
+            default_date = datetime.now(timezone.utc) - timedelta(days=4)
+            self.start_date = default_date.strftime("%Y-%m-%d")
+            logger.info("No start_date provided, using default: %s", self.start_date)
+
     @property
     def name(self) -> str:
         return "channel_messages"
