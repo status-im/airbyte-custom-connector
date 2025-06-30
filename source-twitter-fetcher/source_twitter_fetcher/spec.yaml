@@ -51,3 +51,8 @@ connectionSpecification:
       items:
         type: string
       minItems: 1
+    tags_frequent_extractions:
+      type: boolean
+      title: "Tags Frequent Extractions"
+      description: "If true, defaults start_time to 1 hour 15 minutes before current time for more frequent extractions. If false, defaults to 5 days before current time."
+      default: false

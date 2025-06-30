@@ -12,15 +12,19 @@ class TagsStream(HttpStream):
     url_base = "https://api.x.com/2/"
     primary_key = "id"
 
-    def __init__(self, start_time: str = None, account_id: str = None, tags: List[str] = None, **kwargs):
+    def __init__(self, start_time: str = None, account_id: str = None, tags: List[str] = None, tags_frequent_extractions: bool = False, **kwargs):
         super().__init__(**kwargs)
         
-        # If start_time is provided, parse it; otherwise default to 5 days ago
+        # If start_time is provided, parse it; otherwise default based on tags_frequent_extractions
         if start_time:
             self.start_time = start_time if isinstance(start_time, datetime) else datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%SZ")
         else:
-            # Default to 5 days before current time
-            self.start_time = datetime.utcnow() - timedelta(days=5)
+            if tags_frequent_extractions:
+                # Default to 1 hour 15 minutes before current time
+                self.start_time = datetime.utcnow() - timedelta(hours=1, minutes=15)
+            else:
+                # Default to 5 days before current time
+                self.start_time = datetime.utcnow() - timedelta(days=5)
             
         self.account_id = account_id
         self.tags = tags or []
