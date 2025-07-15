@@ -1,0 +1,27 @@
+documentationUrl: https://www.reddit.com/dev/api/
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Reddit Fetcher
+  type: object
+  required:
+    - client_id
+    - client_secret
+    - username
+    - days
+    - subreddit
+  properties:
+    client_id:
+      type: string
+      description: "The Client ID (username) from the Reddit API"
+    client_secret:
+      type: string
+      description: "The Client Secret (password) from the Reddit API"
+    subreddit:
+      type: string
+      description: "The Subreddit that will be monitored"
+    username:
+      type: string
+      description: "The username of the Reddit account that has created the Client ID and Secret"
+    days:
+      type: integer
+      description: "How many days in the past to look for votes and comments"

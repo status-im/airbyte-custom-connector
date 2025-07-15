@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "subreddit_posts",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "post_id": {
+      "type": "string"
+    },
+    "kind_name": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "ups": {
+      "type": "integer"
+    },
+    "downs": {
+      "type": "integer"
+    },
+    "upvote_ratio": {
+      "type": "number"
+    },
+    "score": {
+      "type": "integer"
+    }
+  }
+}
