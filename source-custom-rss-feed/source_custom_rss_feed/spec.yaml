@@ -1,0 +1,24 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Custom RSS Feed Spec
+  type: object
+  required:
+    - rss_urls
+  properties:
+    rss_urls:
+      type: array
+      items:
+        type: string
+        format: uri
+      description: 'List of RSS feed URLs to extract data from (e.g., https://netblocks.org/feed)'
+      examples:
+        - ["https://netblocks.org/feed"]
+        - ["https://netblocks.org/feed", "https://example.com/rss"]
+    start_time:
+      type: string
+      format: date-time
+      description: 'Optional start time to filter articles. Only articles published after this date will be extracted. Format: YYYY-MM-DDTHH:MM:SSZ (ISO 8601)'
+      examples:
+        - "2024-01-01T00:00:00Z"
+        - "2024-12-01T12:00:00Z"

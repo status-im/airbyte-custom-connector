@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "author": {
+      "type": ["string", "null"],
+      "description": "Author of the article"
+    },
+    "content": {
+      "type": ["string", "null"],
+      "description": "Content"
+    },
+    "description": {
+      "type": ["string", "null"],
+      "description": "Description or summary of the article"
+    },
+    "guid": {
+      "type": ["string", "null"],
+      "description": "Globally unique identifier for the article"
+    },
+    "link": {
+      "type": ["string", "null"],
+      "description": "URL link to the full article"
+    },
+    "published": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Publication date and time of the article"
+    },
+    "title": {
+      "type": ["string", "null"],
+      "description": "Title of the article"
+    }
+  }
+}
