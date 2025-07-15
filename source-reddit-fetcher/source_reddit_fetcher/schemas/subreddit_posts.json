@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind_tag": {
+      "type": "string"
+    },
+    "kind_name": {
+      "type": "string"
+    },
+    "subreddit": {
+      "type": "string"
+    },
+    "post_id": {
+      "type": "string"
+    },
+    "post_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "created_timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "timezone": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "text": {
+      "type": "string"
+    },
+    "html_text": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    }
+  }
+}
