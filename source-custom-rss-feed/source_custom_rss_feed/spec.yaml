@@ -18,7 +18,7 @@ connectionSpecification:
     start_time:
       type: string
       format: date-time
-      description: 'Optional start time to filter articles. Only articles published after this date will be extracted. Format: YYYY-MM-DDTHH:MM:SSZ (ISO 8601)'
+      description: 'Optional start time to filter articles. Only articles published after this date will be extracted. If not provided, defaults to one week ago. Format: YYYY-MM-DDTHH:MM:SSZ (ISO 8601)'
       examples:
         - "2024-01-01T00:00:00Z"
         - "2024-12-01T12:00:00Z"

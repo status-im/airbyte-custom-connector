@@ -42,7 +42,7 @@ pip install -e .
 
 | Parameter | Type | Description | Example |
 |-----------|------|-------------|---------|
-| `start_time` | ISO 8601 DateTime | Only extract articles published after this date | `"2024-01-01T00:00:00Z"` |
+| `start_time` | ISO 8601 DateTime | Only extract articles published after this date. Defaults to one week ago if not provided. | `"2024-01-01T00:00:00Z"` |
 
 ### Configuration Example
 
@@ -148,15 +148,6 @@ docker run --rm -v $(pwd)/sample_files:/tmp/sample_files \
 - Python 3.9+
 - Docker
 - Airbyte CDK
-
-### Setup
-```bash
-# Clone and install dependencies
-git clone <repository-url>
-cd source-custom-rss-feed
-pip install -r requirements.txt
-pip install -e .
-```
 
 ## Limitations
 

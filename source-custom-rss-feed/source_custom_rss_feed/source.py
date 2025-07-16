@@ -1,6 +1,6 @@
 from abc import ABC
 from typing import Any, Iterable, List, Mapping, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import feedparser
 from urllib.parse import urlparse
@@ -168,6 +168,12 @@ class SourceCustomRssFeed(AbstractSource):
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         rss_urls = config.get("rss_urls", [])
         start_time = config.get("start_time")
+        
+        # If no start_time provided, default to one week ago
+        if not start_time:
+            one_week_ago = datetime.utcnow() - timedelta(weeks=1)
+            start_time = one_week_ago.strftime("%Y-%m-%dT%H:%M:%SZ")
+            logger.info(f"No start_time provided, defaulting to one week ago: {start_time}")
         
         return [
             ArticlesStream(rss_urls=rss_urls, start_time=start_time)
