@@ -1,7 +1,7 @@
 {
-    "client_id": "your_reddit_client_id",
-    "client_secret": "your_reddit_client_secret",
-    "username": "your_reddit_username",
-    "subreddit": "subreddit_name_to_be_monitored",
+    "client_id": "ZMX2JG0-HmebOUdbZpjATg",
+    "client_secret": "32KUcImO7JtOLZS6WzvnC7pmyeeoGA",
+    "username": "massive-skill-issue",
+    "subreddit": "statusim",
     "days": 31
 }
