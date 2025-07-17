@@ -17,8 +17,8 @@ TEST_REQUIREMENTS = [
 ]
 
 setup(
-    name="source_twitter_fetcher",
-    description="Source implementation for Twitter Fetcher.",
+    name="source_custom_rss_feed",
+    description="Source implementation for RSS feed.",
     author="Status",
     author_email="devops@status.im",
     packages=find_packages(),
@@ -29,7 +29,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "source-twitter-fetcher=source_twitter_fetcher.run:run",
+            "source-custom-rss-feed=source_custom_rss_feed.run:run",
         ],
     },
 )

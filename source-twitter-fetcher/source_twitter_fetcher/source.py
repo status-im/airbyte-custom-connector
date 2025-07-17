@@ -99,6 +99,7 @@ class SourceTwitterFetcher(AbstractSource):
             tweet,
             tweet_metrics,
             tweet_promoted,
+            tweet_comments,
             promoted_tweet_active,
             promoted_tweet_billing,
             promoted_tweet_engagement,

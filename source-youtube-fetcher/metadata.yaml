@@ -8,22 +8,22 @@ data:
   remoteRegistries:
     pypi:
       enabled: true
-      packageName: airbyte-source-discord-fetcher
+      packageName: airbyte-source-youtube-fetcher
   connectorBuildOptions:
     baseImage: docker.io/airbyte/python-connector-base:1.0.0@sha256:dd17e347fbda94f7c3abff539be298a65af2d7fc27a307d89297df1081a45c27
   connectorSubtype: api
   connectorType: source
-  definitionId: b62a9143-1b59-41b2-9942-bae709e7da6b
+  definitionId: 464a7cea-0317-485e-9a9c-bcd06155bfff
   dockerImageTag: 1.0.0
-  dockerRepository: harbor.status.im/bi/airbyte/source-discord-fetcher
-  githubIssueLabel: source-discord-fetcher
-  icon: discord-fetcher.svg
+  dockerRepository: harbor.status.im/bi/airbyte/source-youtube-fetcher
+  githubIssueLabel: source-youtube-fetcher
+  icon: app-store.svg
   license: MIT
-  name: Discord Fetcher
+  name: Youtube Fetcher
   releaseDate: TODO
   supportLevel: community
   releaseStage: alpha
-  documentationUrl: https://docs.airbyte.com/integrations/sources/discord
-  tags:
+  documentationUrl: https://docs.airbyte.com/integrations/sources/source-youtube-fetcher
+  githubIssueLabel: source-youtube-fetcher
     - language:python
 metadataSpecVersion: "1.0"

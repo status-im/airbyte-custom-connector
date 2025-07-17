@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The ID of the message"
+    },
+    "type": {
+      "type": "integer",
+      "description": "The type of message"
+    },
+    "content": {
+      "type": "string",
+      "description": "The actual content of the message"
+    },
+    "channel_id": {
+      "type": "string",
+      "description": "The ID of the channel the message was sent in"
+    },
+    "author": {
+      "type": "object",
+      "description": "The author of this message",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The author's ID"
+        },
+        "username": {
+          "type": "string",
+          "description": "The author's username"
+        },
+        "discriminator": {
+          "type": "string",
+          "description": "The author's discriminator"
+        },
+        "avatar": {
+          "type": ["string", "null"],
+          "description": "The author's avatar hash"
+        },
+        "bot": {
+          "type": "boolean",
+          "description": "Whether the author is a bot"
+        }
+      }
+    },
+    "attachments": {
+      "type": "array",
+      "description": "Any attached files",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Attachment ID"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Name of file attached"
+          },
+          "size": {
+            "type": "integer",
+            "description": "Size of file in bytes"
+          },
+          "url": {
+            "type": "string",
+            "description": "Source URL of file"
+          },
+          "proxy_url": {
+            "type": "string",
+            "description": "A proxied URL of file"
+          },
+          "content_type": {
+            "type": ["string", "null"],
+            "description": "The attachment's media type"
+          }
+        }
+      }
+    },
+    "embeds": {
+      "type": "array",
+      "description": "Any embedded content",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": ["string", "null"],
+            "description": "Title of embed"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of embed (rich, image, video, etc)"
+          },
+          "description": {
+            "type": ["string", "null"],
+            "description": "Description of embed"
+          },
+          "url": {
+            "type": ["string", "null"],
+            "description": "URL of embed"
+          }
+        }
+      }
+    },
+    "mentions": {
+      "type": "array",
+      "description": "Users specifically mentioned in the message",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID of the mentioned user"
+          },
+          "username": {
+            "type": "string",
+            "description": "Username of the mentioned user"
+          },
+          "discriminator": {
+            "type": "string",
+            "description": "Discriminator of the mentioned user"
+          }
+        }
+      }
+    },
+    "mention_roles": {
+      "type": "array",
+      "description": "Roles specifically mentioned in this message",
+      "items": {
+        "type": "string"
+      }
+    },
+    "pinned": {
+      "type": "boolean",
+      "description": "Whether this message is pinned"
+    },
+    "mention_everyone": {
+      "type": "boolean",
+      "description": "Whether this message mentions everyone"
+    },
+    "tts": {
+      "type": "boolean",
+      "description": "Whether this was a TTS message"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this message was sent"
+    },
+    "edited_timestamp": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When this message was edited (null if never)"
+    },
+    "flags": {
+      "type": ["integer", "null"],
+      "description": "Message flags combined as a bitfield"
+    },
+    "thread": {
+      "type": ["object", "null"],
+      "description": "Thread that was started from this message",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The ID of the thread"
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the thread"
+        }
+      }
+    }
+  },
+  "required": ["id", "channel_id", "author", "content", "timestamp"]
+} 

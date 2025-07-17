@@ -6,7 +6,7 @@
 from setuptools import find_packages, setup
 
 MAIN_REQUIREMENTS = [
-    "airbyte-cdk>=0.50.0,<0.60.0",
+    "airbyte-cdk~=0.2",
 ]
 
 TEST_REQUIREMENTS = [
@@ -17,8 +17,8 @@ TEST_REQUIREMENTS = [
 ]
 
 setup(
-    name="source_twitter_fetcher",
-    description="Source implementation for Twitter Fetcher.",
+    name="source_twitter_ads",
+    description="Source implementation for Twitter Ads.",
     author="Status",
     author_email="devops@status.im",
     packages=find_packages(),
@@ -29,7 +29,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "source-twitter-fetcher=source_twitter_fetcher.run:run",
+            "source-twitter-ads=source_twitter_ads.run:run",
         ],
     },
 )

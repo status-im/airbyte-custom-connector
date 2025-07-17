@@ -1,0 +1,44 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Twitter Fetcher
+  type: object
+  required:
+    - credentials
+    - account_ids
+    - start_time
+  properties:
+    credentials:
+      title: Twitter Dev account Credentials
+      type: object
+      properties:
+        consumer_key:
+          title:        'Consumer Key'
+          type:         string
+          description:  "Consumer Key of the Twitter Dev account project"
+          airbyte_secret: true
+        consumer_secret:
+          title:        'Consumer Secret'
+          type:         string
+          description:  "Consumer Secret of the Twitter Dev account project"
+          airbyte_secret: true
+        access_key:
+          title:        'Access Key'
+          type:         string
+          description:  "Access Key of the Twitter Dev account project"
+          airbyte_secret: true
+        access_secret:
+          title:        'Access Secret Key'
+          type:         string
+          description:  "Access Secret of the Twitter Dev account project"
+          airbyte_secret: true
+    account_ids:
+      type:             array
+      title:            "Account Ids"
+      description:      "List of Accounts Id to fetch"
+      items:
+        type: string
+    start_time:
+      type:         string
+      description:  "Start date of fetching data"
+      format:       datetime

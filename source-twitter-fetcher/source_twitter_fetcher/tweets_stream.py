@@ -27,6 +27,10 @@ class TwitterStream(HttpStream):
         if delay_time:
             return int(delay_time)
 
+    def _apply_rate_limiting(self):
+        """Apply rate limiting delay that all Twitter streams should use"""
+        time.sleep(2)
+
 class Account(TwitterStream):
     primary_key = "id"
 
@@ -94,7 +98,7 @@ class Tweet(TwitterStream):
             data = response.json()['data']
             for t in data:
                 yield t
-        time.sleep(2)
+        self._apply_rate_limiting()
 
 class TweetMetrics(HttpSubStream, Tweet):
     primary_key = "id"
@@ -135,7 +139,7 @@ class TweetMetrics(HttpSubStream, Tweet):
             data = response.json()['data']
             logger.debug("DBG-FULL-T: id %s", data.get('id'))
             yield data
-        time.sleep(2)
+        self._apply_rate_limiting()
 
 class TweetPromoted(HttpSubStream, Tweet):
     primary_key = "id"
@@ -177,4 +181,4 @@ class TweetPromoted(HttpSubStream, Tweet):
             yield data
         elif 'error' in response.json():
             logger.info("No promoted Metrics for this tweet")
-        time.sleep(2)
+        self._apply_rate_limiting()

@@ -75,9 +75,9 @@ python main.py read --config sample_files/config-example.json --catalog sample_f
 ### Locally running the connector docker image
 
 ```bash
-docker build -t airbyte/twitter-fetcher:dev .
+docker build -t airbyte/source-discord-fetcher:dev .
 # Running the spec command against your patched connector
-docker run airbyte/twitter-fetcher:dev spec
+docker run airbyte/source-discord-fetcher:dev spec
 ````
 
 #### Run

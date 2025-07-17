@@ -1,0 +1,160 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "channel_id": {
+      "type": "string",
+      "description": "YouTube channel ID"
+    },
+    "title": {
+      "type": "string",
+      "description": "Channel title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Channel description"
+    },
+    "custom_url": {
+      "type": "string",
+      "description": "Channel custom URL"
+    },
+    "published_at": {
+      "type": "string",
+      "description": "Channel creation date in ISO 8601 format"
+    },
+    "country": {
+      "type": "string",
+      "description": "Country where the channel is based"
+    },
+    "default_language": {
+      "type": "string",
+      "description": "Default language for the channel"
+    },
+    "thumbnails": {
+      "type": "object",
+      "description": "Channel thumbnail images",
+      "properties": {
+        "default": {
+          "type": "object",
+          "properties": {
+            "url": {"type": "string"},
+            "width": {"type": "integer"},
+            "height": {"type": "integer"}
+          }
+        },
+        "medium": {
+          "type": "object",
+          "properties": {
+            "url": {"type": "string"},
+            "width": {"type": "integer"},
+            "height": {"type": "integer"}
+          }
+        },
+        "high": {
+          "type": "object",
+          "properties": {
+            "url": {"type": "string"},
+            "width": {"type": "integer"},
+            "height": {"type": "integer"}
+          }
+        }
+      }
+    },
+    "subscriber_count": {
+      "type": "integer",
+      "description": "Number of subscribers"
+    },
+    "video_count": {
+      "type": "integer",
+      "description": "Number of videos uploaded"
+    },
+    "view_count": {
+      "type": "integer",
+      "description": "Total number of views across all videos"
+    },
+    "hidden_subscriber_count": {
+      "type": "boolean",
+      "description": "Whether subscriber count is hidden"
+    },
+    "uploads_playlist_id": {
+      "type": "string",
+      "description": "Playlist ID for uploads"
+    },
+    "likes_playlist_id": {
+      "type": "string",
+      "description": "Playlist ID for liked videos"
+    },
+    "favorites_playlist_id": {
+      "type": "string",
+      "description": "Playlist ID for favorites"
+    },
+    "watchHistory_playlist_id": {
+      "type": "string",
+      "description": "Playlist ID for watch history"
+    },
+    "watchLater_playlist_id": {
+      "type": "string",
+      "description": "Playlist ID for watch later"
+    },
+    "channel_keywords": {
+      "type": "string",
+      "description": "Channel keywords"
+    },
+    "channel_unsubscribed_trailer": {
+      "type": "string",
+      "description": "Video ID for unsubscribed trailer"
+    },
+    "channel_featured_channels_urls": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "URLs of featured channels"
+    },
+    "banner_image_url": {
+      "type": "string",
+      "description": "Channel banner image URL"
+    },
+    "topic_categories": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "YouTube topic categories"
+    },
+    "topic_ids": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "YouTube topic IDs"
+    },
+    "privacy_status": {
+      "type": "string",
+      "description": "Channel privacy status"
+    },
+    "is_linked": {
+      "type": "boolean",
+      "description": "Whether channel is linked to a Google+ page"
+    },
+    "long_uploads_status": {
+      "type": "string",
+      "description": "Long uploads status"
+    },
+    "made_for_kids": {
+      "type": "boolean",
+      "description": "Whether channel is made for kids"
+    },
+    "self_declared_made_for_kids": {
+      "type": "boolean",
+      "description": "Whether channel is self-declared as made for kids"
+    },
+    "fetched_at": {
+      "type": "string",
+      "description": "Timestamp when data was fetched"
+    },
+    "channel_identifier": {
+      "type": "string",
+      "description": "Original channel identifier used for the request"
+    },
+    "api_quota_used": {
+      "type": "integer",
+      "description": "API quota units used for this request"
+    }
+  },
+  "required": ["channel_id", "title", "fetched_at"]
+} 
