@@ -21,6 +21,7 @@ class RedditCredentialsAuthentication(TokenAuthenticator):
             "grant_type": "client_credentials"
         }
 
+        # https://github.com/reddit-archive/reddit/wiki/oauth2#authorization
         url = f"{BASE_URL}/api/v1/access_token"
         logger.info(f"Authentication URL: {url}")
 
@@ -28,13 +29,22 @@ class RedditCredentialsAuthentication(TokenAuthenticator):
         response = requests.post(url, auth=auth, data=data, headers=headers)
         response.raise_for_status()
         logger.info(f"Successfully connected to {url}")
-        token = response.json().get("access_token")
+        
+        info: dict = response.json()
+
+        token: str = info.get("access_token")
+        auth_method: str = info.get("token_type")
         
         if not token:
             raise Exception("Could not fetch access token... Please further investigate!")
         
         logger.info("Successfully fetched Reddit access token")
-        super().__init__(token) 
+        logger.info(f"Authentication method: {auth_method.title()}")
+        
+        valid_hours = info["expires_in"] / (60 * 60)
+        logger.info(f"Token is valid for: {valid_hours}")
+
+        super().__init__(token, auth_method.title())
 
 
 
@@ -43,8 +53,11 @@ class ApiStream(HttpStream):
     primary_key: Optional[str] = None
     url_base = "https://oauth.reddit.com/"
 
-    def __init__(self, authenticator: requests.auth.AuthBase):
+    def __init__(self, days: int, authenticator: requests.auth.AuthBase):
         super().__init__(authenticator=authenticator)
+
+        today_utc = datetime.datetime.now(datetime.timezone.utc).date()
+        self.start_date = (today_utc - pd.offsets.Day(days)).date()
 
 
     def backoff_time(self, response: requests.Response) -> Optional[float]:
@@ -59,8 +72,8 @@ class ApiStream(HttpStream):
         return float(wait) if wait else None
 
 
-    def to_utc_timestamp(self, timestamp: float) -> datetime.date:
-        return datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc).date()
+    def to_utc_timestamp(self, timestamp: float) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
 
 
 class SubredditPosts(ApiStream):
@@ -79,8 +92,8 @@ class SubredditPosts(ApiStream):
     primary_key = "id"
     cursor_field = "created_timestamp"
 
-    def __init__(self, subreddit: str, authenticator: requests.auth.AuthBase):
-        super().__init__(authenticator)
+    def __init__(self, days: int, subreddit: str, authenticator: requests.auth.AuthBase, **kwargs):
+        super().__init__(days, authenticator)
         self.subreddit = subreddit
 
 
@@ -129,16 +142,14 @@ class SubredditPosts(ApiStream):
 
 
 
-class SubredditVotes(SubredditPosts):
+class SubredditPostVotes(SubredditPosts):
 
     primary_key = "id"
     cursor_field = ""
 
-    def __init__(self, days: int, subreddit: str, authenticator: requests.auth.AuthBase):
-        super().__init__(subreddit, authenticator)
+    def __init__(self, days: int, subreddit: str, authenticator: requests.auth.AuthBase, **kwargs):
+        super().__init__(days, subreddit, authenticator)
         
-        today_utc = datetime.datetime.now(datetime.timezone.utc).date()
-        self.start_date = (today_utc - pd.offsets.Day(days)).date()
 
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
@@ -152,7 +163,7 @@ class SubredditVotes(SubredditPosts):
             if not data:
                 continue
                         
-            created_utc = self.to_utc_timestamp(data["created_utc"])
+            created_utc = self.to_utc_timestamp(data["created_utc"]).date()
             if self.start_date > created_utc:
                 break
 
@@ -180,7 +191,7 @@ class SubredditVotes(SubredditPosts):
         data: dict[str, Any] = response.json()
         children: list[dict] = data.get("data", {}).get("children", [])
 
-        if self.start_date > self.to_utc_timestamp(children[-1]["data"]["created_utc"]):
+        if self.start_date > self.to_utc_timestamp(children[-1]["data"]["created_utc"]).date():
             params = None
 
         return params
@@ -189,20 +200,22 @@ class SubredditVotes(SubredditPosts):
 
 class SubredditComments(HttpSubStream, ApiStream):
 
-    def __init__(self, subreddit: str, authenticator: requests.auth.AuthBase, **kwargs):
+    def __init__(self, days: int, subreddit: str, authenticator: requests.auth.AuthBase, **kwargs):
+        kwargs.update({
+            "days": days,
+            "authenticator": authenticator
+        })
         super().__init__(parent=SubredditPosts, **kwargs)
         
         self.subreddit = subreddit
-        self.parent = SubredditPosts(self.subreddit, authenticator)
+        self.parent = SubredditPosts(days, self.subreddit, authenticator)
 
     def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
         post: dict = stream_slice.get("parent")
         post_id = post["post_id"]
 
         url = f"{self.url_base}/r/{self.subreddit}/comments/{post_id}"
-        logger.info(f"{self.__class__.__name__}: {url}")
         return url
-
 
     def parse_response(self, response: requests.Response, *, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
         
@@ -227,6 +240,48 @@ class SubredditComments(HttpSubStream, ApiStream):
             }
             yield row
 
+    def next_page_token(self, response: requests.Response):
+        _, comments = response.json()
+        after = comments.get("data", {}).get("after")
+        return {"after": after} if after else None
+
+
+
+class SubredditCommentsVotes(SubredditComments):
+
+    def __init__(self, days: int, subreddit: str, authenticator: requests.auth.AuthBase, **kwargs):
+        super().__init__(days, subreddit, authenticator, **kwargs)
+
+    def parse_response(self, response: requests.Response, *, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
+        
+        _, comments = response.json()
+        post_id = response.url.split("/")[-1].split("?")[0]
+
+        for child in comments["data"]["children"]:
+
+            child_data: dict = child["data"]
+
+            row = {
+                "id": f"{self.subreddit}-{post_id}-{child_data['id']}",
+                "subreddit": self.subreddit,
+                "ups": child_data["ups"],
+                "downs": child_data["downs"],
+                "score": child_data["score"]
+            }
+
+            yield row
+
+    def next_page_token(self, response: requests.Response):
+        _, comments = response.json()
+        params = super().next_page_token(response)
+
+        children = comments.get("data", {}).get("children", [])
+
+        if len(children) == 0 or self.start_date > self.to_utc_timestamp(children[-1]["data"]["created_utc"]).date():
+            params = None
+
+        return params
+
 
 
 class SourceRedditFetcher(AbstractSource):
@@ -239,9 +294,15 @@ class SourceRedditFetcher(AbstractSource):
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         
-        auth = RedditCredentialsAuthentication(**config)
+        auth = RedditCredentialsAuthentication(
+            client_id=config["client_id"],
+            client_secret=config["client_secret"],
+            username=config["username"]
+        )
         streams = [
-            SubredditPosts(subreddit=config["subreddit"], authenticator=auth),
-            SubredditVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth)
+            SubredditPosts(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
+            SubredditPostVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
+            SubredditComments(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
+            SubredditCommentsVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth)
         ]
         return streams
