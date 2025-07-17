@@ -8,88 +8,31 @@ from airbyte_cdk.sources.streams.http import HttpStream
 
 logger = logging.getLogger("airbyte")
 
-class TagsStream(HttpStream):
+class TwitterStream(HttpStream):
     url_base = "https://api.x.com/2/"
-    primary_key = "id"
-
-    def __init__(self, start_time: str = None, account_id: str = None, tags: List[str] = None, tags_frequent_extractions: bool = False, **kwargs):
+    
+    def __init__(self, start_time: str = None, account_id: str = None, **kwargs):
         super().__init__(**kwargs)
+        self.start_time = start_time
+        self.account_id = account_id
+    
+    def backoff_time(self, response: requests.Response) -> Optional[float]:
+        # Handles API rate limiting with Retry-After headers
         
-        # If start_time is provided, parse it; otherwise default based on tags_frequent_extractions
-        if start_time:
-            self.start_time = start_time if isinstance(start_time, datetime) else datetime.strptime(start_time, "%Y-%m-%dT%H:%M:%SZ")
-        else:
+    def _apply_rate_limiting(self):
+        time.sleep(2)  # Rate limiting protection
+
+class TagsStream(TwitterStream):  # Inherit from TwitterStream
+    def __init__(self, tags: List[str] = None, tags_frequent_extractions: bool = False, **kwargs):
+        super().__init__(**kwargs)  # Let TwitterStream handle start_time, account_id
+        
+        # Handle tags-specific logic
+        if not self.start_time:  # Only override if TwitterStream didn't set it
             if tags_frequent_extractions:
-                # Default to 1 hour 15 minutes before current time
                 self.start_time = datetime.utcnow() - timedelta(hours=1, minutes=15)
             else:
-                # Default to 5 days before current time
                 self.start_time = datetime.utcnow() - timedelta(days=5)
-            
-        self.account_id = account_id
+                
         self.tags = tags or []
-
-    def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
-        for tag in self.tags:
-            yield {"tag": tag}
-
-    def path(
-        self,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None,
-        next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        return "tweets/search/recent" # this endpoint fetches data from the last 7 days 
-
-    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
-        if 'meta' in response.json() and 'next_token' in response.json()['meta'] and response.json()['meta']['result_count'] > 0:
-            logger.debug('DBG-NT: %s', response.json()['meta']['next_token'])
-            return {"next_token": response.json()['meta']['next_token']}
-
-    def request_params(
-        self,
-        next_page_token: Optional[Mapping[str, Any]] = None,
-        stream_state: Mapping[str, Any] = None,
-        stream_slice: Mapping[str, Any] = None
-    ) -> MutableMapping[str, Any]:
-        tag = stream_slice["tag"]
-        params = {
-            "query": tag,
-            "tweet.fields": "text,public_metrics,author_id,referenced_tweets,created_at",
-            "expansions": "author_id",
-            "user.fields": "username,name,verified,public_metrics",
-            "max_results": 100
-        }
-        params.update({"start_time": self.start_time.strftime("%Y-%m-%dT%H:%M:%SZ")})
-        if next_page_token:
-            params.update(**next_page_token)
-        return params
-
-    def parse_response(
-        self,
-        response: requests.Response,
-        stream_slice: Mapping[str, Any] = None,
-        **kwargs
-    ) -> Iterable[Mapping]:
-        logger.debug("Full response %s", response.json())
-        response_data = response.json()
-        
-        # Create a mapping of user_id to user info for quick lookup because ser data is returned separately in the includes.users array, you need to manually join them using the author_id as the key
-        users_map = {}
-        if 'includes' in response_data and 'users' in response_data['includes']:
-            for user in response_data['includes']['users']:
-                users_map[user['id']] = user
-        
-        if 'data' in response_data:
-            data = response_data['data']
-            for t in data:
-                t["matched_tag"] = stream_slice["tag"]
-                
-                if t.get('author_id') and t['author_id'] in users_map:
-                    user_info = users_map[t['author_id']]
-                    t["author_username"] = user_info.get('username')
-                    t["author_name"] = user_info.get('name')
-                    t["author_verified"] = user_info.get('verified')
-                
-                yield t
-        time.sleep(2)  # Rate limiting protection 
+    
+ 
