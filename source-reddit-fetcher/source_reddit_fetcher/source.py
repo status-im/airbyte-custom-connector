@@ -48,14 +48,15 @@ class RedditCredentialsAuthentication(TokenAuthenticator):
 
 
 
-class ApiStream(HttpStream):
+class RedditStream(HttpStream):
 
     primary_key: Optional[str] = None
     url_base = "https://oauth.reddit.com/"
 
-    def __init__(self, days: int, authenticator: requests.auth.AuthBase):
+    def __init__(self, subreddit: str, days: int, authenticator: requests.auth.AuthBase):
         super().__init__(authenticator=authenticator)
 
+        self.subreddit = subreddit
         today_utc = datetime.datetime.now(datetime.timezone.utc).date()
         self.start_date = (today_utc - pd.offsets.Day(days)).date()
 
@@ -76,7 +77,19 @@ class ApiStream(HttpStream):
         return datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
 
 
-class SubredditPosts(ApiStream):
+    def request_params(self, stream_state: Optional[Mapping[str, Any]], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
+        
+        params = {
+            "limit": 100
+        }
+        if next_page_token:
+            params.update(next_page_token)
+        
+        return params
+
+
+
+class Posts(RedditStream):
 
     # Based on "type prefixes"
     # https://www.reddit.com/dev/api/
@@ -93,8 +106,7 @@ class SubredditPosts(ApiStream):
     cursor_field = "created_timestamp"
 
     def __init__(self, days: int, subreddit: str, authenticator: requests.auth.AuthBase, **kwargs):
-        super().__init__(days, authenticator)
-        self.subreddit = subreddit
+        super().__init__(subreddit, days, authenticator)
 
 
 
@@ -138,11 +150,12 @@ class SubredditPosts(ApiStream):
     def next_page_token(self, response: requests.Response) -> Optional[dict[str, Any]]:
         data: dict = response.json()
         after = data.get("data", {}).get("after")
+        return None
         return {"after": after} if after else None
 
 
 
-class SubredditPostVotes(SubredditPosts):
+class PostVotes(Posts):
 
     primary_key = "id"
     cursor_field = ""
@@ -198,17 +211,15 @@ class SubredditPostVotes(SubredditPosts):
 
 
 
-class SubredditComments(HttpSubStream, ApiStream):
+class Comments(HttpSubStream, RedditStream):
 
-    def __init__(self, days: int, subreddit: str, authenticator: requests.auth.AuthBase, **kwargs):
+    def __init__(self, days: int, authenticator: requests.auth.AuthBase, **kwargs):
         kwargs.update({
             "days": days,
             "authenticator": authenticator
         })
-        super().__init__(parent=SubredditPosts, **kwargs)
-        
-        self.subreddit = subreddit
-        self.parent = SubredditPosts(days, self.subreddit, authenticator)
+        super().__init__(parent=Posts, **kwargs)
+        self.parent = Posts(days, self.subreddit, authenticator)
 
     def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
         post: dict = stream_slice.get("parent")
@@ -247,10 +258,13 @@ class SubredditComments(HttpSubStream, ApiStream):
 
 
 
-class SubredditCommentsVotes(SubredditComments):
+class CommentsVotes(Comments):
 
     def __init__(self, days: int, subreddit: str, authenticator: requests.auth.AuthBase, **kwargs):
-        super().__init__(days, subreddit, authenticator, **kwargs)
+        kwargs.update({
+            "subreddit": subreddit
+        })
+        super().__init__(days, authenticator, **kwargs)
 
     def parse_response(self, response: requests.Response, *, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
         
@@ -300,9 +314,9 @@ class SourceRedditFetcher(AbstractSource):
             username=config["username"]
         )
         streams = [
-            SubredditPosts(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
-            SubredditPostVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
-            SubredditComments(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
-            SubredditCommentsVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth)
+            Posts(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
+            PostVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
+            Comments(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
+            CommentsVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth)
         ]
         return streams
