@@ -42,7 +42,7 @@ class RedditCredentialsAuthentication(TokenAuthenticator):
         logger.info(f"Authentication method: {auth_method.title()}")
         
         valid_hours = info["expires_in"] / (60 * 60)
-        logger.info(f"Token is valid for: {valid_hours}")
+        logger.info(f"Token is valid for: {int(valid_hours)} hours")
 
         super().__init__(token, auth_method.title())
 
@@ -150,12 +150,11 @@ class Posts(RedditStream):
     def next_page_token(self, response: requests.Response) -> Optional[dict[str, Any]]:
         data: dict = response.json()
         after = data.get("data", {}).get("after")
-        return None
         return {"after": after} if after else None
 
 
 
-class PostVotes(Posts):
+class PostsVotes(Posts):
 
     primary_key = "id"
     cursor_field = ""
@@ -315,7 +314,7 @@ class SourceRedditFetcher(AbstractSource):
         )
         streams = [
             Posts(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
-            PostVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
+            PostsVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
             Comments(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
             CommentsVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth)
         ]
