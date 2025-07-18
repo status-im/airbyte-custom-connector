@@ -18,8 +18,10 @@ The connector takes the following input:
 
 The connector will return the following:
 
-* [SubredditPosts](./source-reddit-fetcher/schemas/subreddit_posts.json)  
-* [SubredditVotes](./source-reddit-fetcher/schemas/subreddit_votes.json)
+* [Posts](./source-reddit-fetcher/schemas/posts.json)  
+* [PostVotes](./source-reddit-fetcher/schemas/posts_votes.json)
+* [Comments](./source-reddit-fetcher/schemas/comments.json)
+* [CommentsVotes](./source-reddit-fetcher/schemas/comments_votes.json)
 
 ## Local development
 
