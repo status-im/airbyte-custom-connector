@@ -8,16 +8,20 @@ connectionSpecification:
     - client_secret
     - username
     - days
+    - subreddit
   properties:
     client_id:
       type: string
       description: "The Client ID (username) from the Reddit API"
-    blocks_to_do:
+    client_secret:
       type: string
       description: "The Client Secret (password) from the Reddit API"
+    subreddit:
+      type: string
+      description: "The Subreddit that will be monitored"
     username:
       type: string
       description: "The username of the Reddit account that has created the Client ID and Secret"
     days:
       type: integer
-      description: "The days that votes and comments will be scraped for"
+      description: "How many days in the past to look for votes and comments"
