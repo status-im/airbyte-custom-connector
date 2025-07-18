@@ -1,7 +1,8 @@
 pipeline {
   agent { label 'linux' }
-  
+
   options {
+    disableRestartFromStage()
     disableConcurrentBuilds()
     /* manage how many builds we keep */
     buildDiscarder(logRotator(
@@ -49,7 +50,7 @@ pipeline {
             }
           }
         }
-      } } 
+      } }
     }
   }
   post {
