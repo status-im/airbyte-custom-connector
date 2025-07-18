@@ -303,7 +303,22 @@ class SourceRedditFetcher(AbstractSource):
         super().__init__()
 
     def check_connection(self, logger: logging.Logger, config: dict) -> Tuple[bool, Any]:
-        return True, None
+
+        logger.info(f"Config keys: {config.keys()}")
+
+        auth = RedditCredentialsAuthentication(
+            client_id=config["client_id"],
+            client_secret=config["client_secret"],
+            username=config["username"]
+        )
+                
+        url = BASE_URL + f"/r/" + config["subreddit"] + "/comments"
+        logger.info(f"Fetching: {url}")
+        
+        resp = requests.get(url)
+        resp.raise_for_status()
+
+        return resp.status_code == 200, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         
