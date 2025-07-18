@@ -2,7 +2,7 @@
     "streams": [
       {
         "stream": {
-          "name": "subreddit_posts",
+          "name": "posts",
           "json_schema": {
             "$schema": "http://json-schema.org/draft-04/schema#",
             "type": "object"
@@ -16,7 +16,7 @@
       },
       {
         "stream": {
-          "name": "subreddit_post_votes",
+          "name": "post_votes",
           "json_schema": {
             "$schema": "http://json-schema.org/draft-04/schema#",
             "type": "object"
@@ -30,7 +30,7 @@
       },
       {
         "stream": {
-          "name": "subreddit_comments",
+          "name": "comments",
           "json_schema": {
             "$schema": "http://json-schema.org/draft-04/schema#",
             "type": "object"
@@ -44,7 +44,7 @@
       },
       {
         "stream": {
-          "name": "subreddit_comments_votes",
+          "name": "comments_votes",
           "json_schema": {
             "$schema": "http://json-schema.org/draft-04/schema#",
             "type": "object"

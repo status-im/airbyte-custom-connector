@@ -65,7 +65,7 @@ Then run any of the connector commands as follows:
 docker run --rm airbyte/source-reddit-fetcher:dev spec
 docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-reddit-fetcher:dev check --config /sample_files/config-example.json
 docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-reddit-fetcher:dev discover --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files airbyte/source-reddit-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
+docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-reddit-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json  
 ```
 
 ### Windows
