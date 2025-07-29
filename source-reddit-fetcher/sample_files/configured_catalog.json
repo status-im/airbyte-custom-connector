@@ -14,21 +14,7 @@
         "sync_mode": "incremental",
         "destination_sync_mode": "append"
       },
-      {
-        "stream": {
-          "name": "posts_votes",
-          "json_schema": {
-            "$schema": "http://json-schema.org/draft-04/schema#",
-            "type": "object"
-          },
-          "supported_sync_modes": [
-            "incremental"
-          ]
-        },
-        "sync_mode": "incremental",
-        "destination_sync_mode": "append"
-      },
-      {
+     {
         "stream": {
           "name": "comments",
           "json_schema": {
@@ -36,25 +22,11 @@
             "type": "object"
           },
           "supported_sync_modes": [
-            "incremental"
+            "full_refresh", "incremental"
           ]
         },
-        "sync_mode": "incremental",
-        "destination_sync_mode": "append"
-      },
-      {
-        "stream": {
-          "name": "comments_votes",
-          "json_schema": {
-            "$schema": "http://json-schema.org/draft-04/schema#",
-            "type": "object"
-          },
-          "supported_sync_modes": [
-            "incremental"
-          ]
-        },
-        "sync_mode": "incremental",
-        "destination_sync_mode": "append"
+        "sync_mode": "full_refresh",
+        "destination_sync_mode": "overwrite"
       }
     ]
   }

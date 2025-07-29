@@ -35,6 +35,15 @@
     },
     "url": {
       "type": "string"
+    },
+    "ups": {
+      "type": "integer"
+    },
+    "downs": {
+      "type": "integer"
+    },
+    "score": {
+      "type": "integer"
     }
   }
 }
