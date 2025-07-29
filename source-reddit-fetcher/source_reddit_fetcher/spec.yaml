@@ -16,6 +16,7 @@ connectionSpecification:
     client_secret:
       type: string
       description: "The Client Secret (password) from the Reddit API"
+      airbyte_secret: true
     subreddit:
       type: string
       description: "The Subreddit that will be monitored"

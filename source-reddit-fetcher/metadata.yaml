@@ -19,7 +19,7 @@ data:
   releaseDate: TODO
   supportLevel: community
   releaseStage: alpha
-  documentationUrl: https://docs.bi.status.im/extractions/reddit.html  
+  documentationUrl: https://docs.bi.status.im/extractions/reddit.html
   tags:
     - language:python
 metadataSpecVersion: "1.0"

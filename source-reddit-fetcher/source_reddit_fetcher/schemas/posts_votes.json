@@ -1,31 +1,30 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "subreddit_posts",
   "type": "object",
   "properties": {
     "id": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "post_id": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "kind_name": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "kind": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "ups": {
-      "type": "integer"
+      "type": ["null", "integer"]
     },
     "downs": {
-      "type": "integer"
+      "type": ["null", "integer"]
     },
     "upvote_ratio": {
-      "type": "number"
+      "type": ["null", "number"]
     },
     "score": {
-      "type": "integer"
+      "type": ["null", "integer"]
     }
   }
 }

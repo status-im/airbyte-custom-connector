@@ -20,7 +20,7 @@ setup(
     name="source-reddit-fetcher",
     description="Source implementation for Reddit.",
     author="Status",
-    author_email="devops@status.im",
+    author_email="bi@status.im",
     packages=find_packages(),
     install_requires=MAIN_REQUIREMENTS,
     package_data={"": ["*.json", "*.yaml", "schemas/*.json", "schemas/shared/*.json"]},
@@ -29,7 +29,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "source-reddit-connector=source_blockchain_reddit.run:run",
+            "source-reddit-connector=source_reddit_fetcher.run:run",
         ],
     },
 )
