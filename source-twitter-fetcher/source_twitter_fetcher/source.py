@@ -5,6 +5,7 @@ from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 
 from .tweets_stream import Account, Tweet, TweetMetrics, TweetPromoted
+from .tweets_comments_stream import TweetComments
 from .ads_stream import PromotedTweetActive, PromotedTweetBilling, PromotedTweetEngagement
 from .spaces_stream import Space
 from .tags_stream import TagsStream
@@ -63,6 +64,16 @@ class SourceTwitterFetcher(AbstractSource):
             account_id=config['account_id'],
             parent=tweet
         )
+
+        tweet_comments_kwargs = {
+            "authenticator": auth,
+            "account_id": config['account_id'],
+            "parent": tweet
+        }
+        if start_time:
+            tweet_comments_kwargs["start_time"] = start_time
+            
+        tweet_comments = TweetComments(**tweet_comments_kwargs)
 
         promoted_tweet_active_kwargs = {
             "authenticator": auth,
