@@ -39,6 +39,18 @@
     },
     "author": {
       "type": "string"
+    },
+    "ups": {
+      "type": ["null", "integer"]
+    },
+    "downs": {
+      "type": ["null", "integer"]
+    },
+    "upvote_ratio": {
+      "type": ["null", "number"]
+    },
+    "score": {
+      "type": ["null", "integer"]
     }
   }
 }
