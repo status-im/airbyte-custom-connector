@@ -4,7 +4,8 @@ from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from airbyte_cdk.sources.streams.http.requests_native_auth import TokenAuthenticator
-import logging, json, datetime, requests
+import logging, json, requests
+from datetime import datetime, timezone, timedelta
 import requests.auth
 import pandas as pd
 import os
@@ -53,7 +54,7 @@ class RedditStream(HttpStream, ABC):
         super().__init__(authenticator=authenticator)
 
         self.subreddit = subreddit
-        today_utc = datetime.datetime.now(datetime.timezone.utc).date()
+        today_utc = datetime.now(timezone.utc).date()
         self.start_date = (today_utc - pd.offsets.Day(days)).date()
 
 
@@ -65,12 +66,12 @@ class RedditStream(HttpStream, ABC):
             logger.warning(f"Raised too many requests at once! Waiting {wait}s...")
         return float(wait) if wait else None
 
-    def to_utc_timestamp(self, timestamp: float) -> datetime.datetime:
-        return datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
+    def to_utc_timestamp(self, timestamp: float) -> datetime:
+        return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
     def request_params(self, stream_state: Optional[Mapping[str, Any]], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
         params = {
-            "limit": 100
+            "limit": 10
         }
         if next_page_token:
             params.update(next_page_token)
@@ -90,6 +91,8 @@ class Posts(RedditStream):
 
     primary_key = "id"
     cursor_field = "created_timestamp"
+    _last_post = None
+    _last_id = None
 
     def path(self, **kwargs):
         return f"{self.url_base}/r/{self.subreddit}/new"
@@ -113,81 +116,30 @@ class Posts(RedditStream):
                 "post_url": BASE_URL + data["permalink"],
                 "url": data["url"],
                 "domain": data["domain"],
-                "created_timestamp": datetime.datetime.fromtimestamp(data["created_utc"], tz=datetime.timezone.utc),
+                "created_timestamp": datetime.fromtimestamp(data["created_utc"], tz=timezone.utc),
                 "timezone": "UTC",
                 "title": data["title"],
                 "text": data["selftext"],
                 "html_text": data["selftext_html"],
                 "author": data["author"],
+                "author_fullname": data["author"],
+                "downs": data["downs"],
+                "ups": data["ups"],
+                "score": data["score"],
+                "upvote_ratio": data["upvote_ratio"],
+                "subreddit_subscribers": data["subreddit_subscribers"],
                 "raw": json.dumps(data)
             }
             yield row
-
+            self._last_post = datetime.fromtimestamp(data["created_utc"], tz=timezone.utc).date()
+            self._last_id = f"t5_{data['id']}"
 
 
     def next_page_token(self, response: requests.Response) -> Optional[dict[str, Any]]:
         data: dict = response.json()
-        after = data.get("data", {}).get("after")
-        return {"after": after} if after else None
 
-
-    def get_json_schema(self) -> Mapping[str, Any]:
-        schema_path = os.path.join(os.path.dirname(__file__), "schemas", f"{self.name}.json")
-        with open(schema_path, "r") as f:
-            return json.load(f)
-
-
-
-class PostsVotes(RedditStream):
-
-    primary_key = "id"
-
-    def path(self, **kwargs):
-        return f"{self.url_base}/r/{self.subreddit}/new"
-
-    def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-        data: dict[str, Any] = response.json()
-        children: list[dict] = data.get("data", {}).get("children", [])
-
-        for child in children:
-            data = child.get("data", {})
-            if not data:
-                continue
-            created_utc = self.to_utc_timestamp(data["created_utc"]).date()
-            if self.start_date > created_utc:
-                break
-
-            keys = ["ups", "downs", "upvote_ratio", "score"]
-            row = {
-                "id": f"{str(datetime.datetime.now().timestamp()).replace('.', '')}-{self.subreddit}-{data['id']}",
-                "post_id": f"{self.subreddit}-{data['id']}",
-                "kind": child["kind"],
-                "kind_name": self.type_prefixes[child["kind"]],
-                **{key: data[key] for key in keys},
-            }
-
-            yield row
-
-
-
-    def next_page_token(self, response: requests.Response) -> Optional[dict[str, Any]]:
-        params = super().next_page_token(response)
-        if not params:
-            return None
-        data: dict[str, Any] = response.json()
-        children: list[dict] = data.get("data", {}).get("children", [])
-
-        if self.start_date > self.to_utc_timestamp(children[-1]["data"]["created_utc"]).date():
-            params = None
-
-        return params
-
-
-    def get_json_schema(self) -> Mapping[str, Any]:
-        schema_path = os.path.join(os.path.dirname(__file__), "schemas", f"{self.name}.json")
-        with open(schema_path, "r") as f:
-            return json.load(f)
-
+        if self.start_date < self._last_post:
+            return {"before": self._last_id}
 
 
 class Comments(HttpSubStream, Posts):
@@ -197,13 +149,12 @@ class Comments(HttpSubStream, Posts):
     def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
         post: dict = stream_slice.get("parent")
         post_id = post["post_id"]
-        url = f"{self.url_base}/r/{post.subreddit}/comments/{post_id}"
+        url = f"{self.url_base}/r/{self.subreddit}/comments/{post_id}"
         return url
 
     def parse_response(self, response: requests.Response, *, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
         _, comments = response.json()
         post_id = response.url.split("/")[-1].split("?")[0]
-
         for child in comments["data"]["children"]:
             child_data: dict = child["data"]
             row = {
@@ -224,16 +175,12 @@ class Comments(HttpSubStream, Posts):
             }
             yield row
 
+
     def next_page_token(self, response: requests.Response):
         _, comments = response.json()
-        after = comments.get("data", {}).get("after")
-        return {"after": after} if after else None
+        before = comments.get("data", {}).get("before")
+        return {"before": before} if before else None
 
-
-    def get_json_schema(self) -> Mapping[str, Any]:
-        schema_path = os.path.join(os.path.dirname(__file__), "schemas", f"{self.name}.json")
-        with open(schema_path, "r") as f:
-            return json.load(f)
 
 class SourceRedditFetcher(AbstractSource):
 
@@ -262,7 +209,6 @@ class SourceRedditFetcher(AbstractSource):
         posts = Posts(days=config["days"], subreddit=config["subreddit"], authenticator=auth)
         streams = [
             posts,
-            PostsVotes(days=config["days"], subreddit=config["subreddit"], authenticator=auth),
             Comments(days=config["days"], subreddit=config["subreddit"], authenticator=auth, parent=posts),
         ]
         return streams
