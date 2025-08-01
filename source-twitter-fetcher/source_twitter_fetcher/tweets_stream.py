@@ -55,6 +55,13 @@ class Account(TwitterStream):
 class Tweet(TwitterStream):
     primary_key = "id"
 
+    def __init__(self, start_time: str = None, account_id: str = None, **kwargs):
+        super().__init__(start_time=start_time, account_id=account_id, **kwargs)
+        
+        # Set default start_time if not provided (5 days before current time)
+        if not self.start_time:
+            self.start_time = datetime.utcnow() - timedelta(days=5)
+
     @property
     def use_cache(self) -> bool:
         return True

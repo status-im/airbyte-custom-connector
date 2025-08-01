@@ -1,24 +1,12 @@
 {
   "credentials":{
-    "client_id": "some-id",
-    "client_secret": "some-secret",
-    "access_token": "some-access-token",
-    "refresh_token": "some-refresh-token",
-    "token_expiry_date": ""
+    "client_id": "your_client_id",
+    "client_secret": "your_client_secret",
+    "access_token": "your_access_token",
+    "refresh_token": "your_refresh_token",
+    "token_expiry_date": "2024-12-31T00:00:00Z"
   },
-  "account_id": "123456789",
+  "account_id": "your_account_id",
   "start_time": "2024-01-01T00:00:00Z",
-  "comment_days_limit": 2,
-  "filtered_author_ids": [
-    "1417373828544487426",
-    "1527270456658632706",
-    "1573349900905054212",
-    "1636287274961829888",
-    "1101033576454340608",
-    "1151831284110385152",
-    "1083104775825252353",
-    "774689518767181828",
-    "1783824207631077376",
-    "18904639"
-  ]
+  "tags": ["@IFT", "@status", "@Airbyte"]
 }

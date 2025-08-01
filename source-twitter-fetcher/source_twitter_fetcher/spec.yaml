@@ -6,7 +6,7 @@ connectionSpecification:
   required:
     - credentials
     - account_id
-    - start_time
+    - tags
   properties:
     credentials:
       title: Twitter Dev account Credentials
@@ -42,19 +42,17 @@ connectionSpecification:
       description:      "Id of the Twitter Account to fetch info from"
     start_time:
       type:         string
-      description:  "Start date of fetching data"
+      description:  "Start date of fetching data. If not provided, defaults to 5 days before current time."
       format:       datetime
-    comment_days_limit:
-      type:         integer
-      title:        "Comment Days Limit"
-      description:  "Number of days to look back for comments on tweets (default: 2)"
-      default:      2
-      minimum:      1
-      maximum:      7
-    filtered_author_ids:
-      type:         array
-      title:        "Filtered Author IDs"
-      description:  "List of Twitter author IDs to filter out from comments (e.g., your own organization's account IDs)"
+    tags:
+      type: array
+      title: "Tags to Monitor"
+      description: "List of Twitter handles to monitor (e.g., ['@IFT', '@Airbyte'])"
       items:
-        type:       string
-      default:      []
+        type: string
+      minItems: 1
+    tags_frequent_extractions:
+      type: boolean
+      title: "Tags Frequent Extractions"
+      description: "If true, defaults start_time to 1 hour 15 minutes before current time for more frequent extractions. If false, defaults to 5 days before current time."
+      default: false
