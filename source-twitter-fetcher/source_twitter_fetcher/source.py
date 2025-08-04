@@ -5,9 +5,10 @@ from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 
 from .tweets_stream import Account, Tweet, TweetMetrics, TweetPromoted
+from .tweets_comments_stream import TweetComments
 from .ads_stream import PromotedTweetActive, PromotedTweetBilling, PromotedTweetEngagement
 from .spaces_stream import Space
-from .tweets_comments_stream import TweetComments
+from .tags_stream import TagsStream
 from .auth import TwitterOAuth
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
@@ -22,11 +23,35 @@ class SourceTwitterFetcher(AbstractSource):
             token_refresh_endpoint="https://api.x.com/2/oauth2/token"
         )
 
-        tweet = Tweet(
-            authenticator=auth,
-            account_id=config["account_id"],
-            start_time=datetime.strptime(config['start_time'], DATE_FORMAT),
-        )
+        # Parse start_time if provided, otherwise streams will use their defaults
+        start_time = None
+        if "start_time" in config:
+            start_time = datetime.strptime(config['start_time'], DATE_FORMAT)
+
+        tweet_kwargs = {
+            "authenticator": auth,
+            "account_id": config["account_id"]
+        }
+        if start_time:
+            tweet_kwargs["start_time"] = start_time
+            
+        tweet = Tweet(**tweet_kwargs)
+
+        tags_kwargs = {
+            "authenticator": auth,
+            "account_id": config["account_id"],
+            "tags": config["tags"]
+        }
+        
+        # Add start_time only if provided in config
+        if start_time:
+            tags_kwargs["start_time"] = start_time
+            
+        # Add tags_frequent_extractions if provided in config
+        if "tags_frequent_extractions" in config:
+            tags_kwargs["tags_frequent_extractions"] = config["tags_frequent_extractions"]
+            
+        tags = TagsStream(**tags_kwargs)
 
         tweet_metrics = TweetMetrics(
             authenticator=auth,
@@ -40,19 +65,24 @@ class SourceTwitterFetcher(AbstractSource):
             parent=tweet
         )
 
-        tweet_comments = TweetComments(
-            authenticator=auth,
-            account_id=config['account_id'],
-            parent=tweet,
-            comment_days_limit=config.get('comment_days_limit', 2),
-            filtered_author_ids=config.get('filtered_author_ids', [])
-        )
+        tweet_comments_kwargs = {
+            "authenticator": auth,
+            "account_id": config['account_id'],
+            "parent": tweet
+        }
+        if start_time:
+            tweet_comments_kwargs["start_time"] = start_time
+            
+        tweet_comments = TweetComments(**tweet_comments_kwargs)
 
-        promoted_tweet_active = PromotedTweetActive(
-            authenticator=auth,
-            account_id=config['account_id'],
-            start_time=datetime.strptime(config['start_time'], DATE_FORMAT),
-        )
+        promoted_tweet_active_kwargs = {
+            "authenticator": auth,
+            "account_id": config['account_id']
+        }
+        if start_time:
+            promoted_tweet_active_kwargs["start_time"] = start_time
+            
+        promoted_tweet_active = PromotedTweetActive(**promoted_tweet_active_kwargs)
 
         promoted_tweet_billing = PromotedTweetBilling(
             authenticator=auth,
@@ -66,11 +96,14 @@ class SourceTwitterFetcher(AbstractSource):
             parent=promoted_tweet_active
         )
 
-        space = Space(
-            authenticator=auth,
-            account_id=config['account_id'],
-            start_time=datetime.strptime(config['start_time'], DATE_FORMAT)
-        )
+        space_kwargs = {
+            "authenticator": auth,
+            "account_id": config['account_id']
+        }
+        if start_time:
+            space_kwargs["start_time"] = start_time
+            
+        space = Space(**space_kwargs)
 
         return [
             Account(authenticator=auth, account_id=config["account_id"]),
@@ -81,5 +114,6 @@ class SourceTwitterFetcher(AbstractSource):
             promoted_tweet_active,
             promoted_tweet_billing,
             promoted_tweet_engagement,
-            space
+            space,
+            tags
         ]
