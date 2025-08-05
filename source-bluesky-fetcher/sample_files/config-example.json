@@ -1,0 +1,7 @@
+{
+  "identifier": "bistatus.bsky.social",
+  "password": "your-app-password-here",
+  "search_terms": ["#ai", "crypto", "#privacy"],
+  "limit": 10,
+  "start_time": "2024-01-01T00:00:00Z"
+}
