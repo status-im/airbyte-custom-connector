@@ -58,7 +58,7 @@
     },
     {
       "stream": {
-        "name": "group_member`",
+        "name": "group_member",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",
           "type": "object"
