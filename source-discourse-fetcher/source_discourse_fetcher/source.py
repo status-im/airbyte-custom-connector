@@ -129,7 +129,7 @@ class Group(DiscourseStream):
         for elt in data.get("groups"):
             yield elt
 
-class GroupMember(HttpSubStream, DiscourseStream):
+class GroupMember(HttpSubStream, Group):
     primary_key="id"
     # https://docs.discourse.org/#tag/Groups/operation/listGroupMembers
     def path(
@@ -138,7 +138,7 @@ class GroupMember(HttpSubStream, DiscourseStream):
        stream_slice: Mapping[str, Any] = None,
        next_page_token: Mapping[str, Any] = None
     ) -> str:
-        group_id = stream_slice.get('parent').get('id')
+        group_id = stream_slice.get('parent').get('name')
         return f"{self.url}/groups/{group_id}/members.json"
 
     def parse_response(
@@ -147,8 +147,7 @@ class GroupMember(HttpSubStream, DiscourseStream):
        **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
-        logger.debug("Response groups %s", data)
-        for elt in data.get("groups"):
+        for elt in data.get("members"):
             yield elt
 
 
