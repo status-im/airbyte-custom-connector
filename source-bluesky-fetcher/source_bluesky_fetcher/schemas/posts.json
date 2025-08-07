@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "uri": {
+      "type": ["string", "null"],
+      "description": "Unique identifier for the post (AT URI)"
+    },
+    "cid": {
+      "type": ["string", "null"],
+      "description": "Content identifier for the post"
+    },
+    "author_did": {
+      "type": ["string", "null"],
+      "description": "Decentralized identifier of the author"
+    },
+    "author_handle": {
+      "type": ["string", "null"],
+      "description": "Handle/username of the author"
+    },
+    "author_display_name": {
+      "type": ["string", "null"],
+      "description": "Display name of the author"
+    },
+    "author_avatar": {
+      "type": ["string", "null"],
+      "description": "Avatar URL of the author"
+    },
+    "text": {
+      "type": ["string", "null"],
+      "description": "Text content of the post"
+    },
+    "created_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Creation timestamp of the post"
+    },
+    "langs": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      },
+      "description": "Languages detected in the post"
+    },
+    "embed": {
+      "type": ["object", "null"],
+      "description": "Embedded content (images, links, etc.)"
+    },
+    "reply_count": {
+      "type": ["integer", "null"],
+      "description": "Number of replies to this post"
+    },
+    "repost_count": {
+      "type": ["integer", "null"],
+      "description": "Number of reposts of this post"
+    },
+    "like_count": {
+      "type": ["integer", "null"],
+      "description": "Number of likes on this post"
+    },
+    "indexed_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "When this post was indexed by the service"
+    },
+    "labels": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "object"
+      },
+      "description": "Content labels applied to this post"
+    },
+    "search_term": {
+      "type": ["string", "null"],
+      "description": "The specific search term that matched this post (e.g., '#ai', 'cryptocurrency')"
+    }
+  }
+}
