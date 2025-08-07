@@ -32,7 +32,8 @@ connectionSpecification:
       type: integer
       default: 25
       minimum: 1
-      description: 'Number of posts to retrieve per search term'
+      maximum: 100
+      description: 'Number of posts to retrieve per search term (max 100 due to API limits)'
     start_time:
       type: string
       format: date-time

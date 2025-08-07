@@ -13,39 +13,29 @@
             "cid": {
               "type": ["string", "null"]
             },
-            "author": {
-              "type": "object",
-              "properties": {
-                "did": {
-                  "type": ["string", "null"]
-                },
-                "handle": {
-                  "type": ["string", "null"]
-                },
-                "display_name": {
-                  "type": ["string", "null"]
-                },
-                "avatar": {
-                  "type": ["string", "null"]
-                }
-              }
+            "author_did": {
+              "type": ["string", "null"]
             },
-            "record": {
-              "type": "object",
-              "properties": {
-                "text": {
-                  "type": ["string", "null"]
-                },
-                "created_at": {
-                  "type": ["string", "null"],
-                  "format": "date-time"
-                },
-                "langs": {
-                  "type": ["array", "null"],
-                  "items": {
-                    "type": "string"
-                  }
-                }
+            "author_handle": {
+              "type": ["string", "null"]
+            },
+            "author_display_name": {
+              "type": ["string", "null"]
+            },
+            "author_avatar": {
+              "type": ["string", "null"]
+            },
+            "text": {
+              "type": ["string", "null"]
+            },
+            "created_at": {
+              "type": ["string", "null"],
+              "format": "date-time"
+            },
+            "langs": {
+              "type": ["array", "null"],
+              "items": {
+                "type": "string"
               }
             },
             "embed": {

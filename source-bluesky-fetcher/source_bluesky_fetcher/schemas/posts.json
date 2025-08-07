@@ -10,47 +10,37 @@
       "type": ["string", "null"],
       "description": "Content identifier for the post"
     },
-    "author": {
-      "type": "object",
-      "properties": {
-        "did": {
-          "type": ["string", "null"],
-          "description": "Decentralized identifier of the author"
-        },
-        "handle": {
-          "type": ["string", "null"],
-          "description": "Handle/username of the author"
-        },
-        "display_name": {
-          "type": ["string", "null"],
-          "description": "Display name of the author"
-        },
-        "avatar": {
-          "type": ["string", "null"],
-          "description": "Avatar URL of the author"
-        }
-      }
+    "author_did": {
+      "type": ["string", "null"],
+      "description": "Decentralized identifier of the author"
     },
-    "record": {
-      "type": "object",
-      "properties": {
-        "text": {
-          "type": ["string", "null"],
-          "description": "Text content of the post"
-        },
-        "created_at": {
-          "type": ["string", "null"],
-          "format": "date-time",
-          "description": "Creation timestamp of the post"
-        },
-        "langs": {
-          "type": ["array", "null"],
-          "items": {
-            "type": "string"
-          },
-          "description": "Languages detected in the post"
-        }
-      }
+    "author_handle": {
+      "type": ["string", "null"],
+      "description": "Handle/username of the author"
+    },
+    "author_display_name": {
+      "type": ["string", "null"],
+      "description": "Display name of the author"
+    },
+    "author_avatar": {
+      "type": ["string", "null"],
+      "description": "Avatar URL of the author"
+    },
+    "text": {
+      "type": ["string", "null"],
+      "description": "Text content of the post"
+    },
+    "created_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Creation timestamp of the post"
+    },
+    "langs": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      },
+      "description": "Languages detected in the post"
     },
     "embed": {
       "type": ["object", "null"],
