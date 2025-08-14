@@ -15,7 +15,7 @@ from airbyte_cdk.sources.streams.http.auth import BasicHttpAuthenticator
 
 logger = logging.getLogger("airbyte")
 
-FIELDS_PARAMS = "id,firstName,lastName,displayedName,division,team,department,customENSUsername,customStatusPublicKey,customGitHubusername,customDiscordUsername,supervision,hireDate"
+FIELDS_PARAMS = "id,firstName,lastName,displayedName,division,team,department,customENSUsername,customStatusPublicKey,customGitHubusername,customDiscordUsername,supervisor,hireDate,bestEmail,city,country,jobTitle"
 
 class CustomBambooHrStream(HttpStream, ABC):
     url_base = "https://api.bamboohr.com/api/gateway.php/"
@@ -29,7 +29,7 @@ class CustomBambooHrStream(HttpStream, ABC):
 
 
     def request_headers(
-        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
         return { "Accept" : "application/json"}
 
