@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Mapping, MutableMapping, Optional, List
+from typing import Any, Iterable, Mapping, MutableMapping, Optional, List, Union
 import logging
 import requests
 import time
@@ -14,7 +14,7 @@ class TweetComments(HttpSubStream, Tweet):
     primary_key = "id"
     cursor_field = "created_at"
     
-    def __init__(self, start_time: str = None, comment_days_limit: int = 2, filtered_author_ids: List[str] = None, **kwargs):
+    def __init__(self, start_time: Union[str, datetime, None] = None, comment_days_limit: int = 2, filtered_author_ids: List[str] = None, **kwargs):
         super().__init__(start_time=start_time, **kwargs)
         self.comment_days_limit = comment_days_limit
         self.limit_date = datetime.now() - timedelta(days=self.comment_days_limit)

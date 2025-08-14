@@ -1,11 +1,9 @@
-from typing import Any, Iterable, Mapping, MutableMapping, Optional, List
+from typing import Any, Iterable, Mapping, MutableMapping, Optional, List, Union
 import logging
 import requests
 import time
 from datetime import datetime, timedelta
-from airbyte_cdk.sources.streams import Stream
-from airbyte_cdk.sources.streams.http import HttpStream
-
+from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from .tweets_stream import TwitterStream
 
 logger = logging.getLogger("airbyte")
@@ -13,7 +11,7 @@ logger = logging.getLogger("airbyte")
 class TagsStream(TwitterStream):
     primary_key = "id"
 
-    def __init__(self, start_time: str = None, account_id: str = None, tags: List[str] = None, tags_frequent_extractions: bool = False, **kwargs):
+    def __init__(self, start_time: Union[str, datetime, None] = None, account_id: str = None, tags: List[str] = None, tags_frequent_extractions: bool = False, **kwargs):
         super().__init__(start_time=start_time, account_id=account_id, **kwargs)
         
         if not self.start_time:
