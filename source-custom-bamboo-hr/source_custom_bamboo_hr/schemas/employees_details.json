@@ -44,6 +44,21 @@
     "hireDate":{
       "type": ["null", "string"],
       "format": "date-time"
+    },
+    "bestEmail": {
+      "type": ["null", "string"],
+      "format": "email"
+    },
+    "city": {
+      "type": ["null", "string"]
+    },
+    "country": {
+      "type": ["null", "string"]
+    },
+    "jobTitle": {
+      "type": ["null", "string"]
+    }
     }
   }
-}
+
+
