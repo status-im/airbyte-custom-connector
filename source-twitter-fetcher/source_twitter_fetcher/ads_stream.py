@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Mapping, MutableMapping, Optional
+from typing import Any, Iterable, Mapping, MutableMapping, Optional, Union
 import logging
 import requests
 import time
@@ -52,6 +52,9 @@ class PromotedTweetActive(TwitterStream):
 class PromotedTweetBilling(HttpSubStream, PromotedTweetActive):
     #gets billing info for each promotted tweet 
     primary_key = "id"
+
+    def __init__(self, start_time: Union[str, datetime, None] = None, **kwargs):
+        super().__init__(start_time=start_time, **kwargs)
 
     def path(
         self,
@@ -118,6 +121,9 @@ class PromotedTweetBilling(HttpSubStream, PromotedTweetActive):
 class PromotedTweetEngagement(HttpSubStream, PromotedTweetActive):
     # fetches engagement metrics on promoted tweets
     primary_key = "id"
+
+    def __init__(self, start_time: Union[str, datetime, None] = None, **kwargs):
+        super().__init__(start_time=start_time, **kwargs)
 
     def path(
         self,

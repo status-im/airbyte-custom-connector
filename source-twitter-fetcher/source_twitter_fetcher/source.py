@@ -53,17 +53,25 @@ class SourceTwitterFetcher(AbstractSource):
             
         tags = TagsStream(**tags_kwargs)
 
-        tweet_metrics = TweetMetrics(
-            authenticator=auth,
-            account_id=config['account_id'],
-            parent=tweet
-        )
+        tweet_metrics_kwargs = {
+            "authenticator": auth,
+            "account_id": config['account_id'],
+            "parent": tweet
+        }
+        if start_time:
+            tweet_metrics_kwargs["start_time"] = start_time
+            
+        tweet_metrics = TweetMetrics(**tweet_metrics_kwargs)
 
-        tweet_promoted = TweetPromoted(
-            authenticator=auth,
-            account_id=config['account_id'],
-            parent=tweet
-        )
+        tweet_promoted_kwargs = {
+            "authenticator": auth,
+            "account_id": config['account_id'],
+            "parent": tweet
+        }
+        if start_time:
+            tweet_promoted_kwargs["start_time"] = start_time
+            
+        tweet_promoted = TweetPromoted(**tweet_promoted_kwargs)
 
         tweet_comments_kwargs = {
             "authenticator": auth,
@@ -84,17 +92,25 @@ class SourceTwitterFetcher(AbstractSource):
             
         promoted_tweet_active = PromotedTweetActive(**promoted_tweet_active_kwargs)
 
-        promoted_tweet_billing = PromotedTweetBilling(
-            authenticator=auth,
-            account_id=config['account_id'],
-            parent=tweet_promoted
-        )
+        promoted_tweet_billing_kwargs = {
+            "authenticator": auth,
+            "account_id": config['account_id'],
+            "parent": promoted_tweet_active
+        }
+        if start_time:
+            promoted_tweet_billing_kwargs["start_time"] = start_time
+            
+        promoted_tweet_billing = PromotedTweetBilling(**promoted_tweet_billing_kwargs)
 
-        promoted_tweet_engagement = PromotedTweetEngagement(
-            authenticator=auth,
-            account_id=config['account_id'],
-            parent=promoted_tweet_active
-        )
+        promoted_tweet_engagement_kwargs = {
+            "authenticator": auth,
+            "account_id": config['account_id'],
+            "parent": promoted_tweet_active
+        }
+        if start_time:
+            promoted_tweet_engagement_kwargs["start_time"] = start_time
+            
+        promoted_tweet_engagement = PromotedTweetEngagement(**promoted_tweet_engagement_kwargs)
 
         space_kwargs = {
             "authenticator": auth,
