@@ -1,0 +1,43 @@
+documentationUrl: https://docs.bsky.app
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Bluesky Fetcher Spec
+  type: object
+  required:
+    - identifier
+    - password
+  properties:
+    identifier:
+      type: string
+      description: 'Bluesky handle or email for authentication (e.g., username.bsky.social)'
+      examples:
+        - "myhandle.bsky.social"
+        - "user@example.com"
+    password:
+      type: string
+      description: 'Bluesky app password (not your main account password - create one in Settings > Privacy and Security > App Passwords)'
+      airbyte_secret: true
+
+    search_terms:
+      type: array
+      items:
+        type: string
+      description: 'List of search terms (hashtags, keywords, etc.). Posts matching ANY term will be returned.'
+      examples:
+        - ["#ai"]
+        - ["#ai", "crypto", "#privacy"]
+        - ["artificial intelligence", "machine learning"]
+        - ["from:bsky.app", "#updates"]
+    limit:
+      type: integer
+      default: 25
+      minimum: 1
+      maximum: 100
+      description: 'Number of posts to retrieve per search term (max 100 due to API limits)'
+    start_time:
+      type: string
+      format: date-time
+      description: 'Optional start time to filter posts. Only posts created after this date will be extracted. If not provided, defaults to one week ago. Format: YYYY-MM-DDTHH:MM:SSZ (ISO 8601)'
+      examples:
+        - "2024-01-01T00:00:00Z"
+        - "2024-12-01T12:00:00Z"
