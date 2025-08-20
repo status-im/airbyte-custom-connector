@@ -159,8 +159,8 @@ class SourceBlueskyFetcher(AbstractSource):
         try:
             access_token = self._get_access_token(config)
             auth = TokenAuthenticator(token=access_token)
-        except:
-            auth = TokenAuthenticator(token="dummy_token")
+        except Exception as e:
+            raise Exception(f"Authentication failed: {str(e)}. Check your credentials.")
         
         return [
             PostsStream(
