@@ -3,100 +3,100 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": ["null", "number"]
+      "type": ["number"]
     },
     "automatic": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "name": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "display_name": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "user_count": {
-      "type": ["null", "number"]
+      "type": ["number"]
     },
     "mentionable_level": {
-      "type": ["null", "number"]
+      "type": ["number"]
     },
     "messageable_level": {
-      "type": ["null", "number"]
+      "type": ["number"]
     },
     "visibility_level": {
-      "type": ["null", "number"]
+      "type": ["number"]
     },
     "primary_group": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "title": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "grant_trust_level": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "incoming_email": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "has_messages": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "flair_url": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "flair_bg_color": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "flair_color": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "bio_raw": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "bio_cooked": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "bio_excerpt": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "public_admission": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "public_exit": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "allow_membership_requests": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "full_name": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "default_notification_level": {
-      "type": ["null", "number"]
+      "type": ["number"]
     },
     "membership_request_template": {
-      "type": ["null", "string"]
+      "type": ["string"]
     },
     "is_group_user": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "is_group_owner": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "members_visibility_level": {
-      "type": ["null", "number"]
+      "type": ["number"]
     },
     "can_see_members": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "can_admin_group": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "can_edit_group": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     },
     "publish_read_state": {
-      "type": ["null", "boolean"]
+      "type": ["boolean"]
     }
   }
 }

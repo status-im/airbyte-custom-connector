@@ -8,17 +8,26 @@
     "name": {
       "type": ["null", "string"]
     },
+    "raw": {
+      "type": ["string"]
+    },
     "username": {
       "type": ["null", "string"]
     },
     "created_at": {
       "type": ["null", "string"]
-    }, 
+    },
     "post_number": {
       "type": ["null", "number"]
     },
     "post_type": {
       "type": ["null", "number"]
+    },
+    "post_count": {
+      "type": ["number"]
+    },
+    "post_url": {
+      "type": ["string"]
     },
     "updated_at": {
       "type": ["null", "string"]

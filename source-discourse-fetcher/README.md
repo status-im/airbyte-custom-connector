@@ -47,16 +47,17 @@ python main.py read --config sample_files/config-example.json --catalog sample_f
 ### Locally running the connector docker image
 
 ```bash
-docker build -t airbyte/twitter-fetcher:dev .
+docker build -t airbyte/source-discourse-fetcher:dev .
 # Running the spec command against your patched connector
-docker run airbyte/twitter-fetcher:dev spec
-````
+docker run airbyte/source-discourse-fetcher:dev spec
+```
 
 #### Run
 Then run any of the connector commands as follows:
+
 ```
-docker run --rm airbyte/twitter-fetcher:dev spec
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/twitter-fetcher:dev check --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/twitter-fetcher:dev discover --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files airbyte/twitter-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
+docker run --rm airbyte/source-discourse-fetcher:dev spec
+docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-discourse-fetcher:dev check --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-discourse-fetcher:dev discover --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files airbyte/source-discourse-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
 ```

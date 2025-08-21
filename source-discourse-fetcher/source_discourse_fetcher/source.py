@@ -15,16 +15,16 @@ from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 logger = logging.getLogger("airbyte")
 
 USER_KEYS = [
-    "id","name","username","active","created_at","trust_level","title","time_read", "staged","days_visited","posts_read_count","topics_entered","post_count", "email" 
+    "id","name","username","active","created_at","trust_level","title","time_read", "staged","days_visited","posts_read_count","topics_entered","post_count", "email"
     ]
 
 POST_KEYS = [
-    "id","name","username","created_at","post_number","post_type","updated_at","reply_count", "reply_to_post_number","quote_count","incoming_link_count","reads","score","topic_id", "topic_slug","topic_title","topic_html_title","category_id" 
+    "id","name","username", "raw", "created_at", "post_number", "post_type", "post_count", "post_url", "updated_at", "reply_count", "reply_to_post_number","quote_count","incoming_link_count","reads","score","topic_id", "topic_slug","topic_title","topic_html_title","category_id"
     ]
 
 class DiscourseStream(HttpStream):
 
-    url_base =  ""
+    url_base = ""
     primary_key = None
 
     def __init__(self, api_key: str, api_username: str, url: str, **kwargs):
@@ -42,7 +42,7 @@ class DiscourseStream(HttpStream):
         return { "Api-Key" : f"{self.api_key}", "Api-Username": f"{self.api_username}"}
 
 class User(DiscourseStream):
-    primary_key="id" 
+    primary_key="id"
 
     def path(
        self,
@@ -54,7 +54,7 @@ class User(DiscourseStream):
 
     def parse_response(
        self,
-       response: requests.Response, 
+       response: requests.Response,
        **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
@@ -64,7 +64,7 @@ class User(DiscourseStream):
             yield user
 
 class Post(DiscourseStream):
-    primary_key="id" 
+    primary_key="id"
 
     def path(
        self,
@@ -76,13 +76,13 @@ class Post(DiscourseStream):
 
     def parse_response(
        self,
-       response: requests.Response, 
+       response: requests.Response,
        **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
         logger.debug("Response %s", data)
         for elt in data.get("latest_posts"):
-            post =  { key : elt.get(key) for key in POST_KEYS }
+            post = { key : elt.get(key) for key in POST_KEYS }
             yield post
 
 class Topic(DiscourseStream):
@@ -98,7 +98,7 @@ class Topic(DiscourseStream):
 
     def parse_response(
        self,
-       response: requests.Response, 
+       response: requests.Response,
        **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
@@ -121,7 +121,7 @@ class Group(DiscourseStream):
 
     def parse_response(
        self,
-       response: requests.Response, 
+       response: requests.Response,
        **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
@@ -129,9 +129,8 @@ class Group(DiscourseStream):
         for elt in data.get("groups"):
             yield elt
 
-class GroupMember(HttpSubStream, DiscourseStream):
+class GroupMember(HttpSubStream, Group):
     primary_key="id"
-    
     # https://docs.discourse.org/#tag/Groups/operation/listGroupMembers
     def path(
        self,
@@ -139,17 +138,16 @@ class GroupMember(HttpSubStream, DiscourseStream):
        stream_slice: Mapping[str, Any] = None,
        next_page_token: Mapping[str, Any] = None
     ) -> str:
-        group_id = stream_slice.get('parent').get('id')
+        group_id = stream_slice.get('parent').get('name')
         return f"{self.url}/groups/{group_id}/members.json"
 
     def parse_response(
        self,
-       response: requests.Response, 
+       response: requests.Response,
        **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
-        logger.debug("Response groups %s", data)
-        for elt in data.get("groups"):
+        for elt in data.get("members"):
             yield elt
 
 
@@ -166,7 +164,7 @@ class Tag(DiscourseStream):
 
     def parse_response(
        self,
-       response: requests.Response, 
+       response: requests.Response,
        **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
@@ -187,7 +185,7 @@ class Category(DiscourseStream):
 
     def parse_response(
        self,
-       response: requests.Response, 
+       response: requests.Response,
        **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
@@ -204,7 +202,7 @@ class SourceDiscourseFetcher(AbstractSource):
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
-        logger.info("Configuring Stream  fron %s", config["url"])
+        logger.info("Configuring Stream fron %s", config["url"])
         group=Group(
                 api_key         = config['api-key'],
                 api_username    = config['api-username'],
@@ -244,4 +242,4 @@ class SourceDiscourseFetcher(AbstractSource):
                 url             = config['url']
             )
         ]
-        return s 
+        return s
