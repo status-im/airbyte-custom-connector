@@ -4,9 +4,8 @@ from datetime import datetime
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 
-from .tweets_stream import Account, Tweet, TweetMetrics, TweetPromoted
+from .tweets_stream import Account, Tweet, TweetMetrics
 from .tweets_comments_stream import TweetComments
-from .ads_stream import PromotedTweetActive, PromotedTweetBilling, PromotedTweetEngagement
 from .spaces_stream import Space
 from .tags_stream import TagsStream
 from .auth import TwitterOAuth
@@ -63,16 +62,6 @@ class SourceTwitterFetcher(AbstractSource):
             
         tweet_metrics = TweetMetrics(**tweet_metrics_kwargs)
 
-        tweet_promoted_kwargs = {
-            "authenticator": auth,
-            "account_id": config['account_id'],
-            "parent": tweet
-        }
-        if start_time:
-            tweet_promoted_kwargs["start_time"] = start_time
-            
-        tweet_promoted = TweetPromoted(**tweet_promoted_kwargs)
-
         tweet_comments_kwargs = {
             "authenticator": auth,
             "account_id": config['account_id'],
@@ -82,36 +71,7 @@ class SourceTwitterFetcher(AbstractSource):
             tweet_comments_kwargs["start_time"] = start_time
             
         tweet_comments = TweetComments(**tweet_comments_kwargs)
-
-        promoted_tweet_active_kwargs = {
-            "authenticator": auth,
-            "account_id": config['account_id']
-        }
-        if start_time:
-            promoted_tweet_active_kwargs["start_time"] = start_time
-            
-        promoted_tweet_active = PromotedTweetActive(**promoted_tweet_active_kwargs)
-
-        promoted_tweet_billing_kwargs = {
-            "authenticator": auth,
-            "account_id": config['account_id'],
-            "parent": promoted_tweet_active
-        }
-        if start_time:
-            promoted_tweet_billing_kwargs["start_time"] = start_time
-            
-        promoted_tweet_billing = PromotedTweetBilling(**promoted_tweet_billing_kwargs)
-
-        promoted_tweet_engagement_kwargs = {
-            "authenticator": auth,
-            "account_id": config['account_id'],
-            "parent": promoted_tweet_active
-        }
-        if start_time:
-            promoted_tweet_engagement_kwargs["start_time"] = start_time
-            
-        promoted_tweet_engagement = PromotedTweetEngagement(**promoted_tweet_engagement_kwargs)
-
+       
         # Get space IDs from config, no default
         space_ids = config.get("space_ids", [])
         
@@ -119,7 +79,6 @@ class SourceTwitterFetcher(AbstractSource):
             "authenticator": auth,
             "space_ids": space_ids
         }
-        # Space stream doesn't use start_time since it fetches specific spaces
             
         space = Space(**space_kwargs)
 
@@ -127,11 +86,7 @@ class SourceTwitterFetcher(AbstractSource):
             Account(authenticator=auth, account_id=config["account_id"]),
             tweet,
             tweet_metrics,
-            tweet_promoted,
             tweet_comments,
-            promoted_tweet_active,
-            promoted_tweet_billing,
-            promoted_tweet_engagement,
             space,
             tags
         ]
