@@ -112,12 +112,14 @@ class SourceTwitterFetcher(AbstractSource):
             
         promoted_tweet_engagement = PromotedTweetEngagement(**promoted_tweet_engagement_kwargs)
 
+        # Get space IDs from config, no default
+        space_ids = config.get("space_ids", [])
+        
         space_kwargs = {
             "authenticator": auth,
-            "account_id": config['account_id']
+            "space_ids": space_ids
         }
-        if start_time:
-            space_kwargs["start_time"] = start_time
+        # Space stream doesn't use start_time since it fetches specific spaces
             
         space = Space(**space_kwargs)
 
