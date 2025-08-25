@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Mapping, MutableMapping, Optional
+from typing import Any, Iterable, Mapping, MutableMapping, Optional, Union
 import logging
 import requests
 import time
@@ -12,10 +12,14 @@ logger = logging.getLogger("airbyte")
 class TwitterStream(HttpStream):
     url_base = "https://api.x.com/2/"
 
-    def __init__(self, start_time: str = None, account_id: str = None, **kwargs):
+    def __init__(self, start_time: Union[str, datetime, None] = None, account_id: str = None, **kwargs):
         super().__init__(**kwargs)
         self.start_time = start_time
         self.account_id = account_id
+        
+        # Set default start_time if not provided (5 days before current time)
+        if not self.start_time:
+            self.start_time = datetime.utcnow() - timedelta(days=5)
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         return None
@@ -55,12 +59,8 @@ class Account(TwitterStream):
 class Tweet(TwitterStream):
     primary_key = "id"
 
-    def __init__(self, start_time: str = None, account_id: str = None, **kwargs):
+    def __init__(self, start_time: Union[str, datetime, None] = None, account_id: str = None, **kwargs):
         super().__init__(start_time=start_time, account_id=account_id, **kwargs)
-        
-        # Set default start_time if not provided (5 days before current time)
-        if not self.start_time:
-            self.start_time = datetime.utcnow() - timedelta(days=5)
 
     @property
     def use_cache(self) -> bool:
@@ -110,6 +110,9 @@ class Tweet(TwitterStream):
 class TweetMetrics(HttpSubStream, Tweet):
     primary_key = "id"
 
+    def __init__(self, start_time: Union[str, datetime, None] = None, **kwargs):
+        super().__init__(start_time=start_time, **kwargs)
+
     def path(
         self,
         stream_state: Mapping[str, Any] = None,
@@ -150,6 +153,9 @@ class TweetMetrics(HttpSubStream, Tweet):
 
 class TweetPromoted(HttpSubStream, Tweet):
     primary_key = "id"
+
+    def __init__(self, start_time: Union[str, datetime, None] = None, **kwargs):
+        super().__init__(start_time=start_time, **kwargs)
 
     def path(
         self,

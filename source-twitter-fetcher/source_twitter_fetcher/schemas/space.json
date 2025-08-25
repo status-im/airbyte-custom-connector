@@ -18,16 +18,10 @@
       "type": ["null", "string"]
     },
     "host_ids": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["string"]
-      }
+      "type": ["null", "string"]
     },
     "invited_user_ids": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["string"]
-      }
+      "type": ["null", "string"]
     },
     "is_ticketed": {
       "type": ["null", "boolean"]
@@ -42,10 +36,7 @@
       "type": ["null", "string"]
     },
     "speaker_ids": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["string"]
-      }
+      "type": ["null", "string"]
     },
     "started_at": {
       "type": ["null", "string"]
@@ -57,23 +48,30 @@
       "type": ["null", "string"]
     },
     "topics": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["object"],
-        "properties":{
-          "id": {
-            "type": ["null", "string"]
-          },
-          "name": {
-            "type": ["null", "string"]
-          },
-          "description": {
-            "type": ["null", "string"]
-          }
-        }
-      }
+      "type": ["null", "string"]
     },
     "updated_at": {
+      "type": ["null", "string"]
+    },
+    "space_id": {
+      "type": ["null", "string"]
+    },
+    "expanded_users": {
+      "type": ["null", "string"]
+    },
+    "expanded_topics": {
+      "type": ["null", "string"]
+    },
+    "expanded_tweets": {
+      "type": ["null", "string"]
+    },
+    "expanded_media": {
+      "type": ["null", "string"]
+    },
+    "expanded_places": {
+      "type": ["null", "string"]
+    },
+    "expanded_polls": {
       "type": ["null", "string"]
     }
   }

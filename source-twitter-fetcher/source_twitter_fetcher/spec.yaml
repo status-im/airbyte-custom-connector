@@ -56,3 +56,10 @@ connectionSpecification:
       title: "Tags Frequent Extractions"
       description: "If true, defaults start_time to 1 hour 15 minutes before current time for more frequent extractions. If false, defaults to 5 days before current time."
       default: false
+    space_ids:
+      type: array
+      title: "Space IDs"
+      description: "List of Twitter Space IDs to fetch (e.g., ['1eaKbjbeejvKX', '1SLjjRYNejbKM']). If not provided, no spaces will be fetched."
+      items:
+        type: string
+      minItems: 0
