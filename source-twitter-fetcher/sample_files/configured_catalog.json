@@ -128,6 +128,23 @@
     },
     {
       "stream": {
+        "name": "get_space_ids",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object"
+        },
+        "supported_sync_modes": [
+          "full_refresh", "incremental"
+        ],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["created_at"]
+      },
+      "sync_mode": "incremental",
+      "destination_sync_mode": "append",
+      "cursor_field": ["created_at"]
+    },
+    {
+      "stream": {
         "name": "tags",
         "json_schema": {},
         "supported_sync_modes": ["full_refresh"],

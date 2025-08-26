@@ -8,5 +8,7 @@
   },
   "account_id": "your_account_id",
   "start_time": "2024-01-01T00:00:00Z",
-  "tags": ["@IFT", "@status", "@Airbyte"]
+  "tags": ["@IFT", "@status", "@Airbyte"],
+  "space_ids": ["1eaKbjbeejvKX", "1SLjjRYNejbKM"],
+  "space_account": ["123456789", "987654321"]
 }

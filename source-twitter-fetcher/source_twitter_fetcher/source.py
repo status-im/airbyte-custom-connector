@@ -6,7 +6,7 @@ from airbyte_cdk.sources.streams import Stream
 
 from .tweets_stream import Account, Tweet, TweetMetrics
 from .tweets_comments_stream import TweetComments
-from .spaces_stream import Space
+from .spaces_stream import Space, GetSpaceIds
 from .tags_stream import TagsStream
 from .auth import TwitterOAuth
 
@@ -77,11 +77,23 @@ class SourceTwitterFetcher(AbstractSource):
             
         space = Space(**space_kwargs)
 
-        return [
+        # Get space account IDs from config for space discovery
+        space_account = config.get("space_account", [])
+        
+        get_space_ids_kwargs = {
+            "authenticator": auth,
+            "space_account": space_account
+        }
+        
+        get_space_ids = GetSpaceIds(**get_space_ids_kwargs)
+
+        streams = [
             Account(authenticator=auth, account_id=config["account_id"]),
             tweet,
             tweet_metrics,
             tweet_comments,
             space,
-            tags
+            tags,
+            get_space_ids
         ]
+        return streams

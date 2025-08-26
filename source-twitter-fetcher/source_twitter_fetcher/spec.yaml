@@ -63,3 +63,10 @@ connectionSpecification:
       items:
         type: string
       minItems: 0
+    space_account:
+      type: array
+      title: "Space Account IDs"
+      description: "List of Twitter User IDs to fetch spaces from (e.g., ['123456789', '987654321']). This will fetch all live and scheduled spaces created by these accounts. If not provided, no space discovery will be performed."
+      items:
+        type: string
+      minItems: 0

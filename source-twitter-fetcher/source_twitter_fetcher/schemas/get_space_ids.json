@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": ["null", "string"]
+    },
+    "state": {
+      "type": ["null", "string"]
+    },
+    "created_at": {
+      "type": ["null", "string"]
+    },
+    "creator_id": {
+      "type": ["null", "string"]
+    },
+    "ended_at": {
+      "type": ["null", "string"]
+    },
+    "host_ids": {
+      "type": ["null", "string"]
+    },
+    "invited_user_ids": {
+      "type": ["null", "string"]
+    },
+    "is_ticketed": {
+      "type": ["null", "boolean"]
+    },
+    "lang": {
+      "type": ["null", "string"]
+    },
+    "participant_count": {
+      "type": ["null", "integer"]
+    },
+    "scheduled_start": {
+      "type": ["null", "string"]
+    },
+    "speaker_ids": {
+      "type": ["null", "string"]
+    },
+    "started_at": {
+      "type": ["null", "string"]
+    },
+    "subscriber_count": {
+      "type": ["null", "integer"]
+    },
+    "title": {
+      "type": ["null", "string"]
+    },
+    "topics": {
+      "type": ["null", "string"]
+    },
+    "updated_at": {
+      "type": ["null", "string"]
+    },
+    "expanded_users": {
+      "type": ["null", "string"]
+    },
+    "expanded_topics": {
+      "type": ["null", "string"]
+    },
+    "expanded_tweets": {
+      "type": ["null", "string"]
+    },
+    "expanded_media": {
+      "type": ["null", "string"]
+    },
+    "expanded_places": {
+      "type": ["null", "string"]
+    },
+    "expanded_polls": {
+      "type": ["null", "string"]
+    }
+  }
+} 
