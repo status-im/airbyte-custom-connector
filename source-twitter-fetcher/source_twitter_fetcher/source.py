@@ -31,10 +31,6 @@ class SourceTwitterFetcher(AbstractSource):
             "authenticator": auth,
             "account_id": config["account_id"]
         }
-        if start_time:
-            tweet_kwargs["start_time"] = start_time
-            
-        tweet = Tweet(**tweet_kwargs)
 
         tags_kwargs = {
             "authenticator": auth,
@@ -42,34 +38,33 @@ class SourceTwitterFetcher(AbstractSource):
             "tags": config["tags"]
         }
         
+        tweet = Tweet(**tweet_kwargs)
+        
+        tweet_metrics_kwargs = {
+            "authenticator": auth,
+            "account_id": config['account_id'],
+            "parent": tweet
+        }
+        
+        tweet_comments_kwargs = {
+            "authenticator": auth,
+            "account_id": config['account_id'],
+            "parent": tweet
+        }
+        
         # Add start_time only if provided in config
         if start_time:
+            tweet_kwargs["start_time"] = start_time
             tags_kwargs["start_time"] = start_time
+            tweet_metrics_kwargs["start_time"] = start_time
+            tweet_comments_kwargs["start_time"] = start_time
             
         # Add tags_frequent_extractions if provided in config
         if "tags_frequent_extractions" in config:
             tags_kwargs["tags_frequent_extractions"] = config["tags_frequent_extractions"]
             
         tags = TagsStream(**tags_kwargs)
-
-        tweet_metrics_kwargs = {
-            "authenticator": auth,
-            "account_id": config['account_id'],
-            "parent": tweet
-        }
-        if start_time:
-            tweet_metrics_kwargs["start_time"] = start_time
-            
-        tweet_metrics = TweetMetrics(**tweet_metrics_kwargs)
-
-        tweet_comments_kwargs = {
-            "authenticator": auth,
-            "account_id": config['account_id'],
-            "parent": tweet
-        }
-        if start_time:
-            tweet_comments_kwargs["start_time"] = start_time
-            
+        tweet_metrics = TweetMetrics(**tweet_metrics_kwargs)   
         tweet_comments = TweetComments(**tweet_comments_kwargs)
        
         # Get space IDs from config, no default
