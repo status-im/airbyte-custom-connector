@@ -3,12 +3,14 @@ from airbyte_cdk.entrypoint import launch, AirbyteEntrypoint
 from .source import SourceMastodonFetcher
 from typing import Optional
 
-# def run():
-#     args = sys.argv[1:]
-#     source = SourceMastodonFetcher()
-#     launch(source, args)
-
 def run():
+    """
+    To run multiple tags and accounts, the schema and catalog are
+    updated when the docker container runs. If a new dynamic stream is created,
+    a generic schema and catalog should be created.
+    """
+    # Add schema file (key) -> config key (value)
+    # combinations if new dynamic streams must be created
     config_mapping = {
         "tag_feed.json": "tags",
         "account_feed.json": "accounts"

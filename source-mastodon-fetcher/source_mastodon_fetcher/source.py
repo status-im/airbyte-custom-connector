@@ -141,6 +141,7 @@ class TagFeed(MastodonStream):
     def __init__(self, url_base: str, tag: str, days: int, authenticator: requests.auth.AuthBase):
         super().__init__(url_base, days, authenticator)
         self.tag = tag
+        # To dynamically create connections
         self.__name = f"{tag}_tag_feed"
 
     @property
@@ -172,9 +173,14 @@ class AccountFeed(MastodonStream):
 
     def __init__(self, url_base: str, account_name: str, account_id: str, days: int, authenticator: requests.auth.AuthBase):
         super().__init__(url_base, days, authenticator)
+        # To dynamically create connections
         self.__name = f"{account_name}_account_feed"
-        self.account_name = account_name
+        # This is not added in the `parse_response` because it already exists in the REST API
         self.account_id = account_id
+
+    @property
+    def name(self) -> str:
+        return self.__name
 
     def path(self, **kwargs) -> str:
         return self.join("/api/v1/accounts/", self.account_id, "statuses")

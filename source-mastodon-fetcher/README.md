@@ -2,7 +2,7 @@
 
 ## Usage
 
-This connector fetches information from a given [Mastodon servers](https://joinmastodon.org/servers).
+This connector fetches information from a given [Mastodon servers](https://joinmastodon.org/servers). Once the data is uploaded to a database, a lot of useful account and post information can be extracted. To learn more about the REST API limit please go through the [documentation](https://docs.joinmastodon.org/api/rate-limits/). 
 
 ### Configuration
 
