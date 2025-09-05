@@ -1,0 +1,33 @@
+documentationUrl: https://docs.joinmastodon.org/
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Mastodon Fetcher
+  type: object
+  required:
+    - access_token
+    - url_base
+    - tags
+    - accounts
+    - days
+  properties:
+    access_token:
+      type: string
+      description: "The Access Token field from the Mastodon application"
+      airbyte_secret: true
+    url_base:
+      type: string
+      description: "The base URL of the Mastodon server"
+    days:
+      type: integer
+      description: "How many days in the past to look for posts. By default -1 will try and get all of the files."
+      default: -1
+    tags:
+      type: array
+      items:
+        type: string
+      description: "The # that will be followed. A stream is created per #."
+    accounts:
+      type: array
+      items:
+        type: string
+      description: "The account name that will be followed for posts. A stream is created per account username."
