@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "mastodon_status",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["id", "created_at", "visibility", "url", "uri", "content"],
+  "properties": {
+    "id": { "type": "string", "description": "Status ID (snowflake-like numeric string)" },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of creation"
+    },
+    "in_reply_to_id": { "type": ["string", "null"] },
+    "in_reply_to_account_id": { "type": ["string", "null"] },
+    "sensitive": { "type": "boolean" },
+    "spoiler_text": { "type": "string" },
+    "visibility": {
+      "type": "string",
+      "enum": ["public", "unlisted", "private", "direct"]
+    },
+    "language": { "type": ["string", "null"] },
+    "uri": { "type": "string" },
+    "url": { "type": "string" },
+    "replies_count": { "type": "integer" },
+    "reblogs_count": { "type": "integer" },
+    "favourites_count": { "type": "integer" },
+    "edited_at": { "type": ["string", "null"], "format": "date-time" },
+    "favourited": { "type": "boolean" },
+    "reblogged": { "type": "boolean" },
+    "muted": { "type": "boolean" },
+    "bookmarked": { "type": "boolean" },
+    "content": { "type": "string", "description": "HTML content of the status" },
+    "filtered": { "type": "array", "items": { "type": "object" } },
+    "reblog": { "type": ["object", "null"], "description": "Boosted status object (same schema as parent)" },
+
+    "application": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "website": { "type": ["string", "null"] }
+      }
+    },
+
+    "account": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "username", "acct", "display_name", "url", "uri", "created_at"],
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "acct": { "type": "string" },
+        "display_name": { "type": "string" },
+        "locked": { "type": ["boolean", "null"] },
+        "bot": { "type": ["boolean", "null"] },
+        "discoverable": { "type": ["boolean", "null"] },
+        "indexable": { "type": ["boolean", "null"] },
+        "group": { "type": ["boolean", "null"] },
+        "created_at": { "type": "string", "format": "date-time" },
+        "note": { "type": "string" },
+        "url": { "type": "string" },
+        "uri": { "type": "string" },
+        "avatar": { "type": ["string", "null"] },
+        "avatar_static": { "type": ["string", "null"] },
+        "header": { "type": ["string", "null"] },
+        "header_static": { "type": ["string", "null"] },
+        "followers_count": { "type": ["integer", "null"] },
+        "following_count": { "type": ["integer", "null"] },
+        "statuses_count": { "type": ["integer", "null"] },
+        "last_status_at": { "type": ["string", "null"] },
+        "hide_collections": { "type": ["boolean", "null"] },
+        "noindex": { "type": ["boolean", "null"] },
+        "emojis": { "type": "array", "items": { "type": "object" } },
+        "roles": { "type": "array", "items": { "type": "object" } },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "name": { "type": ["string", "null"] },
+              "value": { "type": ["string", "null"] },
+              "verified_at": { "type": ["string", "null"], "format": "date-time" }
+            }
+          }
+        }
+      }
+    },
+
+    "media_attachments": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true }
+    },
+
+    "mentions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "url"],
+        "properties": {
+          "name": { "type": "string" },
+          "url": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+
+    "emojis": { "type": "array", "items": { "type": "object" } },
+
+    "quote": { "type": ["object", "null"], "additionalProperties": true },
+
+    "card": {
+      "type": ["object", "null"],
+      "additionalProperties": true,
+      "properties": {
+        "url": { "type": ["string", "null"] },
+        "title": { "type": ["string", "null"] },
+        "description": { "type": ["string", "null"] },
+        "language": { "type": ["string", "null"] },
+        "type": { "type": ["string", "null"] },
+        "author_name": { "type": ["string", "null"] },
+        "author_url": { "type": ["string", "null"] },
+        "provider_name": { "type": ["string", "null"] },
+        "provider_url": { "type": ["string", "null"] },
+        "html": { "type": ["string", "null"] },
+        "width": { "type": ["integer", "null"] },
+        "height": { "type": ["integer", "null"] },
+        "image": { "type": ["string", "null"] },
+        "image_description": { "type": ["string", "null"] },
+        "embed_url": { "type": ["string", "null"] },
+        "blurhash": { "type": ["string", "null"] },
+        "published_at": { "type": ["string", "null"], "format": "date-time" },
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "name": { "type": ["string", "null"] },
+              "url": { "type": ["string", "null"] },
+              "account": {
+                "type": ["object", "null"],
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "poll": { "type": ["object", "null"], "additionalProperties": true }
+  }
+}
