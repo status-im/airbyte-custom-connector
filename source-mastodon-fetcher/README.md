@@ -10,9 +10,9 @@ The connector takes the following input:
 
 - `access_token` - the access token field from the Mastodon application.
 - `url_base` - the base URL of the Mastodon server.
-- `tags` - The `#` that will be followed. A stream is created per `#`.
-- `accounts` - The account names that will be followed for posts. A stream is created per account username.
-- `days` - How many days in the past to look for posts. By default -1 will try and get all of the files.
+- `tags` - the `#` that will be followed. A stream is created per `#`.
+- `accounts` - the account names that will be followed for posts. A stream is created per account username.
+- `days` - how many days in the past to look for posts. By default -1 will try and get all of the files.
 
 ### Output
 
