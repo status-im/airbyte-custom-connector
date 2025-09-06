@@ -1,4 +1,4 @@
-# .Mastodon Source
+# Mastodon Source
 
 ## Usage
 
