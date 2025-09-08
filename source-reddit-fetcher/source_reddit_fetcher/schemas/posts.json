@@ -22,7 +22,7 @@
       "format": "uri"
     },
     "created_timestamp": {
-      "type": "string",
+      "type": ["null", "string"],
       "format": "date-time"
     },
     "timezone": {
@@ -40,6 +40,15 @@
     "author": {
       "type": "string"
     },
+    "author_fullname": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
     "ups": {
       "type": ["null", "integer"]
     },
@@ -51,6 +60,12 @@
     },
     "score": {
       "type": ["null", "integer"]
+    },
+    "subreddit_subscribers": {
+      "type": ["null", "integer"]
+    },
+    "raw": {
+      "type": "string"
     }
   }
 }

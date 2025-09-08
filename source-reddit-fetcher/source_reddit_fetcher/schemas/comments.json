@@ -15,7 +15,7 @@
       "type": "string"
     },
     "created_timestamp": {
-      "type": "string",
+      "type": ["null", "string"],
       "format": "date-time"
     },
     "timezone": {

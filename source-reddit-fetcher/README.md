@@ -3,7 +3,7 @@
 
 ## Usage
 
-This connector fetch information from a selected subreddit.
+This connector fetches information from one or multiple selected subreddits.
 
 ### Configuration
 
@@ -12,16 +12,29 @@ The connector takes the following input:
 - `client_id` - Reddit's client ID for your account
 - `client_secret` - Reddit's client secret for your account
 - `username` - your Reddit username that has been used to generate the `client_id` and `client_secret`
+- `subreddits` - array of subreddit names to monitor (e.g., ["privacy", "technology", "programming"])
 - `days` - used to calculate the stop date. Before that date votes and comments will not be monitored. Calculation: $stop\ date = today - days$
+
+#### Configuration Example
+
+```json
+{
+    "client_id": "your_reddit_client_id",
+    "client_secret": "your_reddit_client_secret", 
+    "username": "your_reddit_username",
+    "subreddits": ["privacy", "technology", "programming"],
+    "days": 31
+}
+```
 
 ### Output
 
-The connector will return the following:
+The connector will return the following streams (one pair per subreddit):
 
-* [Posts](./source-reddit-fetcher/schemas/posts.json)  
-* [PostVotes](./source-reddit-fetcher/schemas/posts_votes.json)
-* [Comments](./source-reddit-fetcher/schemas/comments.json)
-* [CommentsVotes](./source-reddit-fetcher/schemas/comments_votes.json)
+* **Posts streams**: `posts_{subreddit_name}` - Contains posts from each subreddit ([schema](./source_reddit_fetcher/schemas/posts.json))  
+* **Comments streams**: `comments_{subreddit_name}` - Contains comments from posts in each subreddit ([schema](./source_reddit_fetcher/schemas/comments.json))
+
+
 
 ## Local development
 

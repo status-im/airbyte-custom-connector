@@ -8,21 +8,34 @@ connectionSpecification:
     - client_secret
     - username
     - days
-    - subreddit
+  additionalProperties: true
   properties:
     client_id:
       type: string
+      title: "Client ID"
       description: "The Client ID (username) from the Reddit API"
     client_secret:
       type: string
+      title: "Client Secret"
       description: "The Client Secret (password) from the Reddit API"
       airbyte_secret: true
-    subreddit:
-      type: string
-      description: "The Subreddit that will be monitored"
     username:
       type: string
+      title: "Username"
       description: "The username of the Reddit account that has created the Client ID and Secret"
+    subreddits:
+      type: array
+      title: "Subreddits"
+      description: "List of subreddits to monitor (e.g., ['privacy', 'technology', 'programming']). If provided, takes precedence over 'subreddit'."
+      items:
+        type: string
+      minItems: 1
+      examples:
+        - ["privacy", "technology", "programming"]
     days:
       type: integer
+      title: "Days"
       description: "How many days in the past to look for votes and comments"
+      minimum: 1
+      maximum: 365
+      default: 30

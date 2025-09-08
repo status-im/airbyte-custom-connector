@@ -1,4 +1,4 @@
-FROM airbyte/python-connector-base:1.1.0
+FROM --platform=linux/amd64 airbyte/python-connector-base:1.1.0
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
