@@ -2,6 +2,6 @@
     "client_id": "your_reddit_client_id",
     "client_secret": "your_reddit_client_secret",
     "username": "your_reddit_username",
-    "subreddit": "subreddit_name_to_be_monitored",
+    "subreddits": ["privacy", "technology", "programming"],
     "days": 31
 }
