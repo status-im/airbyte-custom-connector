@@ -57,6 +57,16 @@
     },
     "jobTitle": {
       "type": ["null", "string"]
+    },
+    "terminationDate": {
+      "type": ["null", "string"],
+      "format": "date-time"
+    },
+    "status": {
+      "type": ["null", "string"]
+    },
+    "employmentStatus": {
+      "type": ["null", "string"]
     }
     }
   }

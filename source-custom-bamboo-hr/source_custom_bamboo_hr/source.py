@@ -15,7 +15,7 @@ from airbyte_cdk.sources.streams.http.auth import BasicHttpAuthenticator
 
 logger = logging.getLogger("airbyte")
 
-FIELDS_PARAMS = "id,firstName,lastName,displayedName,division,team,department,customENSUsername,customStatusPublicKey,customGitHubusername,customDiscordUsername,supervisor,hireDate,bestEmail,city,country,jobTitle"
+FIELDS_PARAMS = "id,firstName,lastName,displayedName,division,team,department,customENSUsername,customStatusPublicKey,customGitHubusername,customDiscordUsername,supervisor,hireDate,bestEmail,city,country,jobTitle, terminationDate, status, employmentStatus"
 
 class CustomBambooHrStream(HttpStream, ABC):
     url_base = "https://api.bamboohr.com/api/gateway.php/"
