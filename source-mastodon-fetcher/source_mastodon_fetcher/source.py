@@ -138,52 +138,47 @@ class MastodonStream(HttpStream):
 
 class TagFeed(MastodonStream):
 
-    def __init__(self, url_base: str, tag: str, days: int, authenticator: requests.auth.AuthBase):
+    def __init__(self, url_base: str, tags: list[str], days: int, authenticator: requests.auth.AuthBase):
         super().__init__(url_base, days, authenticator)
-        self.tag = tag
-        # To dynamically create connections
-        self.__name = f"{tag}_tag_feed"
+        self.tags = tags
 
-    @property
-    def name(self) -> str:
-        return self.__name
+    def stream_slices(self, **kwargs):
+        for tag in self.tags:
+            yield {"tag": tag}
 
-    def path(self, **kwargs) -> str:
-        return self.join("/api/v1/timelines/tag/", self.tag)
+    def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None) -> str:
+        tag = stream_slice["tag"]
+        return self.join("/api/v1/timelines/tag/", tag)
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         if self.is_old(response):
             return
         
+        tag = response.url.split("/")[-1].split("?")[0]
         posts: list[dict] = response.json()
         for post in posts:
             post.update({
                 "timezone": self.timezone,
-                "api_tag": self.tag,
+                "api_tag": tag,
                 "created_at": datetime.datetime.fromisoformat(post["created_at"].replace("Z", "+00:00"))
             })            
             yield post
-
-    def next_page_token(self, response: requests.Response):
-        return super().next_page_token(response)
 
 
 
 class AccountFeed(MastodonStream):
 
-    def __init__(self, url_base: str, account_name: str, account_id: str, days: int, authenticator: requests.auth.AuthBase):
+    def __init__(self, url_base: str, account_ids: list[str], days: int, authenticator: requests.auth.AuthBase):
         super().__init__(url_base, days, authenticator)
-        # To dynamically create connections
-        self.__name = f"{account_name}_account_feed"
-        # This is not added in the `parse_response` because it already exists in the REST API
-        self.account_id = account_id
+        self.account_ids = account_ids
 
-    @property
-    def name(self) -> str:
-        return self.__name
+    def stream_slices(self, **kwargs):
+        for account_id in self.account_ids:
+            yield {"account_id": account_id}
 
-    def path(self, **kwargs) -> str:
-        return self.join("/api/v1/accounts/", self.account_id, "statuses")
+    def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None) -> str:
+        account_id = stream_slice["account_id"]
+        return self.join("/api/v1/accounts/", account_id, "statuses")
     
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         if self.is_old(response):
@@ -196,9 +191,6 @@ class AccountFeed(MastodonStream):
                 "created_at": datetime.datetime.fromisoformat(post["created_at"].replace("Z", "+00:00"))
             })            
             yield post
-    
-    def next_page_token(self, response: requests.Response):
-        return super().next_page_token(response)
 
 
 
@@ -218,23 +210,12 @@ class SourceMastodonFetcher(AbstractSource):
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
 
-        auth = TokenAuthenticator(config["access_token"])
-        tag_feeds = [
-            TagFeed(config["url_base"], tag, config["days"], auth)
-            for tag in config["tags"]
+        auth = TokenAuthenticator(config["access_token"])        
+        account_ids = [self.__get_account_id(username, config) for username in config["accounts"]]
+        streams = [
+            TagFeed(config["url_base"], config["tags"], config["days"], auth),
+            AccountFeed(config["url_base"], account_ids, config["days"], auth)
         ]
-        account_feeds = [
-            AccountFeed(
-                config["url_base"], 
-                username, 
-                self.__get_account_id(username, config),
-                config["days"],
-                auth
-            )
-            for username in config["accounts"]
-        ]
-        
-        streams = [*tag_feeds, *account_feeds]
         return streams
     
     def __get_account_id(self, username: str, config: dict) -> Optional[str]:
