@@ -50,7 +50,7 @@ class RedditStream(HttpStream, ABC):
 
     primary_key: Optional[str] = None
     url_base = "https://oauth.reddit.com/"
-    
+
     # Reddit API rate limits: 60 requests per minute for OAuth
     _min_request_interval = 1.1  # Slightly more than 1 second to be safe
 
@@ -90,17 +90,17 @@ class RedditStream(HttpStream, ABC):
                     if match:
                         wait_time = float(match.group(1))
                     else:
-                        wait_time = 10.0 
+                        wait_time = 10.0
                 else:
-                    wait_time = 10.0  
-            
+                    wait_time = 10.0
+
             logger.warning(f"Rate limited (429)! Waiting {wait_time}s before retry...")
             return wait_time
-        
+
         # For other error responses, use exponential backoff
         if response.status_code >= 500:
             return 5.0
-        
+
         return None
 
     def _send_request(self, request: requests.PreparedRequest, request_kwargs: Mapping[str, Any]) -> requests.Response:
@@ -111,7 +111,7 @@ class RedditStream(HttpStream, ABC):
                 sleep_time = self._min_request_interval - time_since_last
                 logger.info(f"Rate limiting: sleeping {sleep_time:.2f}s between requests")
                 time.sleep(sleep_time)
-        
+
         self._last_request_time = time.time()
         return super()._send_request(request, request_kwargs)
 
@@ -121,7 +121,7 @@ class RedditStream(HttpStream, ABC):
     def request_params(self, stream_state: Optional[Mapping[str, Any]], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
         # Use smaller limit to reduce rate limiting
         params = {
-            "limit": 25  
+            "limit": 25
         }
         if next_page_token:
             params.update(next_page_token)
@@ -130,10 +130,10 @@ class RedditStream(HttpStream, ABC):
 
 class MultiSubredditPosts(RedditStream):
     """Unified posts stream that handles multiple subreddits"""
-    
+
     type_prefixes = {
         "t1": "comment",
-        "t2": "account", 
+        "t2": "account",
         "t3": "link",
         "t4": "message",
         "t5": "subreddit",
@@ -142,13 +142,13 @@ class MultiSubredditPosts(RedditStream):
 
     primary_key = "id"
     cursor_field = "created_timestamp"
-    
+
     def __init__(self, days: int, subreddits: List[str], authenticator: requests.auth.AuthBase):
         # Use first subreddit for parent initialization
         super().__init__(days=days, subreddit=subreddits[0], authenticator=authenticator)
         self.subreddits = subreddits
-        self._last_posts = {} 
-        self._last_ids = {}    
+        self._last_posts = {}
+        self._last_ids = {}
 
     @property
 
@@ -170,7 +170,7 @@ class MultiSubredditPosts(RedditStream):
             data = child.get("data", {})
             if not data:
                 continue
-                
+
             try:
                 created_utc = data.get("created_utc")
                 if created_utc:
@@ -179,10 +179,10 @@ class MultiSubredditPosts(RedditStream):
                 else:
                     created_timestamp = None
                     logger.debug(f"Post {data.get('id', 'unknown')} has no created_utc timestamp")
-                
+
                 # Use post ID or generate a unique identifier
                 post_id = data.get("id", f"unknown_{hash(str(data))}")
-                
+
                 row = {
                     "id": f"{subreddit}-{post_id}",
                     "kind_tag": child.get("kind", ""),
@@ -207,24 +207,24 @@ class MultiSubredditPosts(RedditStream):
                     "raw": json.dumps(data)
                 }
                 yield row
-                
+
                 if created_utc:
                     self._last_ids[subreddit] = f"t5_{post_id}"
-                    
+
             except Exception as e:
                 logger.warning(f"Failed to parse post {data.get('id', 'unknown')} from r/{subreddit}: {str(e)}")
                 continue
 
     def next_page_token(self, response: requests.Response, stream_slice: Mapping[str, Any] = None) -> Optional[dict[str, Any]]:
         subreddit = stream_slice["subreddit"] if stream_slice else self.subreddit
-        
+
         if subreddit in self._last_posts and self.start_date < self._last_posts[subreddit]:
             return {"before": self._last_ids[subreddit]}
 
 
 class MultiSubredditComments(HttpSubStream):
     """Unified comments stream that handles multiple subreddits"""
-    
+
     primary_key = "id"
     cursor_field = "created_timestamp"
     url_base = "https://oauth.reddit.com/"
@@ -264,13 +264,13 @@ class MultiSubredditComments(HttpSubStream):
                         wait_time = 10.0
                 else:
                     wait_time = 10.0
-            
+
             logger.warning(f"Rate limited (429)! Waiting {wait_time}s before retry...")
             return wait_time
-        
+
         if response.status_code >= 500:
             return 5.0
-        
+
         return None
 
     def _send_request(self, request: requests.PreparedRequest, request_kwargs: Mapping[str, Any]) -> requests.Response:
@@ -280,7 +280,7 @@ class MultiSubredditComments(HttpSubStream):
                 sleep_time = self._min_request_interval - time_since_last
                 logger.info(f"Rate limiting: sleeping {sleep_time:.2f}s between requests")
                 time.sleep(sleep_time)
-        
+
         self._last_request_time = time.time()
         return super()._send_request(request, request_kwargs)
 
@@ -296,7 +296,7 @@ class MultiSubredditComments(HttpSubStream):
         return params
 
     @property
-    
+
     def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
         post: dict = stream_slice.get("parent")
         post_id = post["post_id"]
@@ -307,10 +307,10 @@ class MultiSubredditComments(HttpSubStream):
         _, comments = response.json()
         post_id = response.url.split("/")[-1].split("?")[0]
         subreddit = stream_slice.get("parent", {}).get("subreddit", "unknown")
-        
+
         for child in comments["data"]["children"]:
             child_data: dict = child["data"]
-            
+
             try:
                 created_utc = child_data.get("created_utc")
                 if created_utc:
@@ -318,9 +318,9 @@ class MultiSubredditComments(HttpSubStream):
                 else:
                     created_timestamp = None
                     logger.debug(f"Comment has no created_utc timestamp")
-                
+
                 comment_id = child_data.get("id", f"unknown_{hash(str(child_data))}")
-                
+
                 row = {
                     "id": f"{subreddit}-{post_id}-{comment_id}",
                     "post_id": f"{subreddit}-{post_id}",
@@ -360,15 +360,15 @@ class SourceRedditFetcher(AbstractSource):
             client_secret=config["client_secret"],
             username=config["username"]
         )
-        
+
         subreddits = config.get("subreddits", [])
         if not subreddits and config.get("subreddit"):
             # Backward compatibility: convert single subreddit to list
             subreddits = [config["subreddit"]]
-        
+
         if not subreddits:
             return False, "No subreddits specified in configuration"
-        
+
         # Test connection with the first subreddit
         test_subreddit = subreddits[0]
         url = BASE_URL + f"/r/{test_subreddit}/new"
@@ -384,22 +384,20 @@ class SourceRedditFetcher(AbstractSource):
             client_secret=config["client_secret"],
             username=config["username"]
         )
-        
+
         subreddits = config.get("subreddits", [])
         if not subreddits and config.get("subreddit"):
             subreddits = [config["subreddit"]]
-        
+
         if not subreddits:
             # If no subreddits configured, raise an error
             raise ValueError("No subreddits specified in configuration. Please provide either 'subreddits' array or 'subreddit' string.")
-        
+
         logger.info(f"Creating unified streams for {len(subreddits)} subreddit(s): {', '.join(subreddits)}")
-  
-        primary_subreddit = subreddits[0]
-        
+
         posts_stream = MultiSubredditPosts(days=config["days"], subreddits=subreddits, authenticator=auth)
         comments_stream = MultiSubredditComments(days=config["days"], subreddits=subreddits, authenticator=auth, parent=posts_stream)
-        
+
         streams = [posts_stream, comments_stream]
         logger.info(f"Created unified streams: {[stream.name for stream in streams]}")
         return streams
