@@ -22,6 +22,7 @@
     "language": { "type": ["string", "null"] },
     "uri": { "type": "string" },
     "url": { "type": "string" },
+    "api_tag": { "type": "string" },
     "replies_count": { "type": "integer" },
     "reblogs_count": { "type": "integer" },
     "favourites_count": { "type": "integer" },
