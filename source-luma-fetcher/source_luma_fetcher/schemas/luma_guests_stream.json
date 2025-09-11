@@ -1,0 +1,225 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "event_api_id": {
+      "type": ["null", "string"],
+      "description": "API ID of the event this guest belongs to (added by connector)"
+    },
+    "api_id": {
+      "type": ["null", "string"],
+      "description": "Unique API identifier for the guest entry"
+    },
+    "guest": {
+      "type": ["null", "object"],
+      "properties": {
+        "api_id": {
+          "type": ["null", "string"],
+          "description": "Guest API ID"
+        },
+        "approval_status": {
+          "type": ["null", "string"],
+          "description": "Approval status (approved, declined, etc.)"
+        },
+        "created_at": {
+          "type": ["null", "string"],
+          "format": "date-time",
+          "description": "When the guest record was created"
+        },
+        "custom_source": {
+          "type": ["null", "string"],
+          "description": "Custom source information"
+        },
+        "eth_address": {
+          "type": ["null", "string"],
+          "description": "Ethereum address of the guest"
+        },
+        "invited_at": {
+          "type": ["null", "string"],
+          "format": "date-time",
+          "description": "When the guest was invited"
+        },
+        "joined_at": {
+          "type": ["null", "string"],
+          "format": "date-time",
+          "description": "When the guest joined"
+        },
+        "phone_number": {
+          "type": ["null", "string"],
+          "description": "Guest's phone number"
+        },
+        "registered_at": {
+          "type": ["null", "string"],
+          "format": "date-time",
+          "description": "When the guest registered"
+        },
+        "registration_answers": {
+          "type": ["null", "array"],
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": ["null", "string"],
+                "description": "Question label"
+              },
+              "answer": {
+                "type": ["null", "string"],
+                "description": "Guest's answer"
+              },
+              "question_id": {
+                "type": ["null", "string"],
+                "description": "Question ID"
+              },
+              "question_type": {
+                "type": ["null", "string"],
+                "description": "Type of question (dropdown, long-text, etc.)"
+              }
+            }
+          },
+          "description": "Registration question answers"
+        },
+        "solana_address": {
+          "type": ["null", "string"],
+          "description": "Solana address of the guest"
+        },
+        "user_api_id": {
+          "type": ["null", "string"],
+          "description": "User API ID"
+        },
+        "user_name": {
+          "type": ["null", "string"],
+          "description": "User's display name"
+        },
+        "user_email": {
+          "type": ["null", "string"],
+          "format": "email",
+          "description": "User's email address"
+        },
+        "user_first_name": {
+          "type": ["null", "string"],
+          "description": "User's first name"
+        },
+        "user_last_name": {
+          "type": ["null", "string"],
+          "description": "User's last name"
+        },
+        "name": {
+          "type": ["null", "string"],
+          "description": "Guest's name"
+        },
+        "email": {
+          "type": ["null", "string"],
+          "format": "email",
+          "description": "Guest's email"
+        },
+        "checked_in_at": {
+          "type": ["null", "string"],
+          "format": "date-time",
+          "description": "When the guest checked in"
+        },
+        "id": {
+          "type": ["null", "string"],
+          "description": "Guest ID"
+        },
+        "user_id": {
+          "type": ["null", "string"],
+          "description": "User ID"
+        },
+        "check_in_qr_code": {
+          "type": ["null", "string"],
+          "format": "uri",
+          "description": "QR code URL for check-in"
+        },
+        "event_tickets": {
+          "type": ["null", "array"],
+          "items": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": ["null", "number"],
+                "description": "Ticket amount"
+              },
+              "amount_discount": {
+                "type": ["null", "number"],
+                "description": "Discount amount"
+              },
+              "amount_tax": {
+                "type": ["null", "number"],
+                "description": "Tax amount"
+              },
+              "id": {
+                "type": ["null", "string"],
+                "description": "Ticket ID"
+              },
+              "api_id": {
+                "type": ["null", "string"],
+                "description": "Ticket API ID"
+              },
+              "checked_in_at": {
+                "type": ["null", "string"],
+                "format": "date-time",
+                "description": "Check-in time for this ticket"
+              },
+              "currency": {
+                "type": ["null", "string"],
+                "description": "Currency code"
+              },
+              "event_ticket_type_id": {
+                "type": ["null", "string"],
+                "description": "Event ticket type ID"
+              },
+              "is_captured": {
+                "type": ["null", "boolean"],
+                "description": "Whether payment is captured"
+              },
+              "name": {
+                "type": ["null", "string"],
+                "description": "Ticket type name"
+              }
+            }
+          },
+          "description": "Array of event tickets"
+        },
+        "event_ticket": {
+          "type": ["null", "object"],
+          "properties": {
+            "amount": {
+              "type": ["null", "number"]
+            },
+            "amount_discount": {
+              "type": ["null", "number"]
+            },
+            "amount_tax": {
+              "type": ["null", "number"]
+            },
+            "id": {
+              "type": ["null", "string"]
+            },
+            "api_id": {
+              "type": ["null", "string"]
+            },
+            "checked_in_at": {
+              "type": ["null", "string"],
+              "format": "date-time"
+            },
+            "currency": {
+              "type": ["null", "string"]
+            },
+            "event_ticket_type_id": {
+              "type": ["null", "string"]
+            },
+            "is_captured": {
+              "type": ["null", "boolean"]
+            },
+            "name": {
+              "type": ["null", "string"]
+            }
+          },
+          "description": "Primary event ticket"
+        }
+      },
+      "description": "Guest details object"
+    }
+  },
+  "additionalProperties": true
+}
