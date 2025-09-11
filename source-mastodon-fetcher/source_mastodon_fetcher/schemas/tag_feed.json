@@ -11,6 +11,7 @@
       "format": "date-time",
       "description": "ISO 8601 UTC timestamp of creation"
     },
+    "timezone": { "type": "string" },
     "in_reply_to_id": { "type": ["string", "null"] },
     "in_reply_to_account_id": { "type": ["string", "null"] },
     "sensitive": { "type": "boolean" },
