@@ -89,6 +89,27 @@ class Post(DiscourseStream):
         posts: list[dict] = response.json().get("latest_posts", [])
         return {"before": posts[-1]["id"]} if posts else None
 
+class Topic(DiscourseStream):
+    primary_key="id"
+    # https://docs.discourse.org/#tag/Topics/operation/listLatestTopics
+    def path(
+       self,
+       stream_state: Mapping[str, Any] = None,
+       stream_slice: Mapping[str, Any] = None,
+       next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        return f"{self.url}/latest.json"
+
+    def parse_response(
+       self,
+       response: requests.Response,
+       **kwargs
+    ) -> Iterable[Mapping]:
+        data = response.json()
+        logger.debug("Response latest topics %s", data)
+        for elt in data.get("topic_list").get("topics"):
+            yield elt
+
 class Group(DiscourseStream):
     primary_key="id"
     use_cache=True
@@ -202,6 +223,11 @@ class SourceDiscourseFetcher(AbstractSource):
                api_username    = config['api-username'],
                url             = config['url']
            ),
+           Topic(
+                api_key         = config['api-key'],
+                api_username    = config['api-username'],
+                url             = config['url']
+            ),
             group,
             GroupMember(
                 api_key         = config['api-key'],
