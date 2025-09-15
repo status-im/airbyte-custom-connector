@@ -2,15 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-
-from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 import logging
 import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
-from airbyte_cdk.sources.streams.http.auth import TokenAuthenticator
 
 logger = logging.getLogger("airbyte")
 
@@ -31,7 +28,7 @@ class DiscourseStream(HttpStream):
         super().__init__(**kwargs)
         self.api_key = api_key
         self.api_username = api_username
-        self.url= url
+        self.url= url[:-1] if url.endswith("/") else url
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         return None
@@ -65,7 +62,7 @@ class User(DiscourseStream):
 
 class Post(DiscourseStream):
     primary_key="id"
-
+    cursor = "created_at"
     def path(
        self,
        stream_state: Mapping[str, Any] = None,
@@ -83,28 +80,14 @@ class Post(DiscourseStream):
         logger.debug("Response %s", data)
         for elt in data.get("latest_posts"):
             post = { key : elt.get(key) for key in POST_KEYS }
+            # Make RAG project assignment easier
+            post["base_url"] = self.url
+            post["post_url"] = self.url + post["post_url"] # post_url always starts with '/'
             yield post
 
-class Topic(DiscourseStream):
-    primary_key="id"
-    # https://docs.discourse.org/#tag/Topics/operation/listLatestTopics
-    def path(
-       self,
-       stream_state: Mapping[str, Any] = None,
-       stream_slice: Mapping[str, Any] = None,
-       next_page_token: Mapping[str, Any] = None
-    ) -> str:
-        return f"{self.url}/latest.json"
-
-    def parse_response(
-       self,
-       response: requests.Response,
-       **kwargs
-    ) -> Iterable[Mapping]:
-        data = response.json()
-        logger.debug("Response latest topics %s", data)
-        for elt in data.get("topic_list").get("topics"):
-            yield elt
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        posts: list[dict] = response.json().get("latest_posts", [])
+        return {"before": posts[-1]["id"]} if posts else None
 
 class Group(DiscourseStream):
     primary_key="id"
@@ -219,11 +202,6 @@ class SourceDiscourseFetcher(AbstractSource):
                api_username    = config['api-username'],
                url             = config['url']
            ),
-            Topic(
-                api_key         = config['api-key'],
-                api_username    = config['api-username'],
-                url             = config['url']
-            ),
             group,
             GroupMember(
                 api_key         = config['api-key'],
