@@ -31,15 +31,15 @@ class LumaStream(HttpStream, ABC):
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         data = response.json()
         if isinstance(data, dict) and data.get('has_more') and data.get('next_cursor'):
-            return {"cursor": data['next_cursor']}
+            return {"pagination_cursor": data['next_cursor']}
         return None
 
     def request_params(
         self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
     ) -> MutableMapping[str, Any]:
         params = {}
-        if next_page_token and next_page_token.get('cursor'):
-            params['cursor'] = next_page_token['cursor']
+        if next_page_token and next_page_token.get('pagination_cursor'):
+            params['pagination_cursor'] = next_page_token['pagination_cursor']
         return params
 
     def should_retry(self, response: requests.Response) -> bool:
@@ -91,6 +91,9 @@ class LumaGuestsStream(LumaStream):
         super().__init__(**kwargs)
         self.events_stream = events_stream
         self._seen_cursors = {}  # Track cursors per event to detect infinite loops
+        self._page_counts = {}  # Track number of pages per event for debugging
+        self._guest_counts = {}  # Track total guests fetched per event for debugging
+        self._duplicate_cursor_events = set()  # Track events with API cursor bugs
 
     @property
     def name(self) -> str:
@@ -132,6 +135,11 @@ class LumaGuestsStream(LumaStream):
         if stream_slice and stream_slice.get('event_api_id'):
             params['event_api_id'] = stream_slice['event_api_id']
 
+        # Add explicit pagination limit to ensure consistent behavior
+        # Try a smaller limit to see if it helps with API cursor issues
+        params['pagination_limit'] = 25
+
+        logger.debug(f"Request params for guests: {params}")
         return params
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
@@ -141,29 +149,50 @@ class LumaGuestsStream(LumaStream):
         if isinstance(data, dict) and data.get('has_more') and data.get('next_cursor'):
             cursor = data['next_cursor']
 
+            # Extract current event from request params instead of URL parsing
             current_event = "unknown"
             try:
                 url = response.request.url
-                if 'event_api_id=' in url:
-                    current_event = url.split('event_api_id=')[1].split('&')[0]
-            except:
-                pass
+                logger.debug(f"Processing pagination for URL: {url}")
 
-            # Check if we've seen this cursor for this event before
+                if 'event_api_id=' in url:
+                    # Extract event_api_id more robustly
+                    import urllib.parse
+                    parsed_url = urllib.parse.urlparse(url)
+                    query_params = urllib.parse.parse_qs(parsed_url.query)
+                    if 'event_api_id' in query_params:
+                        current_event = query_params['event_api_id'][0]
+                        logger.debug(f"Extracted event_api_id: {current_event}")
+            except Exception as e:
+                logger.warning(f"Failed to extract event_api_id from URL: {e}")
+                current_event = "unknown"
+
             if current_event not in self._seen_cursors:
                 self._seen_cursors[current_event] = set()
+                self._page_counts[current_event] = 0
 
+            # Increment page count
+            self._page_counts[current_event] += 1
+
+            # Check if we've seen this cursor for this event before
             if cursor in self._seen_cursors[current_event]:
-                logger.warning(f"INFINITE LOOP DETECTED: cursor {cursor} already seen for event {current_event}. Breaking pagination.")
+                # Mark this event as having cursor duplication issues and stop pagination
+                self._duplicate_cursor_events.add(current_event)
+                logger.warning(f"Cannot continue pagination for event {current_event} due to API cursor bug. Breaking after {self._page_counts[current_event]} pages.")
+                return None
+
+            # Add a safety limit for maximum pages per event (in case of API issues)
+            # With 25 guests per page, 1000 pages = 25,000 guests max
+            max_pages_per_event = 1000  # Generous limit for very large events
+            if self._page_counts[current_event] >= max_pages_per_event:
+                logger.warning(f"SAFETY LIMIT REACHED: {max_pages_per_event} pages processed for event {current_event} (approx {max_pages_per_event * 25} guests). Breaking pagination to avoid infinite loops.")
                 return None
 
             # Add cursor to seen set
             self._seen_cursors[current_event].add(cursor)
 
-            logger.info(f"Next page token: {cursor} for event {current_event}")
-            return {"cursor": cursor}
+            return {"pagination_cursor": cursor}
 
-        logger.info("No more pages")
         return None
 
     def parse_response(self, response: requests.Response, stream_slice: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping]:
@@ -172,12 +201,20 @@ class LumaGuestsStream(LumaStream):
         event_api_id = stream_slice.get('event_api_id') if stream_slice else None
 
         guest_count = 0
+        total_count = data.get('total_count', 'unknown') if isinstance(data, dict) else 'unknown'
+        has_more = data.get('has_more', False) if isinstance(data, dict) else False
+
         if isinstance(data, dict) and 'entries' in data:
             for guest in data['entries']:
                 if event_api_id:
                     guest['event_api_id'] = event_api_id
                 guest_count += 1
                 yield guest
+
+        if event_api_id:
+            if event_api_id not in self._guest_counts:
+                self._guest_counts[event_api_id] = 0
+            self._guest_counts[event_api_id] += guest_count
 
         self._apply_rate_limiting()
 
