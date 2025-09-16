@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "api_id": {
+      "type": ["null", "string"],
+      "description": "Unique API identifier for the entry"
+    },
+    "event": {
+      "type": ["null", "object"],
+      "properties": {
+        "id": {
+          "type": ["null", "string"],
+          "description": "Unique identifier for the event"
+        },
+        "user_id": {
+          "type": ["null", "string"],
+          "description": "ID of the user who created the event"
+        },
+        "calendar_id": {
+          "type": ["null", "string"],
+          "description": "Calendar ID where the event belongs"
+        },
+        "start_at": {
+          "type": ["null", "string"],
+          "format": "date-time",
+          "description": "Start time of the event in ISO 8601 format"
+        },
+        "duration_interval": {
+          "type": ["null", "string"],
+          "description": "Duration interval of the event"
+        },
+        "end_at": {
+          "type": ["null", "string"],
+          "format": "date-time",
+          "description": "End time of the event in ISO 8601 format"
+        },
+        "created_at": {
+          "type": ["null", "string"],
+          "format": "date-time",
+          "description": "Timestamp when the event was created"
+        },
+        "timezone": {
+          "type": ["null", "string"],
+          "description": "Timezone for the event"
+        },
+        "name": {
+          "type": ["null", "string"],
+          "description": "Name of the event"
+        },
+        "description": {
+          "type": ["null", "string"],
+          "description": "Detailed description of the event"
+        },
+        "description_md": {
+          "type": ["null", "string"],
+          "description": "Markdown formatted description of the event"
+        },
+        "geo_address_json": {
+          "type": ["null", "object"],
+          "properties": {
+            "address": {
+              "type": ["null", "string"],
+              "description": "Street address"
+            },
+            "city": {
+              "type": ["null", "string"],
+              "description": "City name"
+            },
+            "region": {
+              "type": ["null", "string"],
+              "description": "Region or state"
+            },
+            "country": {
+              "type": ["null", "string"],
+              "description": "Country name"
+            },
+            "city_state": {
+              "type": ["null", "string"],
+              "description": "Combined city and state"
+            },
+            "full_address": {
+              "type": ["null", "string"],
+              "description": "Complete formatted address"
+            },
+            "google_maps_place_id": {
+              "type": ["null", "string"],
+              "description": "Google Maps place identifier"
+            },
+            "apple_maps_place_id": {
+              "type": ["null", "string"],
+              "description": "Apple Maps place identifier"
+            },
+            "description": {
+              "type": ["null", "string"],
+              "description": "Additional location description"
+            }
+          },
+          "description": "Detailed geographic address information"
+        },
+        "geo_latitude": {
+          "type": ["null", "string"],
+          "description": "Geographic latitude of the event"
+        },
+        "geo_longitude": {
+          "type": ["null", "string"],
+          "description": "Geographic longitude of the event"
+        },
+        "meeting_url": {
+          "type": ["null", "string"],
+          "format": "uri",
+          "description": "Meeting URL for virtual events"
+        },
+        "cover_url": {
+          "type": ["null", "string"],
+          "format": "uri",
+          "description": "URL to the event's cover image"
+        },
+        "registration_questions": {
+          "type": ["null", "array"],
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": ["null", "string"],
+                "description": "Question ID"
+              },
+              "label": {
+                "type": ["null", "string"],
+                "description": "Question label/text"
+              },
+              "required": {
+                "type": ["null", "boolean"],
+                "description": "Whether the question is required"
+              },
+              "question_type": {
+                "type": ["null", "string"],
+                "description": "Type of question (text, select, etc.)"
+              },
+              "options": {
+                "type": ["null", "array"],
+                "items": {
+                  "type": "string"
+                },
+                "description": "Available options for select-type questions"
+              }
+            }
+          },
+          "description": "Registration questions for the event"
+        },
+        "url": {
+          "type": ["null", "string"],
+          "format": "uri",
+          "description": "URL to the event's page on Luma"
+        },
+        "visibility": {
+          "type": ["null", "string"],
+          "description": "Event visibility setting (e.g., 'public', 'private')"
+        }
+      },
+      "description": "Event details object"
+    },
+    "tags": {
+      "type": ["null", "array"],
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": ["null", "string"],
+            "description": "Tag ID"
+          },
+          "name": {
+            "type": ["null", "string"],
+            "description": "Tag name"
+          }
+        }
+      },
+      "description": "Tags associated with the event"
+    }
+  },
+  "additionalProperties": true
+}
