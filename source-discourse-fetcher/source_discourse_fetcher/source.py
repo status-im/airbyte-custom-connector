@@ -222,37 +222,37 @@ class SourceDiscourseFetcher(AbstractSource):
                 url             = config['url']
             )
         s = [
-            # User(
-            #     api_key         = config['api-key'],
-            #     api_username    = config['api-username'],
-            #     url             = config['url']
-            # ),
+            User(
+                api_key         = config['api-key'],
+                api_username    = config['api-username'],
+                url             = config['url']
+            ),
             Post(
                api_key         = config['api-key'],
                api_username    = config['api-username'],
                url             = config['url']
            ),
-        #    Topic(
-        #         api_key         = config['api-key'],
-        #         api_username    = config['api-username'],
-        #         url             = config['url']
-        #     ),
-        #     group,
-        #     GroupMember(
-        #         api_key         = config['api-key'],
-        #         api_username    = config['api-username'],
-        #         url             = config['url'],
-        #         parent=group
-        #         ),
-        #     Tag(
-        #         api_key         = config['api-key'],
-        #         api_username    = config['api-username'],
-        #         url             = config['url']
-        #     ),
-        #     Category(
-        #         api_key         = config['api-key'],
-        #         api_username    = config['api-username'],
-        #         url             = config['url']
-        #     )
+           Topic(
+                api_key         = config['api-key'],
+                api_username    = config['api-username'],
+                url             = config['url']
+            ),
+            group,
+            GroupMember(
+                api_key         = config['api-key'],
+                api_username    = config['api-username'],
+                url             = config['url'],
+                parent=group
+                ),
+            Tag(
+                api_key         = config['api-key'],
+                api_username    = config['api-username'],
+                url             = config['url']
+            ),
+            Category(
+                api_key         = config['api-key'],
+                api_username    = config['api-username'],
+                url             = config['url']
+            )
         ]
         return s
