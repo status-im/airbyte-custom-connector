@@ -67,6 +67,9 @@
     },
     "category_id": {
       "type": ["null", "number"]
+    },
+    "base_url": {
+      "type": ["string"]
     }
   }
 }
