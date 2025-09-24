@@ -40,7 +40,7 @@ class DiscourseStream(HttpStream):
 
 class User(DiscourseStream):
     primary_key="id"
-
+    next_page = 0
     def path(
        self,
        stream_state: Mapping[str, Any] = None,
@@ -48,6 +48,21 @@ class User(DiscourseStream):
        next_page_token: Mapping[str, Any] = None
     ) -> str:
         return f"{self.url}/admin/users/list/active.json"
+
+
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        next_page = {"page": self.next_page } if len(response.json()) > 0 else None
+        return next_page
+
+
+    def request_params(self, stream_state, stream_slice = None, next_page_token = None):
+        params = {
+            "order": "created",
+            "asc": "true"
+        }
+        if next_page_token:
+            params.update(next_page_token)
+        return params
 
     def parse_response(
        self,
@@ -59,6 +74,7 @@ class User(DiscourseStream):
             logger.debug("Response %s", elt)
             user = { key : elt.get(key) for key in USER_KEYS }
             yield user
+        self.next_page = self.next_page + 1
 
 class Post(DiscourseStream):
     primary_key="id"
@@ -74,6 +90,7 @@ class Post(DiscourseStream):
     def parse_response(
        self,
        response: requests.Response,
+       next_page_token: Mapping[str, Any] = None,
        **kwargs
     ) -> Iterable[Mapping]:
         data: dict = response.json()
@@ -86,20 +103,19 @@ class Post(DiscourseStream):
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         posts: list[dict] = response.json().get("latest_posts", [])
-        next_page =  {"before": posts[-1]["id"]} if posts else None
+        next_page = {"before": posts[-1]["id"]} if posts else None
         return next_page
-    
-    
-    def request_params(self, stream_state, stream_slice = None, next_page_token = None):
-        # Trigger the next_page_token
-        output = super().request_params(stream_state, stream_slice, next_page_token)
+
+
+    def request_params(self, stream_state, stream_slice = None, next_page_token: Mapping[str, Any] = None):
+        params = {}
         if next_page_token:
-            output.update(next_page_token)
-        
-        return next_page_token
+            params.update(next_page_token)
+        return params
 
 class Topic(DiscourseStream):
     primary_key="id"
+    next_page = 0
     # https://docs.discourse.org/#tag/Topics/operation/listLatestTopics
     def path(
        self,
@@ -109,15 +125,34 @@ class Topic(DiscourseStream):
     ) -> str:
         return f"{self.url}/latest.json"
 
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        topics_list=response.json().get("topic_list").get("topics")
+        next_page = {"page": self.next_page } if len(topics_list) > 0 else None
+        return next_page
+
+
+    def request_params(self, stream_state, stream_slice = None, next_page_token: Mapping[str, Any] = None):
+        params = {
+            "order": "created",
+            "ascending": "true",
+            "per_page": "100"
+        }
+        if next_page_token:
+            params.update(next_page_token)
+        return params
+
     def parse_response(
        self,
        response: requests.Response,
+        next_page_token: Mapping[str, Any] = None,
        **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
         logger.debug("Response latest topics %s", data)
         for elt in data.get("topic_list").get("topics"):
             yield elt
+        self.next_page = self.next_page + 1
+
 
 class Group(DiscourseStream):
     primary_key="id"
@@ -216,43 +251,18 @@ class SourceDiscourseFetcher(AbstractSource):
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         logger.info("Configuring Stream fron %s", config["url"])
-        group=Group(
-                api_key         = config['api-key'],
-                api_username    = config['api-username'],
-                url             = config['url']
-            )
-        s = [
-            User(
-                api_key         = config['api-key'],
-                api_username    = config['api-username'],
-                url             = config['url']
-            ),
-            Post(
-               api_key         = config['api-key'],
-               api_username    = config['api-username'],
-               url             = config['url']
-           ),
-           Topic(
-                api_key         = config['api-key'],
-                api_username    = config['api-username'],
-                url             = config['url']
-            ),
+        args = {
+            "api_key": config['api-key'],
+            "api_username": config['api-username'],
+            "url": config['url']
+        }
+        group=Group(**args)
+        return [
+            User(**args),
+            Post(**args),
+            Topic(**args),
             group,
-            GroupMember(
-                api_key         = config['api-key'],
-                api_username    = config['api-username'],
-                url             = config['url'],
-                parent=group
-                ),
-            Tag(
-                api_key         = config['api-key'],
-                api_username    = config['api-username'],
-                url             = config['url']
-            ),
-            Category(
-                api_key         = config['api-key'],
-                api_username    = config['api-username'],
-                url             = config['url']
-            )
+            GroupMember(parent=group, **args),
+            Tag(**args),
+            Category(**args)
         ]
-        return s
