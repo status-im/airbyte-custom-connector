@@ -2,6 +2,7 @@
   "credentials":{
     "client_id": "your_client_id",
     "client_secret": "your_client_secret",
+    "bearer_token": "your_bearer_token",
     "access_token": "your_access_token",
     "refresh_token": "your_refresh_token",
     "token_expiry_date": "2024-12-31T00:00:00Z"
