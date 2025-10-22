@@ -16,7 +16,7 @@ class TwitterStream(HttpStream):
         super().__init__(**kwargs)
         self.start_time = start_time
         self.account_id = account_id
-        
+
         # Set default start_time if not provided (5 days before current time)
         if not self.start_time:
             self.start_time = datetime.utcnow() - timedelta(days=5)
@@ -24,12 +24,44 @@ class TwitterStream(HttpStream):
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         return None
 
-    def backoff_time(self, response: requests.Response) -> Optional[float]:
-        logger.warn("API rate limit: %s\n%s", response.json(), response.headers)
+    def should_retry(self, response: requests.Response) -> bool:
+        """
+        Determine if we should retry based on the response status code.
+        Don't retry on 401/403 (auth errors) as they won't fix themselves.
+        Do retry on 429 (rate limit) and 5xx (server errors).
+        """
+        if response.status_code in [401, 403]:
+            logger.error(f"Authentication error ({response.status_code}). Not retrying. Response: {response.text[:200]}")
+            return False
+        if response.status_code == 429:
+            logger.warning("Rate limit hit (429). Will retry with backoff.")
+            return True
+        if response.status_code >= 500:
+            logger.warning(f"Server error ({response.status_code}). Will retry.")
+            return True
+        return super().should_retry(response)
 
+    def backoff_time(self, response: requests.Response) -> Optional[float]:
+        """Handle rate limiting and backoff"""
+        # Only try to parse JSON if we haven't already
+        try:
+            response_data = response.text  # Use .text instead of .json() to avoid consuming the response
+            logger.warning(f"API rate limit or error. Status: {response.status_code}, Headers: {response.headers}")
+            logger.debug(f"Response body: {response_data}")
+        except Exception as e:
+            logger.warning(f"Could not log response: {e}")
+
+        # Check for Retry-After header (Twitter uses this for rate limiting)
         delay_time = response.headers.get("Retry-After")
         if delay_time:
+            logger.info(f"Rate limited. Retrying after {delay_time} seconds")
             return int(delay_time)
+
+        if response.status_code == 429:
+            logger.warning("Rate limit hit (429) but no Retry-After header. Using default 60 second backoff")
+            return 60.0
+
+        return None
 
     def _apply_rate_limiting(self):
         """Apply rate limiting delay that all Twitter streams should use"""
