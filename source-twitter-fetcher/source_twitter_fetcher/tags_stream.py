@@ -13,7 +13,7 @@ class TagsStream(TwitterStream):
 
     def __init__(self, start_time: Union[str, datetime, None] = None, account_id: str = None, tags: List[str] = None, tags_frequent_extractions: bool = False, **kwargs):
         super().__init__(start_time=start_time, account_id=account_id, **kwargs)
-        
+
         if not self.start_time:
             if tags_frequent_extractions:
                 # Default to 1 hour 15 minutes before current time
@@ -21,7 +21,7 @@ class TagsStream(TwitterStream):
             else:
                 # Default to 5 days before current time
                 self.start_time = datetime.utcnow() - timedelta(days=5)
-            
+
         self.tags = tags or []
 
     def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
@@ -34,7 +34,7 @@ class TagsStream(TwitterStream):
         stream_slice: Mapping[str, Any] = None,
         next_page_token: Mapping[str, Any] = None
     ) -> str:
-        return "tweets/search/recent" # this endpoint fetches data from the last 7 days 
+        return "tweets/search/recent" # this endpoint fetches data from the last 7 days
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         if 'meta' in response.json() and 'next_token' in response.json()['meta'] and response.json()['meta']['result_count'] > 0:
@@ -68,25 +68,23 @@ class TagsStream(TwitterStream):
     ) -> Iterable[Mapping]:
         logger.debug("Full response %s", response.json())
         response_data = response.json()
-        
+
         # Create a mapping of user_id to user info for quick lookup because user data is returned separately in the includes.users array, you need to manually join them using the author_id as the key
         users_map = {}
         if 'includes' in response_data and 'users' in response_data['includes']:
             for user in response_data['includes']['users']:
                 users_map[user['id']] = user
-        
+
         if 'data' in response_data:
             data = response_data['data']
             for t in data:
                 t["matched_tag"] = stream_slice["tag"]
-                
+
                 if t.get('author_id') and t['author_id'] in users_map:
                     user_info = users_map[t['author_id']]
                     t["author_username"] = user_info.get('username')
                     t["author_name"] = user_info.get('name')
                     t["author_verified"] = user_info.get('verified')
-                
-                yield t
-        self._apply_rate_limiting() 
 
- 
+                yield t
+        self._apply_rate_limiting()

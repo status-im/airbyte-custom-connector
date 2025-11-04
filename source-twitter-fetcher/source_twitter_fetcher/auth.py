@@ -1,5 +1,6 @@
 
 from typing import Any, Mapping, Union
+import base64
 
 import requests
 import logging
@@ -50,3 +51,25 @@ class TwitterOAuth(SingleUseRefreshTokenOauth2Authenticator):
         response.raise_for_status()
         return content
 
+
+class TwitterBearerTokenAuth(TokenAuthenticator):
+    """
+    Simple Bearer Token Authentication for Twitter API v2
+    Uses a static bearer token from Twitter Developer Portal
+    """
+
+    def __init__(self, config: Mapping[str, Any], **kwargs):
+        bearer_token = config["credentials"].get("bearer_token", "").strip()
+        if not bearer_token:
+            raise AirbyteTracedException(
+                internal_message="bearer_token not provided in credentials",
+                message="Bearer Token is required for tags and space discovery streams. Please add your bearer_token from Twitter Developer Portal to the credentials.",
+                failure_type=FailureType.config_error,
+            )
+
+        self._bearer_token = bearer_token
+        super().__init__(token="", **kwargs)
+
+    @property
+    def token(self) -> str:
+        return f"Bearer {self._bearer_token}"
