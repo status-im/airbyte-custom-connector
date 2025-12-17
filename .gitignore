@@ -165,3 +165,5 @@ reports_examples/
 *.ps1
 
 */*/config.json
+/.vscode
+*.ipynb

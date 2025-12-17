@@ -1,17 +1,12 @@
 documentationUrl: https://docsurl.com
 connectionSpecification:
   $schema: http://json-schema.org/draft-07/schema#
-  title: Wallet Fetcher Spec
+  title: Bitcoin Explorer Spec
   type: object
   required:
     - wallets
   additionalProperties: true
   properties:
-    api_key:
-      title: api_key
-      type: string
-      description: 'API key for ethplorer'
-      airbyte_secret: true
     wallets:
       title: Wallets
       description: "List of wallet to scan"
@@ -23,21 +18,16 @@ connectionSpecification:
             title: Address
             type: string
             description: Address of the wallet
-            airbyte_secret: true
           name:
             title: Name
             type: string
             description: Name of the wallet
-          blockchain:
-            title: blockchain
-            description: List of blockchain concerning the wallets
+          tags:
             type: array
+            description: List of tags linked to the wallet
             items:
               type: string
-              enum:
-                - BTC
-                - ETH
-          tags:
-            title: tags
-            type: string
-            description: List of tags linked to the wallet
+          backfill:
+            title: Backfill
+            type: boolean
+            description: If True then the entire history will be fetched. If False only yesterday's prices will be fetched

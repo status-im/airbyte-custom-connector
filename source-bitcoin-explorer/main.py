@@ -6,8 +6,8 @@
 import sys
 
 from airbyte_cdk.entrypoint import launch
-from source_wallet_fetcher import SourceWalletFetcher
+from source_bitcoin_explorer import SourceBitcoinExplorer
 
 if __name__ == "__main__":
-    source = SourceWalletFetcher()
+    source = SourceBitcoinExplorer()
     launch(source, sys.argv[1:])

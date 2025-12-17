@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Transaction timestamp in UTC"
+    },
+    "timezone": {
+      "type": "string",
+      "description": "Timezone of the timestamp"
+    },
+    "hash": {
+      "type": "string",
+      "description": "Bitcoin transaction hash"
+    },
+    "chain": {
+      "type": "string",
+      "description": "Blockchain name"
+    },
+    "chain_id": {
+      "type": ["string", "null"],
+      "description": "Chain ID (null for Bitcoin)"
+    },
+    "wallet_name": {
+      "type": "string",
+      "description": "Wallet name queried"
+    },
+    "wallet_address": {
+      "type": "string",
+      "description": "Wallet address queried"
+    },
+    "tags": {
+      "type": "array",
+      "description": "Wallet classification tags",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "total_transactions": {
+      "type": "integer",
+      "description": "Total number of transactions for the wallet"
+    },
+    "total_received": {
+      "type": "integer",
+      "description": "Total satoshis received by the wallet"
+    },
+    "total_sent": {
+      "type": "integer",
+      "description": "Total satoshis sent by the wallet"
+    },
+    "token_name": {
+      "type": "string",
+      "description": "Token name"
+    },
+    "token_symbol": {
+      "type": "string",
+      "description": "Token symbol"
+    },
+    "token_decimal": {
+      "type": "integer",
+      "description": "Token decimal precision"
+    },
+    "transaction_fee": {
+      "type": "integer",
+      "description": "Transaction fee in satoshis"
+    },
+    "net_change": {
+      "type": "integer",
+      "description": "Net balance change (received - sent)"
+    },
+    "movement": {
+      "type": "string",
+      "enum": ["in", "out", "both", "none"],
+      "description": "Transaction direction relative to wallet"
+    },
+    "current_balance": {
+      "type": "integer",
+      "description": "Wallet balance after transaction"
+    },
+    "sent": {
+      "type": "integer",
+      "description": "Satoshis sent in this transaction"
+    },
+    "received": {
+      "type": "integer",
+      "description": "Satoshis received in this transaction"
+    },
+    "from_utxo": {
+      "type": "array",
+      "description": "Input UTXOs",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "addr": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          }
+        },
+        "required": ["addr", "amount"]
+      }
+    },
+    "to_utxo": {
+      "type": "array",
+      "description": "Output UTXOs",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "addr": {
+            "type": "string"
+          },
+          "value": {
+            "type": "integer"
+          }
+        },
+        "required": ["addr", "value"]
+      }
+    }
+  }
+}
