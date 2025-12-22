@@ -21,4 +21,4 @@ data:
   documentationUrl: https://docs.airbyte.com/integrations/sources/discourse-fetcher
   tags:
     - language:python
-metadataSpecVersion: "1.0"
+metadataSpecVersion: "1.1"

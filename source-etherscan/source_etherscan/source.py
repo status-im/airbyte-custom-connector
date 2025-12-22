@@ -6,9 +6,7 @@
 from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 
-import requests
-import logging
-import time
+import requests, logging, time, re, random
 
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
@@ -16,10 +14,11 @@ from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.sources.streams.http.requests_native_auth import TokenAuthenticator
 from airbyte_cdk.sources.declarative.auth.declarative_authenticator import NoAuth
 from airbyte_cdk.utils.traced_exception import AirbyteTracedException, FailureType
+from airbyte_cdk.sources.streams.http.exceptions import UserDefinedBackoffException
+
 
 from datetime import datetime, timedelta
 from .models import Wallet, Token
-import requests
 
 logger = logging.getLogger("airbyte")
 
@@ -51,6 +50,35 @@ class EtherscanStream(HttpStream, ABC):
 
     def path(self, **kwargs) -> str:
         return "v2/api"
+    
+    def backoff_time(self, response: requests.Response) -> Optional[float]:
+        output: dict = response.json()
+        result = output.get("result")
+        
+        seconds = 0
+        if "rate limit reached" in str(result).lower():
+            match = re.search(r"\((\d+)\s*/", str(result))
+            seconds = int(match.group(1))
+        logger.info(f"backoff_time: {seconds}s")
+        return seconds
+    
+    def raise_for_rate_limit(self, response: requests.Response, stream_slice: Mapping[str, any]):
+
+        output: dict = response.json()
+        result = output.get("result")
+
+        name = stream_slice["name"]
+        address = stream_slice["address"]
+        logger.info(f"{name} - {address}")
+
+        if "rate limit reached" in str(result).lower():
+            logger.info("TRIGGERING CUSTOM EXCEPTION")
+            match = re.search(r"(\d+)\s*", str(result))
+            multiplier = random.randint(1, 10)
+            backoff = (int(match.group(0)) if match else 1) * multiplier
+            raise UserDefinedBackoffException(backoff, response.request, response, result)
+        
+        time.sleep(0.55)
 
 class InternalBalance(EtherscanStream):
     primary_key = "wallet_address"
@@ -71,12 +99,7 @@ class InternalBalance(EtherscanStream):
     def parse_response(self, response: requests.Response, stream_slice: Mapping[str, any] = None, **kwargs) -> Iterable[Mapping]:
         logger.debug("stream_slice : %s", stream_slice )
         balance = response.json()
-        if "status" not in balance or balance.get("status") != "1":
-            raise AirbyteTracedException(
-                message="Error when calling the API to get the balance",
-                internal_message=f"Balance fetching in error {balance}",
-                failure_type=FailureType.config_error
-            )
+        self.raise_for_rate_limit(response, stream_slice)
         yield {
             "wallet_name": stream_slice["name"],
             "wallet_address": stream_slice["address"],
@@ -84,7 +107,6 @@ class InternalBalance(EtherscanStream):
             "balance": balance.get("result"),
             "chain": self.chain_id
         }
-        time.sleep(0.2)
 
 class TokenBalance(EtherscanStream):
     primary_key = "wallet_address"
@@ -116,12 +138,7 @@ class TokenBalance(EtherscanStream):
 
     def parse_response(self, response: requests.Response, stream_slice: Mapping[str, any] = None, **kwargs) -> Iterable[Mapping]:
         balance = response.json()
-        if "status" not in balance or balance.get("status") != "1":
-            raise AirbyteTracedException(
-                message="Error when calling the API to get the balance",
-                internal_message=f"Balance fetching in error {balance}",
-                failure_type=FailureType.config_error
-            )
+        self.raise_for_rate_limit(response, stream_slice)
         logger.debug("Balance : %s", balance)
         yield {
             "wallet_name": stream_slice["name"],
@@ -132,7 +149,6 @@ class TokenBalance(EtherscanStream):
             "balance": balance.get("result"),
             "chain": self.chain_id
         }
-        time.sleep(0.2)
 
 
 
@@ -161,8 +177,7 @@ class InternalTransaction(EtherscanStream):
 
     def parse_response(self, response: requests.Response, stream_slice: Mapping[str, any] = None, **kwargs) -> Iterable[Mapping]:
         res = response.json()
-        if "status" not in res or res.get("status") != "1":
-            logger.debug("No transaction for wallet %s - %s", stream_slice['name'], stream_slice['address'])
+        self.raise_for_rate_limit(response, stream_slice)
         logger.debug("response: %s", res)
         for trx in res.get("result"):
             yield {
@@ -178,7 +193,6 @@ class InternalTransaction(EtherscanStream):
                 "blockNumber": trx.get("blockNumber"),
                 "timestamp": trx.get("timeStamp")
             }
-        time.sleep(0.2)
 
 
 """
@@ -203,8 +217,7 @@ class TokenTransaction(EtherscanStream):
 
     def parse_response(self, response: requests.Response, stream_slice: Mapping[str, any] = None, **kwargs) -> Iterable[Mapping]:
         res = response.json()
-        if "status" not in res or res.get("status") != "1":
-            logger.info("No transaction for wallet %s - %s", stream_slice['name'], stream_slice['address'])
+        self.raise_for_rate_limit(response, stream_slice)
         for trx in res.get("result"):
             yield {
                 "wallet_name": stream_slice["name"],
@@ -227,7 +240,6 @@ class TokenTransaction(EtherscanStream):
                 "blockNumber": trx.get("blockNumber"),
                 "timestamp": trx.get("timeStamp")
             }
-        time.sleep(0.2)
 
 # Source
 class SourceEtherscan(AbstractSource):
@@ -250,6 +262,6 @@ class SourceEtherscan(AbstractSource):
         ]
         if 'tokens' in config:
             streams.append(TokenBalance(tokens=[Token(name=t.get("name"),address=t.get("address")) for t in config["tokens"]],**default_args))
-
+        logger.info(f"Streams: {streams}")
         return streams
 
