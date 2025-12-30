@@ -5,7 +5,6 @@ from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 import time
 import logging
-from datetime import datetime, timezone
 import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
@@ -86,8 +85,8 @@ class LumaEventsStream(LumaStream):
 
 class LumaGuestsStream(LumaStream):
     """guests stream"""
-    primary_key = [["api_id"], ["event_api_id"]]  # Composite primary key
-    cursor_field = "_airbyte_extracted_at"
+    primary_key = ["api_id", "event_api_id"]  # Composite primary key
+    cursor_field = "registered_at"  # Flattened from guest.registered_at
 
     def __init__(self, events_stream: LumaEventsStream, **kwargs):
         super().__init__(**kwargs)
@@ -218,12 +217,9 @@ class LumaGuestsStream(LumaStream):
         data = response.json()
 
         event_api_id = stream_slice.get('event_api_id') if stream_slice else None
-        extraction_time = datetime.now(timezone.utc).isoformat()
 
         # Get the cursor value from state for incremental filtering
-        state_cursor_value = None
-        if stream_state:
-            state_cursor_value = stream_state.get(self.cursor_field)
+        state_cursor_value = stream_state.get(self.cursor_field) if stream_state else None
 
         guest_count = 0
         total_count = data.get('total_count', 'unknown') if isinstance(data, dict) else 'unknown'
@@ -234,8 +230,10 @@ class LumaGuestsStream(LumaStream):
                 if event_api_id:
                     guest['event_api_id'] = event_api_id
 
-                # Add extraction timestamp for incremental sync tracking
-                guest['_airbyte_extracted_at'] = extraction_time
+                # Flatten registered_at from guest object to top level for cursor field
+                guest_obj = guest.get('guest', {})
+                if guest_obj and guest_obj.get('registered_at'):
+                    guest['registered_at'] = guest_obj['registered_at']
 
                 # For incremental sync, only yield records newer than the state cursor
                 record_cursor_value = guest.get(self.cursor_field)

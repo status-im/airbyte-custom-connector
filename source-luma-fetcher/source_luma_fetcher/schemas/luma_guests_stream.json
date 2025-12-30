@@ -10,6 +10,11 @@
       "type": ["null", "string"],
       "description": "Unique API identifier for the guest entry"
     },
+    "registered_at": {
+      "type": ["null", "string"],
+      "format": "date-time",
+      "description": "When the guest registered (flattened from guest.registered_at for incremental sync cursor)"
+    },
     "guest": {
       "type": ["null", "object"],
       "properties": {
