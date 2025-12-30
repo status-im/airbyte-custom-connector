@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "symbol": {
+      "type": ["null", "string"],
+      "description": "The token symbol (e.g., ETH, BTC)"
+    },
+    "price_usd": {
+      "type": ["null", "string"],
+      "description": "The token price in USD"
+    },
+    "price_last_updated_at": {
+      "type": ["null", "string"],
+      "description": "Timestamp when the price was last updated"
+    },
+    "currency": {
+      "type": ["null", "string"],
+      "description": "The currency of the price (e.g., usd)"
+    },
+    "fetch_timestamp": {
+      "type": ["null", "string"],
+      "description": "Timestamp when this data was fetched"
+    }
+  }
+}
