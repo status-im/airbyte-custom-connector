@@ -13,8 +13,8 @@ class TokenPrices(HttpStream):
     """Stream to fetch current token prices from Alchemy API."""
 
     url_base = "https://api.g.alchemy.com/prices/v1/"
-    primary_key = ["symbol", "fetch_timestamp"]
-    cursor_field = "fetch_timestamp"
+    primary_key = ["symbol", "price_last_updated_at"]
+    cursor_field = "price_last_updated_at"
 
     def __init__(self, api_key: str, symbols: List[str], **kwargs):
         super().__init__(**kwargs)
@@ -42,29 +42,29 @@ class TokenPrices(HttpStream):
 
     def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
         data = response.json()
-        fetch_timestamp = datetime.utcnow().isoformat()
 
         for token in data.get("data", []):
             prices = token.get("prices", [])
             price_info = prices[0] if prices else {}
+            price_last_updated_at = price_info.get("lastUpdatedAt")
 
             yield {
                 "symbol": token.get("symbol"),
                 "price_usd": price_info.get("value"),
-                "price_last_updated_at": price_info.get("lastUpdatedAt"),
+                "price_last_updated_at": price_last_updated_at,
                 "currency": price_info.get("currency"),
-                "fetch_timestamp": fetch_timestamp,
             }
 
-        self._cursor_value = fetch_timestamp
+            if price_last_updated_at:
+                self._cursor_value = price_last_updated_at
 
 
 class HistoricalTokenPrices(HttpStream):
     """Stream to fetch historical token prices from Alchemy API."""
 
-    name = "token_prices"  
-    primary_key = ["symbol", "fetch_timestamp"]
-    cursor_field = "fetch_timestamp"
+    name = "token_prices"
+    primary_key = ["symbol", "price_last_updated_at"]
+    cursor_field = "price_last_updated_at"
     http_method = "POST"
 
     def __init__(self, api_key: str, symbols: List[str], historical_timestamp: str, **kwargs):
@@ -108,32 +108,32 @@ class HistoricalTokenPrices(HttpStream):
 
     def parse_response(self, response: requests.Response, stream_slice: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping]:
         response_data = response.json()
-        fetch_timestamp = datetime.utcnow().isoformat()
 
-        # Historical API response: { symbol, currency, data: [{ value, timestamp }] }
         symbol = response_data.get("symbol", stream_slice["symbol"])
         currency = response_data.get("currency")
         prices = response_data.get("data", [])
 
         if prices:
             price_info = prices[0]
+            price_last_updated_at = price_info.get("timestamp")
+
             yield {
                 "symbol": symbol,
                 "price_usd": price_info.get("value"),
-                "price_last_updated_at": price_info.get("timestamp"),
+                "price_last_updated_at": price_last_updated_at,
                 "currency": currency,
-                "fetch_timestamp": fetch_timestamp,
             }
+
+            if price_last_updated_at:
+                self._cursor_value = price_last_updated_at
         else:
             yield {
                 "symbol": symbol,
                 "price_usd": None,
                 "price_last_updated_at": self.historical_timestamp,
                 "currency": currency,
-                "fetch_timestamp": fetch_timestamp,
             }
-
-        self._cursor_value = fetch_timestamp
+            self._cursor_value = self.historical_timestamp
 
 
 class SourceAlchemyFetcher(AbstractSource):

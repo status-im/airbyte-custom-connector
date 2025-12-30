@@ -17,10 +17,6 @@
     "currency": {
       "type": ["null", "string"],
       "description": "The currency of the price (e.g., usd)"
-    },
-    "fetch_timestamp": {
-      "type": ["null", "string"],
-      "description": "Timestamp when this data was fetched"
     }
   }
 }

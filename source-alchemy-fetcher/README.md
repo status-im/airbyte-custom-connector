@@ -43,9 +43,8 @@ Airbyte connector to fetch cryptocurrency token prices from the [Alchemy API](ht
 |-------|-------------|
 | `symbol` | Token symbol (e.g., ETH) |
 | `price_usd` | Price in USD |
-| `price_last_updated_at` | When the price was last updated |
+| `price_last_updated_at` | When the price was last updated (cursor field) |
 | `currency` | Currency of the price (usd) |
-| `fetch_timestamp` | When this data was fetched |
 
 ## Local Development
 
