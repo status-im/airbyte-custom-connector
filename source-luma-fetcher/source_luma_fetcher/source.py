@@ -5,6 +5,7 @@ from abc import ABC
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 import time
 import logging
+from datetime import datetime, timezone
 import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
@@ -86,6 +87,7 @@ class LumaEventsStream(LumaStream):
 class LumaGuestsStream(LumaStream):
     """guests stream"""
     primary_key = [["api_id"], ["event_api_id"]]  # Composite primary key
+    cursor_field = "_airbyte_extracted_at"
 
     def __init__(self, events_stream: LumaEventsStream, **kwargs):
         super().__init__(**kwargs)
@@ -94,6 +96,7 @@ class LumaGuestsStream(LumaStream):
         self._page_counts = {}  # Track number of pages per event for debugging
         self._guest_counts = {}  # Track total guests fetched per event for debugging
         self._duplicate_cursor_events = set()  # Track events with API cursor bugs
+        self._state = {}  # Track state for incremental sync
 
     @property
     def name(self) -> str:
@@ -101,7 +104,21 @@ class LumaGuestsStream(LumaStream):
 
     @property
     def supported_sync_modes(self) -> List[str]:
-        return ["full_refresh"]
+        return ["full_refresh", "incremental"]
+
+    def get_updated_state(
+        self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]
+    ) -> Mapping[str, Any]:
+        """Update state with the latest record's cursor value"""
+        current_state = dict(current_stream_state) if current_stream_state else {}
+        latest_cursor_value = latest_record.get(self.cursor_field)
+
+        if latest_cursor_value:
+            current_cursor_value = current_state.get(self.cursor_field)
+            if current_cursor_value is None or latest_cursor_value > current_cursor_value:
+                current_state[self.cursor_field] = latest_cursor_value
+
+        return current_state
 
     def stream_slices(self, sync_mode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None) -> Iterable[Optional[Mapping[str, Any]]]:
         # Read events from the events stream to get event_api_ids
@@ -195,10 +212,18 @@ class LumaGuestsStream(LumaStream):
 
         return None
 
-    def parse_response(self, response: requests.Response, stream_slice: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping]:
+    def parse_response(
+        self, response: requests.Response, stream_slice: Mapping[str, Any] = None, stream_state: Mapping[str, Any] = None, **kwargs
+    ) -> Iterable[Mapping]:
         data = response.json()
 
         event_api_id = stream_slice.get('event_api_id') if stream_slice else None
+        extraction_time = datetime.now(timezone.utc).isoformat()
+
+        # Get the cursor value from state for incremental filtering
+        state_cursor_value = None
+        if stream_state:
+            state_cursor_value = stream_state.get(self.cursor_field)
 
         guest_count = 0
         total_count = data.get('total_count', 'unknown') if isinstance(data, dict) else 'unknown'
@@ -208,6 +233,16 @@ class LumaGuestsStream(LumaStream):
             for guest in data['entries']:
                 if event_api_id:
                     guest['event_api_id'] = event_api_id
+
+                # Add extraction timestamp for incremental sync tracking
+                guest['_airbyte_extracted_at'] = extraction_time
+
+                # For incremental sync, only yield records newer than the state cursor
+                record_cursor_value = guest.get(self.cursor_field)
+                if state_cursor_value and record_cursor_value:
+                    if record_cursor_value <= state_cursor_value:
+                        continue  # Skip records already synced
+
                 guest_count += 1
                 yield guest
 
