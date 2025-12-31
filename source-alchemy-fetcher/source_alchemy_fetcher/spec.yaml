@@ -1,0 +1,37 @@
+documentationUrl: https://docs.alchemy.com/reference/token-api-quickstart
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Alchemy Token Price Fetcher Spec
+  type: object
+  required:
+    - api_key
+    - symbols
+  properties:
+    api_key:
+      type: string
+      title: API Key
+      description: Your Alchemy API key.
+      airbyte_secret: true
+      order: 0
+    symbols:
+      type: array
+      title: Token Symbols
+      description: List of cryptocurrency symbols to fetch prices for (e.g., ETH, BTC, USDT, SNT)
+      items:
+        type: string
+      examples:
+        - ["ETH", "BTC", "USDT"]
+      order: 1
+    historical_fetch:
+      type: boolean
+      title: Fetch Historical Prices
+      description: If enabled, fetch historical prices for the specified timestamp instead of current prices.
+      default: false
+      order: 2
+    historical_timestamp:
+      type: string
+      title: Historical Timestamp
+      description: The timestamp to fetch historical prices for (ISO 8601 format, e.g., 2024-01-01T00:00:00Z). Required if historical_fetch is enabled.
+      examples:
+        - "2024-01-01T00:00:00Z"
+      order: 3

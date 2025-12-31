@@ -1,0 +1,6 @@
+{
+  "api_key": "your_alchemy_api_key",
+  "symbols": ["ETH", "BTC", "USDT", "SNT"],
+  "historical_fetch": false,
+  "historical_timestamp": "2024-01-01T00:00:00Z"
+}
