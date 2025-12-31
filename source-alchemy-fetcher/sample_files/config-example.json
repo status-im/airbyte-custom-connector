@@ -1,6 +1,22 @@
 {
-  "api_key": "your_alchemy_api_key",
-  "symbols": ["ETH", "BTC", "USDT", "SNT"],
-  "historical_fetch": false,
-  "historical_timestamp": "2024-01-01T00:00:00Z"
+    "api_key": "",
+    "tokens": [
+        {
+            "network": "opt-mainnet",
+            "address": "0x4200000000000000000000000000000000000042",
+            "symbol": "OP",
+            "start_date": "2025-12-01",
+            "end_date": "2025-12-31",
+            "interval": "1d"
+        },
+        {
+            "symbol": "BTC",
+            "start_date": "2025-11-01",
+            "interval": "1d"
+        },
+        {
+            "symbol": "SNT",
+            "interval": "1d"
+        }
+    ]
 }
