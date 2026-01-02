@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp of the price point."
+    },
+    "timezone": {
+      "type": "string",
+      "description": "Timezone of the timestamp.",
+      "examples": ["UTC"]
+    },
+    "network": {
+      "type": "string",
+      "description": "The network chain name as it is in Alchemy.",
+      "examples": ["eth-mainnet", "opt-mainnet"]
+    },
+    "chain_id": {
+      "type": "number",
+      "description": "The network chain ID.",
+      "examples": [1, 10]
+    },
+    "address": {
+      "type": "string",
+      "description": "The address of the token."
+    },
+    "symbol": {
+      "type": "string",
+      "description": "Token symbol (e.g. ETH, BTC).",
+      "examples": ["ETH", "SNT"]
+    },
+    "currency": {
+      "type": "string",
+      "description": "Quote currency (e.g. USD)."
+    },
+    "source": {
+      "type": "string",
+      "description": "Data source name.",
+      "examples": ["alchemy"]
+    },
+    "amount": {
+      "type": "number",
+      "description": "Price value."
+    },
+    "market_cap": {
+      "type": "number",
+      "description": "The current Market cap in fiat currency."
+    },
+    "total_volume": {
+      "type": "number",
+      "description": "The aggregate trading volume."
+    },
+    "stream_slice": {
+      "type": "object",
+      "description": "Request slice metadata",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "timestamp",
+    "symbol",
+    "currency",
+    "amount"
+  ]
+}

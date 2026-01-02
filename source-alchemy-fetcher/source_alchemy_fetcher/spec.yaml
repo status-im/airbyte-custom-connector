@@ -5,33 +5,77 @@ connectionSpecification:
   type: object
   required:
     - api_key
-    - symbols
+    - tokens
   properties:
     api_key:
       type: string
       title: API Key
       description: Your Alchemy API key.
       airbyte_secret: true
-      order: 0
-    symbols:
+
+    tokens:
+      title: Tokens
+      description: List of tokens that will be extracted.
       type: array
-      title: Token Symbols
-      description: List of cryptocurrency symbols to fetch prices for (e.g., ETH, BTC, USDT, SNT)
       items:
-        type: string
-      examples:
-        - ["ETH", "BTC", "USDT"]
-      order: 1
-    historical_fetch:
-      type: boolean
-      title: Fetch Historical Prices
-      description: If enabled, fetch historical prices for the specified timestamp instead of current prices.
-      default: false
-      order: 2
-    historical_timestamp:
-      type: string
-      title: Historical Timestamp
-      description: The timestamp to fetch historical prices for (ISO 8601 format, e.g., 2024-01-01T00:00:00Z). Required if historical_fetch is enabled.
-      examples:
-        - "2024-01-01T00:00:00Z"
-      order: 3
+        type: object
+        properties:
+          network:
+            title: Chain Name
+            type: string
+            description: The chain name as it is in Alchemy
+            type: 
+              - string
+              - "null"
+            enum:
+              - "null"
+              - eth-mainnet
+              - opt-mainnet
+              - arb-mainnet
+              - base-mainnet
+              - frax-mainnet
+              - zora-mainnet
+            default: "null"
+          address:
+            title: Address
+            type: string
+            description: Token contract address
+            type: 
+              - string
+              - "null"
+            default: "null"
+          symbol:
+            title: Symbol
+            type: string
+            description: Token symbol
+            items:
+              type: string
+            examples:
+              - ["ETH", "BTC", "USDT"]
+          start_date:
+            type: 
+              - string
+              - "null"
+            title: "Historical start date for backfills"
+            description: 'Optional start date to add historical data. If not provided, defaults to yesterday. Format: YYYY-MM-DD'
+            examples:
+              - "2026-01-01"
+              - "2026-12-02"
+          end_date:
+            type: 
+              - string
+              - "null"
+            title: "Historical end date for backfills"
+            description: 'Optional end date to add historical data. If not provided, defaults to yesterday. Format: YYYY-MM-DD'
+            examples:
+              - "2026-01-01"
+              - "2026-12-02"
+          interval:
+            type: string
+            title: Fetch interval
+            description: Time interval for data points.
+            enum:
+              - 5m
+              - 1h
+              - 1d
+            default: 1d
