@@ -10,7 +10,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: 8a3b5f9c-7e2d-4b1a-9c6f-3d8e4a2b1c0d
-  dockerImageTag: 1.0.1
+  dockerImageTag: 1.0.2
   dockerRepository: harbor.status.im/bi/airbyte/source-alchemy-fetcher
   githubIssueLabel: source-alchemy-fetcher
   icon: alchemy-fetcher.svg

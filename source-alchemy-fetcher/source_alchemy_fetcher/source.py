@@ -39,7 +39,7 @@ class HistoricalRates(HttpStream):
         is_blank = isinstance(date, type(None))
         is_string = isinstance(date, str)
 
-        if is_blank or (is_string and len(date) == 0):
+        if is_blank or (is_string and len(date) == 0) or (is_string and date == "null"):
             return datetime.datetime.now().date() - datetime.timedelta(days=1)
 
         return datetime.datetime.strptime(date, "%Y-%m-%d").date()
@@ -185,6 +185,9 @@ class SourceAlchemyFetcher(AbstractSource):
         new_tokens = []
         for token in tokens:
             current: dict = copy.deepcopy(token)
+            network = current.get("network")
+            if network == "null":
+                current.pop("network")
             
             current.update({
                 "start_date": HistoricalRates.to_date(current.get("start_date")),
@@ -212,6 +215,9 @@ class SourceAlchemyFetcher(AbstractSource):
                 continue
             
             payload = HistoricalRates.create_payload(token)
+            date = datetime.datetime.now().date().replace(month=1, day=1)
+            payload["startTime"] = HistoricalRates.to_utc_format(date)
+            payload["endTime"] = HistoricalRates.to_utc_format(date, False)
             payload["interval"] = "1d"
 
             logger.info(f"POST request: {url}")
