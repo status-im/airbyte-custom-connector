@@ -16,7 +16,7 @@ from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger("airbyte")
 
-GUILD_KEYS = ["id", "name", "owner_id", "roles", "description", "chain", "max_members"]
+GUILD_KEYS = ["id", "name", "owner_id", "roles", "description", "chain", "max_members", "approximate_member_count"]
 CHANNEL_KEYS = ["id", "type", "guild_id", "position", "name", "topic", "last_message_id", "managed", "parent_id", "last_pin_timestamp", "message_count", "member_count", "falgs", "total_message_sent"]
 USER_KEYS = [ "id", "username", "discriminator", "global_name", "bot", "mfa_enabled", "verified", "email", "premium_type", "public_flags"]
 ROLES_KEYS = ["id", "name", "color", "hoist", "position", "permissions", "managed", "mentionable", "falgs", "guild_id"]
@@ -32,9 +32,9 @@ class DiscordFetcherStream(HttpStream, ABC):
         self.endpoint = endpoint
 
     def path(
-        self, 
-        stream_state: Mapping[str, Any] = None, 
-        stream_slice: Mapping[str, Any] = None, 
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
         next_page_token: Mapping[str, Any] = None
     ) -> str:
         return f"guilds/{stream_slice['guild_id']}{self.endpoint}"
@@ -51,13 +51,22 @@ class DiscordFetcherStream(HttpStream, ABC):
 class Guild(DiscordFetcherStream):
     primary_key = "id"
 
+    def request_params(
+        self,
+        stream_state: Optional[Mapping[str, Any]],
+        stream_slice: Optional[Mapping[str, Any]] = None,
+        next_page_token: Optional[Mapping[str, Any]] = None,
+    ) -> MutableMapping[str, Any]:
+        # Request guild with counts to get approximate_member_count
+        return {"with_counts": "true"}
+
     def parse_response(
         self, response: requests.Response, stream_slice: Mapping[str, Any] = None, **kwargs
     ) -> Iterable[Mapping]:
         logger.debug("Response: %s", response.json())
         data=response.json()
         guild = { key : data.get(key) for key in GUILD_KEYS }
-        yield guild 
+        yield guild
 
 
 class GuildChannel(DiscordFetcherStream):
@@ -72,16 +81,16 @@ class GuildChannel(DiscordFetcherStream):
         data=response.json()
         for elt in data:
             channel = { key : elt.get(key) for key in CHANNEL_KEYS }
-            yield channel 
+            yield channel
 
 
 class Channel(HttpSubStream, DiscordFetcherStream):
     primary_key="id"
 
     def path(
-        self, 
-        stream_state: Mapping[str, Any] = None, 
-        stream_slice: Mapping[str, Any] = None, 
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
         next_page_token: Mapping[str, Any] = None
     ) -> str:
         logger.info("chnl_exec: Parent: %s", stream_slice.get('parent'))
@@ -113,7 +122,7 @@ class Member(DiscordFetcherStream):
         next_page_token: Optional[Mapping[str, Any]] = None,
     ) -> MutableMapping[str, Any]:
         params = {"limit": MAX_USERS}
- 
+
         if next_page_token:
             params.update(**next_page_token)
         return params
@@ -127,11 +136,11 @@ class Member(DiscordFetcherStream):
             user = { key : elt.get('user').get(key) for key in USER_KEYS }
             user['guild_id']=stream_slice['guild_id']
             user['roles']=elt.get('roles')
-            yield user 
+            yield user
 
 class GuildRole(DiscordFetcherStream):
     primary_key=None
-    
+
     def parse_response(
         self, response: requests.Response, stream_slice: Mapping[str, Any] = None, **kwargs
     ) -> Iterable[Mapping]:
@@ -141,15 +150,15 @@ class GuildRole(DiscordFetcherStream):
             logger.info('Role : %s',  elt)
             role = { key : elt.get(key) for key in ROLES_KEYS }
             role['guild_id']=stream_slice['guild_id']
-            yield role 
+            yield role
 
 class ChannelMessagesStream(DiscordFetcherStream):
     """
     Stream for extracting all messages from multiple Discord channels.
     """
-    
+
     primary_key = "id"
-    
+
     def __init__(self, config: Mapping[str, Any], **kwargs):
         super().__init__(guilds_id=config["guilds_id"], endpoint="/messages", **kwargs)
         self.channel_ids = config["channel_id"]
@@ -173,9 +182,9 @@ class ChannelMessagesStream(DiscordFetcherStream):
             yield slice_data
 
     def path(
-        self, 
-        stream_state: Mapping[str, Any] = None, 
-        stream_slice: Mapping[str, Any] = None, 
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
         next_page_token: Mapping[str, Any] = None
     ) -> str:
         logger.info("ChannelMessagesStream path - stream_slice: %s", stream_slice)
@@ -195,7 +204,7 @@ class ChannelMessagesStream(DiscordFetcherStream):
         next_page_token: Optional[Mapping[str, Any]] = None,
     ) -> MutableMapping[str, Any]:
         params = {"limit": 100}
-        
+
         # Only one of before, after, or around can be used at a time
         if next_page_token:
             params.update(next_page_token)
@@ -209,7 +218,7 @@ class ChannelMessagesStream(DiscordFetcherStream):
             # Convert timestamp to snowflake
             snowflake = ((start_date_ts - DISCORD_EPOCH) << 22)
             params["after"] = str(snowflake)
-            
+
         return params
 
     def parse_response(
@@ -232,7 +241,7 @@ class SourceDiscordFetcher(AbstractSource):
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         auth = TokenAuthenticator(token=config["api_key"], auth_method="Bot")
         guildChannel=GuildChannel(guilds_id=config["guilds_id"], endpoint="/channels", authenticator=auth)
-        
+
         # Create base streams
         streams = [
             Guild(guilds_id=config["guilds_id"],  authenticator=auth),
@@ -242,5 +251,5 @@ class SourceDiscordFetcher(AbstractSource):
             GuildRole(guilds_id=config["guilds_id"], endpoint="/roles", authenticator=auth),
             ChannelMessagesStream(config, authenticator=auth),
         ]
-            
+
         return streams
