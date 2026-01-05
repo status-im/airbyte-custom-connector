@@ -36,6 +36,7 @@ connectionSpecification:
               - frax-mainnet
               - zora-mainnet
             default: "null"
+            order: 0
           address:
             title: Address
             type: string
@@ -44,6 +45,7 @@ connectionSpecification:
               - string
               - "null"
             default: "null"
+            order: 1
           symbol:
             title: Symbol
             type: string
@@ -52,6 +54,7 @@ connectionSpecification:
               type: string
             examples:
               - ["ETH", "BTC", "USDT"]
+            order: 3
           start_date:
             type: 
               - string
@@ -61,6 +64,7 @@ connectionSpecification:
             examples:
               - "2026-01-01"
               - "2026-12-02"
+            order: 4
           end_date:
             type: 
               - string
@@ -70,6 +74,7 @@ connectionSpecification:
             examples:
               - "2026-01-01"
               - "2026-12-02"
+            order: 5
           interval:
             type: string
             title: Fetch interval
@@ -79,3 +84,4 @@ connectionSpecification:
               - 1h
               - 1d
             default: 1d
+            order: 6

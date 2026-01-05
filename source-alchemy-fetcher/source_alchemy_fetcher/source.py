@@ -4,18 +4,18 @@ from airbyte_cdk.sources.streams.http.requests_native_auth import TokenAuthentic
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.sources.streams.call_rate import APIBudget, FixedWindowCallRatePolicy
 
 logger = logging.getLogger("airbyte")
 
 class HistoricalRates(HttpStream):
 
-    REQUESTS = 25
     http_method = "POST"
     primary_key = ["symbol", "timestamp"]
     interval_mappings = {
-        "5m": 7,
-        "1h": 30,
-        "1d": 365
+        "5m": 6,
+        "1h": 29,
+        "1d": 364
     }
 
     @staticmethod
@@ -82,11 +82,37 @@ class HistoricalRates(HttpStream):
 
         return payload
 
+    def parse_iso_ts(self, ts: str) -> datetime.datetime:
+        try:
+            return datetime.datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S.%fZ")
+        except ValueError:
+            return datetime.datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ")
 
     def __init__(self, tokens: List[dict], authenticator: requests.auth.AuthBase,**kwargs):
-        super().__init__(authenticator, **kwargs)
+        now = datetime.datetime.now()
+        matchers = []
+        # Policies are based on Free tier and API:
+        # https://www.alchemy.com/pricing
+        # https://docs.airbyte.com/platform/2.0/connector-development/connector-builder-ui/global-configuration#rate-limit-policies
+        api_budget = APIBudget(
+            policies=[
+                FixedWindowCallRatePolicy(
+                    next_reset_ts=now + datetime.timedelta(hours=1),
+                    period=datetime.timedelta(hours=1),
+                    call_limit=300,
+                    matchers=matchers
+                ),
+                FixedWindowCallRatePolicy(
+                    next_reset_ts=now + datetime.timedelta(minutes=1),
+                    period=datetime.timedelta(minutes=1),
+                    call_limit=25,
+                    matchers=matchers
+                ),
+            ]
+        )
+        self.logger.info(f"API Budget: {api_budget}")
+        super().__init__(authenticator, api_budget)
         self.tokens = tokens
-        self.sleep_seconds = 1 / self.REQUESTS
         
 
     @property
@@ -111,9 +137,8 @@ class HistoricalRates(HttpStream):
             while current_start <= end_date:
                 current_end = current_start + interval
 
-                current_token_info["startTime"] = current_start
-                current_token_info["endTime"] = current_end
-
+                current_token_info["start_date"] = current_start
+                current_token_info["end_date"] = current_end
                 current_slice = {
                     "payload": HistoricalRates.create_payload(current_token_info),
                     "metadata": token_info
@@ -137,8 +162,8 @@ class HistoricalRates(HttpStream):
         ccy = str(data["currency"]).upper()
 
         for row in data["data"]:
-            timestamp = datetime.datetime.strptime(row["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
-
+            # Interval timestamps can be returned in a slightly different format
+            timestamp = self.parse_iso_ts(row["timestamp"])
             if timestamp.date() > end_date:
                 continue
 
@@ -162,10 +187,19 @@ class HistoricalRates(HttpStream):
             }
             yield point
 
-        time.sleep(self.sleep_seconds)
 
     def next_page_token(self, response: requests.Response) -> None:
         return None
+    
+    def backoff_time(self, response: requests.Response) -> Optional[float]:
+        
+        if response.status_code != 429:
+            return None
+        
+        message: str = response.json()["error"]["message"]
+        seconds = 60 * 15
+        logger.error(f"{message} Sleeping for {seconds} seconds")
+        return seconds
 
 
 class SourceAlchemyFetcher(AbstractSource):
