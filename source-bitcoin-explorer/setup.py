@@ -17,8 +17,8 @@ TEST_REQUIREMENTS = [
 ]
 
 setup(
-    name="source_wallet_fetcher",
-    description="Source implementation for Wallet Fetcher.",
+    name="source-bitcoin-explorer",
+    description="Source implementation for Bitcoin Explorer.",
     author="Airbyte",
     author_email="devops@status.im",
     packages=find_packages(),

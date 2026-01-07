@@ -1,0 +1,10 @@
+{
+  "wallets": [
+    {
+      "address": "bc1quavk8mmyla69h0fmpdcr2e68cuplz63gu3f890",
+      "name": "test",
+      "tags": ["EOA", "Stacking"],
+      "backfill": true
+    }
+  ]
+}
