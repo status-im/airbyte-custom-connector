@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "update_id": {
+      "type": "integer",
+      "description": "Unique identifier for the update"
+    },
+    "update_type": {
+      "type": "string",
+      "description": "Type of update: message, channel_post"
+    },
+    "message_id": {
+      "type": ["integer", "null"],
+      "description": "Unique message identifier within the chat"
+    },
+    "date": {
+      "type": ["integer", "null"],
+      "description": "Unix timestamp when the message was sent"
+    },
+    "text": {
+      "type": ["string", "null"],
+      "description": "Text content of the message"
+    },
+    "caption": {
+      "type": ["string", "null"],
+      "description": "Caption for media messages"
+    },
+    "chat_id": {
+      "type": ["integer", "null"],
+      "description": "Unique identifier for the chat"
+    },
+    "chat_title": {
+      "type": ["string", "null"],
+      "description": "Title of the chat (for groups/channels)"
+    },
+    "chat_type": {
+      "type": ["string", "null"],
+      "description": "Type of chat: private, group, supergroup, channel"
+    },
+    "chat_username": {
+      "type": ["string", "null"],
+      "description": "Username of the chat (if available)"
+    },
+    "is_forum": {
+      "type": "boolean",
+      "description": "Whether the chat is a forum (has topics)"
+    },
+    "from_id": {
+      "type": ["integer", "null"],
+      "description": "Unique identifier of the user who sent the message"
+    },
+    "from_username": {
+      "type": ["string", "null"],
+      "description": "Username of the sender"
+    },
+    "from_first_name": {
+      "type": ["string", "null"],
+      "description": "First name of the sender"
+    },
+    "from_last_name": {
+      "type": ["string", "null"],
+      "description": "Last name of the sender"
+    },
+    "from_is_bot": {
+      "type": "boolean",
+      "description": "Whether the sender is a bot"
+    },
+    "message_thread_id": {
+      "type": ["integer", "null"],
+      "description": "Thread/topic ID for forum messages"
+    },
+    "is_topic_message": {
+      "type": "boolean",
+      "description": "Whether the message is part of a forum topic"
+    },
+    "reply_to_message_id": {
+      "type": ["integer", "null"],
+      "description": "Message ID being replied to"
+    },
+    "forward_from_chat_id": {
+      "type": ["integer", "null"],
+      "description": "Chat ID of the original message if forwarded"
+    },
+    "forward_date": {
+      "type": ["integer", "null"],
+      "description": "Unix timestamp of the original message if forwarded"
+    },
+    "has_photo": {
+      "type": "boolean",
+      "description": "Whether the message contains a photo"
+    },
+    "has_video": {
+      "type": "boolean",
+      "description": "Whether the message contains a video"
+    },
+    "has_document": {
+      "type": "boolean",
+      "description": "Whether the message contains a document"
+    },
+    "has_audio": {
+      "type": "boolean",
+      "description": "Whether the message contains audio"
+    },
+    "has_voice": {
+      "type": "boolean",
+      "description": "Whether the message contains a voice message"
+    },
+    "has_sticker": {
+      "type": "boolean",
+      "description": "Whether the message contains a sticker"
+    },
+    "has_poll": {
+      "type": "boolean",
+      "description": "Whether the message contains a poll"
+    },
+    "has_location": {
+      "type": "boolean",
+      "description": "Whether the message contains a location"
+    },
+    "raw_update": {
+      "type": "object",
+      "description": "Full raw update object from Telegram API"
+    }
+  },
+  "required": ["update_id", "update_type"]
+}

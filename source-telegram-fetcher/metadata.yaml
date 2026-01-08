@@ -1,0 +1,31 @@
+data:
+  allowedHosts:
+    hosts:
+      - api.telegram.org
+  registries:
+    oss:
+      enabled: true
+    cloud:
+      enabled: false
+  remoteRegistries:
+    pypi:
+      enabled: true
+      packageName: airbyte-source-telegram-fetcher
+  connectorBuildOptions:
+    baseImage: docker.io/airbyte/python-connector-base:1.0.0@sha256:dd17e347fbda94f7c3abff539be298a65af2d7fc27a307d89297df1081a45c27
+  connectorSubtype: api
+  connectorType: source
+  definitionId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+  dockerImageTag: 1.0.0
+  dockerRepository: harbor.status.im/bi/airbyte/source-telegram-fetcher
+  githubIssueLabel: source-telegram-fetcher
+  icon: telegram-fetcher.svg
+  license: MIT
+  name: Telegram Fetcher
+  releaseDate: 2025-01-08
+  supportLevel: community
+  releaseStage: alpha
+  documentationUrl: https://docs.airbyte.com/integrations/sources/telegram
+  tags:
+    - language:python
+metadataSpecVersion: "1.0"
