@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Wallet Transactions",
+  "description": "Schema for wallet transaction records",
+  "type": "object",
+  "properties": {
+    "wallet_address": {
+      "type": "string",
+      "description": "The address of the wallet"
+    },
+    "wallet_name": {
+      "type": "string",
+      "description": "Name of the wallet (optional)"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Tags associated with the wallet"
+    },
+    "hash": {
+      "type": "string",
+      "description": "Transaction hash"
+    },
+    "block": {
+      "type": "integer",
+      "description": "Block number of the transaction"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the transaction"
+    },
+    "from_address": {
+      "type": "string",
+      "description": "Sender address"
+    },
+    "movement": {
+      "type": ["string", "null"],
+      "description": "Movement type or direction"
+    },
+    "to_address": {
+      "type": "string",
+      "description": "Recipient address"
+    },
+    "amount": {
+      "type": "string",
+      "description": "Amount transferred (in base unit)"
+    },
+    "token_name": {
+      "type": "string",
+      "description": "Name of the token"
+    },
+    "token_symbol": {
+      "type": "string",
+      "description": "Token symbol"
+    },
+    "token_decimal": {
+      "type": "integer",
+      "description": "Token decimals"
+    },
+    "chain_id": {
+      "type": "integer",
+      "description": "Chain identifier"
+    },
+    "gas_price": {
+      "type": "string",
+      "description": "Gas price used"
+    },
+    "gas_used": {
+      "type": "string",
+      "description": "Gas used by transaction"
+    },
+    "gas_decimals": {
+      "type": "integer",
+      "description": "Decimals for gas"
+    }
+  }
+}
