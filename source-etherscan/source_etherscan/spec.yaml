@@ -17,11 +17,6 @@ connectionSpecification:
       title: 'Chain Id'
       type: string
       description: 'Id of the blockchain'
-    delta:
-      title: 'Transaction days delta'
-      type: integer
-      default: 1
-      description: 'Number of previous days to fetch transaction'
     wallets:
       title: Wallets
       description: "List of wallet to scan"
@@ -30,29 +25,39 @@ connectionSpecification:
         type: object
         properties:
           address:
-            title: address
+            title: Address
             type: string
             description: 'Address of the wallet'
+            order: 1
           name:
-            title: name
+            title: Name
             type: string
             description: 'Name of the wallet'
-          tag:
-            title: tag
-            type: string
-            description: 'Wallet Tag'
-    tokens:
-      title: Tokens
-      description: "List of tokens to fetch balance"
-      type: array
-      items:
-        type: object
-        properties:
-          address:
-            title: address
-            type: string
-            description: 'Address of the token'
-          name:
-            title: name
-            type: string
-            description: 'Name of the token'
+            order: 2
+          tags:
+            title: Tags
+            type: array
+            description: 'Wallet tags'
+            items:
+              type: string
+            order: 3
+          start_date:
+            type: 
+              - string
+              - "null"
+            title: "Historical start date for backfills"
+            description: 'Optional start date to add historical data. If not provided, defaults to yesterday. Format: YYYY-MM-DD'
+            examples:
+              - "2026-01-01"
+              - "2026-12-02"
+            order: 4
+          end_date:
+            type: 
+              - string
+              - "null"
+            title: "Historical end date for backfills"
+            description: 'Optional end date to add historical data. If not provided, defaults to yesterday. Format: YYYY-MM-DD'
+            examples:
+              - "2026-01-01"
+              - "2026-12-02"
+            order: 5
