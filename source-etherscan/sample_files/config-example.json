@@ -1,0 +1,13 @@
+{
+    "api_key": "My REST API Key",
+    "chain_id": "1",
+    "wallets": [
+        {
+            "address": "blah-blah-blah",
+            "name": "blah-blah-blah",
+            "tags": ["Blah"],
+            "start_date": "2008-01-01",
+            "end_date": null
+        }
+    ]
+}
