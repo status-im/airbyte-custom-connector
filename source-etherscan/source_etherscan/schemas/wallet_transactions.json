@@ -58,20 +58,16 @@
       "type": "integer",
       "description": "Token decimals"
     },
-    "transaction_fee": {
-      "type": "integer",
-      "description": "Transaction fee (gasPrice * gasUsed)"
-    },
     "chain_id": {
       "type": "integer",
       "description": "Chain identifier"
     },
     "gas_price": {
-      "type": "integer",
+      "type": "string",
       "description": "Gas price used"
     },
     "gas_used": {
-      "type": "integer",
+      "type": "string",
       "description": "Gas used by transaction"
     },
     "gas_decimals": {

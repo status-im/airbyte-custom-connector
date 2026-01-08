@@ -70,25 +70,25 @@
       "type": "integer",
       "description": "Token decimal places"
     },
-    "transaction_fee": {
-      "type": "integer",
-      "description": "Transaction fee (gasPrice * gasUsed)"
-    },
     "token_address": {
       "type": "string",
       "description": "Token contract address"
     },
     "gas_price": {
-      "type": "integer",
+      "type": "string",
       "description": "Gas price used"
     },
     "gas_used": {
-      "type": "integer",
+      "type": "string",
       "description": "Gas used by transaction"
     },
     "gas_decimals": {
       "type": "integer",
       "description": "Decimals used for gas"
+    },
+    "chain_id": {
+      "type": "integer",
+      "description": "Chain identifier"
     }
   }
 }

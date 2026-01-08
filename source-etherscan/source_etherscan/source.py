@@ -122,10 +122,9 @@ class WalletTransactions(EtherscanStream):
                 "token_name": "Ethereum",
                 "token_symbol": "ETH",
                 "token_decimal": self.ETHEREUM_DECIMALS,
-                "transaction_fee": int(trx["gasPrice"]) * int(trx["gasUsed"]),
                 "chain_id": int(self.chain_id),
-                "gas_price": int(trx["gasPrice"]),
-                "gas_used": int(trx["gasUsed"]),
+                "gas_price": trx["gasPrice"],
+                "gas_used": trx["gasUsed"],
                 "gas_decimals": self.ETHEREUM_DECIMALS
             }
             if trx["from"] == stream_slice["address"]:
@@ -253,11 +252,11 @@ class WalletTokenTransactions(EtherscanStream):
                 "token_name": trx["tokenName"],
                 "token_symbol": trx["tokenSymbol"],
                 "token_decimal": int(trx["tokenDecimal"]),
-                "transaction_fee": (int(trx["gasPrice"]) * int(trx["gasUsed"])) / self.ETHEREUM_DECIMALS,
                 "token_address": trx["contractAddress"],
-                "gas_price": int(trx["gasPrice"]),
-                "gas_used": int(int(trx["gasUsed"])),
-                "gas_decimals": self.ETHEREUM_DECIMALS
+                "gas_price": trx["gasPrice"],
+                "gas_used": trx["gasUsed"],
+                "gas_decimals": self.ETHEREUM_DECIMALS,
+                "chain_id": int(self.chain_id),
             }
             if trx["from"] == stream_slice["address"]:
                 point["movement"] = "out"
