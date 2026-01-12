@@ -22,6 +22,9 @@
     },
     "max_members": {
       "type": [ "null", "number" ]
+    },
+    "approximate_member_count": {
+      "type": [ "null", "number" ]
     }
   }
 }
