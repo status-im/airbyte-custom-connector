@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": ["null", "number"]
+    },
+    "action_type": {
+      "type": ["null", "number"]
+    },
+    "created_at": {
+      "type": ["null", "string"]
+    },
+    "acting_user_id": {
+      "type": ["null", "number"]
+    },
+    "acting_username": {
+      "type": ["null", "string"]
+    },
+    "target_user_id": {
+      "type": ["null", "number"]
+    },
+    "target_post_id": {
+      "type": ["null", "number"]
+    },
+    "target_topic_id": {
+      "type": ["null", "number"]
+    },
+    "target_username": {
+      "type": ["null", "string"]
+    },
+    "post_number": {
+      "type": ["null", "number"]
+    },
+    "topic_title": {
+      "type": ["null", "string"]
+    },
+    "slug": {
+      "type": ["null", "string"]
+    },
+    "category_id": {
+      "type": ["null", "number"]
+    }
+  }
+}
