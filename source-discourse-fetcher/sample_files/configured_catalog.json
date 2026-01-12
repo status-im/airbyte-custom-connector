@@ -16,6 +16,20 @@
     },
     {
       "stream": {
+        "name": "user_action",
+        "json_schema": {
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "type": "object"
+        },
+        "supported_sync_modes": [
+          "full_refresh",  "incremental"
+        ]
+      },
+      "sync_mode":  "incremental",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
         "name": "post",
         "json_schema": {
           "$schema": "http://json-schema.org/draft-04/schema#",

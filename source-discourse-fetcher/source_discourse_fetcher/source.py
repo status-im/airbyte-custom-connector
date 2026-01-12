@@ -15,6 +15,15 @@ USER_KEYS = [
     "id","name","username","active","created_at","trust_level","title","time_read", "staged","days_visited","posts_read_count","topics_entered","post_count", "email"
     ]
 
+USER_ACTION_KEYS = [
+    "id", "action_type", "created_at", "acting_user_id", "acting_username",
+    "target_user_id", "target_post_id", "target_topic_id", "target_username",
+    "post_number", "topic_title", "slug", "category_id"
+    ]
+
+# Action types to filter: LIKE (1), NEW_TOPIC (4), REPLY (5)
+ALLOWED_ACTION_TYPES = [1, 4, 5]
+
 POST_KEYS = [
     "id","name","username", "raw", "created_at", "post_number", "post_type", "post_count", "post_url", "updated_at", "reply_count", "reply_to_post_number","quote_count","incoming_link_count","reads","score","topic_id", "topic_slug","topic_title","topic_html_title","category_id"
     ]
@@ -41,6 +50,7 @@ class DiscourseStream(HttpStream):
 class User(DiscourseStream):
     primary_key="id"
     next_page = 0
+    use_cache = True
     def path(
        self,
        stream_state: Mapping[str, Any] = None,
@@ -75,6 +85,65 @@ class User(DiscourseStream):
             user = { key : elt.get(key) for key in USER_KEYS }
             yield user
         self.next_page = self.next_page + 1
+
+
+class UserAction(HttpSubStream, User):
+    primary_key = "id"
+    next_page_offset = 0
+
+    def path(
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        return f"{self.url}/user_actions.json"
+
+    def request_params(self, stream_state, stream_slice=None, next_page_token: Mapping[str, Any] = None):
+        username = stream_slice.get('parent').get('username')
+        params = {
+            "username": username
+        }
+        if next_page_token:
+            params.update(next_page_token)
+        return params
+
+    def backoff_time(self, response: requests.Response) -> Optional[float]:
+        """Use the wait_seconds from Discourse rate limit response for optimal backoff."""
+        if response.status_code == 429:
+            try:
+                data = response.json()
+                wait_seconds = data.get("extras", {}).get("wait_seconds")
+                if wait_seconds:
+                    logger.info(f"Rate limited, waiting {wait_seconds} seconds as requested by API")
+                    return float(wait_seconds) + 1 
+            except Exception:
+                pass
+        return None  # Fall back to default exponential backoff
+
+    def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
+        data = response.json()
+        user_actions = data.get("user_actions", [])
+        if len(user_actions) > 0:
+            self.next_page_offset += len(user_actions)
+            return {"offset": self.next_page_offset}
+        self.next_page_offset = 0
+        return None
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_slice: Mapping[str, Any] = None,
+        **kwargs
+    ) -> Iterable[Mapping]:
+        data = response.json()
+        logger.debug("Response user_actions %s", data)
+        for elt in data.get("user_actions", []):
+            # Filter by allowed action types: LIKE (1), NEW_TOPIC (4), REPLY (5)
+            if elt.get("action_type") in ALLOWED_ACTION_TYPES:
+                user_action = {key: elt.get(key) for key in USER_ACTION_KEYS}
+                yield user_action
+
 
 class Post(DiscourseStream):
     primary_key="id"
@@ -256,9 +325,11 @@ class SourceDiscourseFetcher(AbstractSource):
             "api_username": config['api-username'],
             "url": config['url']
         }
-        group=Group(**args)
+        user = User(**args)
+        group = Group(**args)
         return [
-            User(**args),
+            user,
+            UserAction(parent=user, **args),
             Post(**args),
             Topic(**args),
             group,
