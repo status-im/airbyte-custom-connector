@@ -100,7 +100,8 @@ class WalletTransactions(EtherscanStream):
         txs: list[dict] = data.get("result", [])
         
         for trx in txs:
-
+            if not isinstance(trx, dict):
+                continue
             timestamp = self.to_datetime(trx["timeStamp"])
             if self.has_finished(stream_slice["address"], timestamp):
                 break
@@ -160,8 +161,9 @@ class WalletInternalTransactions(EtherscanStream):
         txs: list[dict] = data.get("result", [])
         
         for trx in txs:
-
-            timestamp = self.to_datetime(trx["timeStamp"])
+            if not isinstance(trx, dict):
+                continue
+            timestamp = self.to_datetime(trx["timeStamp"])            
             if self.has_finished(stream_slice["address"], timestamp):
                 break
             
@@ -226,7 +228,8 @@ class WalletTokenTransactions(EtherscanStream):
         txs: list[dict] = data.get("result", [])
 
         for trx in txs:
-
+            if not isinstance(trx, dict):
+                continue
             timestamp = self.to_datetime(trx["timeStamp"])
             if self.has_finished(stream_slice["address"], timestamp):
                 break
