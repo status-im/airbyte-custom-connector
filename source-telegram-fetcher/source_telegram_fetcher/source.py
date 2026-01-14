@@ -46,10 +46,18 @@ class Messages(TelegramStream):
     """
 
     primary_key = "update_id"
+    cursor_field = "update_id"
 
     def __init__(self, bot_token: str, chat_ids: List[str] = None, **kwargs):
         super().__init__(bot_token=bot_token, **kwargs)
         self.chat_ids = chat_ids or []
+
+    def supports_incremental(self) -> bool:
+        return True
+
+    @property
+    def source_defined_cursor(self) -> bool:
+        return True
 
     def path(
         self,
@@ -73,14 +81,40 @@ class Messages(TelegramStream):
         # Use offset from state to get only new messages
         if next_page_token and "offset" in next_page_token:
             params["offset"] = next_page_token["offset"]
+            logger.info(f"Using offset from next_page_token: {next_page_token['offset']}")
         elif stream_state and "offset" in stream_state:
             params["offset"] = stream_state["offset"]
+            logger.info(f"Using offset from stream_state: {stream_state['offset']}")
+        else:
+            logger.info("No offset found - fetching from beginning")
 
         return params
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """Telegram returns all available updates at once, no pagination needed."""
         return None
+
+    def get_updated_state(
+        self,
+        current_stream_state: MutableMapping[str, Any],
+        latest_record: Mapping[str, Any],
+    ) -> Mapping[str, Any]:
+        """
+        Update the state with the highest update_id seen.
+        The offset should be set to max_update_id + 1 for the next request
+        to acknowledge all updates up to that point.
+        """
+        latest_update_id = latest_record.get("update_id")
+        current_offset = current_stream_state.get("offset", 0)
+
+        if latest_update_id is not None:
+            # Offset should be max_update_id + 1 to acknowledge all updates
+            # Keep the maximum offset to handle multiple records being processed
+            new_offset = latest_update_id + 1
+            current_stream_state["offset"] = max(new_offset, current_offset)
+            logger.info(f"Updated state: offset={current_stream_state['offset']} (from update_id={latest_update_id})")
+
+        return current_stream_state
 
     def parse_response(
         self,
@@ -96,7 +130,11 @@ class Messages(TelegramStream):
             return
 
         results = data.get("result", [])
-        logger.info("Fetched %d updates from Telegram", len(results))
+        logger.info(f"Fetched {len(results)} updates from Telegram")
+
+        if results:
+            update_ids = [u.get("update_id") for u in results]
+            logger.info(f"Update IDs in response: {update_ids}")
 
         for update in results:
             message = update.get("message") or update.get("channel_post")
@@ -154,7 +192,10 @@ class Messages(TelegramStream):
 
     @property
     def state_checkpoint_interval(self) -> int:
-        return 100
+        # Save state after each record to ensure updates are acknowledged immediately
+        # This is critical for Telegram API - once fetched, updates must be acknowledged
+        # to prevent them from being returned again in the next sync
+        return 1
 
 
 class ChatInfo(TelegramStream):
