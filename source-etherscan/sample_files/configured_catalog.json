@@ -2,59 +2,30 @@
   "streams": [
     {
       "stream": {
-        "name": "internal_balance",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh"
-        ]
+        "name": "wallet_transactions",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh", "incremental"]
       },
-      "sync_mode": "full_refresh",
-      "destination_sync_mode": "overwrite"
+      "sync_mode": "incremental",
+      "destination_sync_mode": "append"
     },
     {
       "stream": {
-        "name": "internal_transaction",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh"
-        ]
+        "name": "wallet_internal_transactions",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh", "incremental"]
       },
-      "sync_mode": "full_refresh",
-      "destination_sync_mode": "overwrite"
+      "sync_mode": "incremental",
+      "destination_sync_mode": "append"
     },
     {
       "stream": {
-        "name": "token_balance",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh"
-        ]
+        "name": "wallet_token_transactions",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh", "incremental"]
       },
-      "sync_mode": "full_refresh",
-      "destination_sync_mode": "overwrite"
-    },
-    {
-      "stream": {
-        "name": "token_transaction",
-        "json_schema": {
-          "$schema": "http://json-schema.org/draft-04/schema#",
-          "type": "object"
-        },
-        "supported_sync_modes": [
-          "full_refresh"
-        ]
-      },
-      "sync_mode": "full_refresh",
-      "destination_sync_mode": "overwrite"
+      "sync_mode": "incremental",
+      "destination_sync_mode": "append"
     }
   ]
 }
