@@ -8,11 +8,12 @@ from .tweets_stream import TwitterStream
 
 logger = logging.getLogger("airbyte")
 
-class TagsStream(TwitterStream):
+class Tags(TwitterStream):
     primary_key = "id"
 
-    def __init__(self, start_time: Union[str, datetime, None] = None, account_id: str = None, tags: List[str] = None, tags_frequent_extractions: bool = False, **kwargs):
-        super().__init__(start_time=start_time, account_id=account_id, **kwargs)
+    def __init__(self, start_time: Union[str, datetime, None] = None, account_ids:
+                 List[str] = [], tags: List[str] = None, tags_frequent_extractions: bool = False, **kwargs):
+        super().__init__(start_time=start_time, account_ids=account_ids, **kwargs)
 
         if not self.start_time:
             if tags_frequent_extractions:

@@ -49,31 +49,31 @@ class Space(TwitterStream):
     ) -> Iterable[Mapping]:
         try:
             data = response.json()
-            
+
             if 'errors' in data:
                 logger.warning(f"Spaces API errors: {data['errors']}")
-            
+
             if 'data' in data and data['data']:
                 space = data['data']
                 space['space_id'] = stream_slice['space_id']
-                
+
                 # Convert arrays to JSON strings
                 for field in ['topics', 'host_ids', 'invited_user_ids', 'speaker_ids']:
                     if field in space and isinstance(space[field], list):
                         space[field] = json.dumps(space[field])
-                
+
                 # Add expanded data as JSON strings
                 if 'includes' in data:
                     includes = data['includes']
                     for key in ['users', 'topics', 'tweets', 'media', 'places', 'polls']:
                         if key in includes:
                             space[f'expanded_{key}'] = json.dumps(includes[key])
-                
+
                 yield space
-                
+
         except Exception as e:
             logger.error(f"Error parsing spaces response: {e}")
-        
+
         self._apply_rate_limiting()
 
 
@@ -92,10 +92,10 @@ class GetSpaceIds(TwitterStream):
     def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
         latest_cursor_value = latest_record.get(self.cursor_field)
         current_state_value = current_stream_state.get(self.cursor_field)
-        
+
         if latest_cursor_value and (not current_state_value or latest_cursor_value > current_state_value):
             return {self.cursor_field: latest_cursor_value}
-        
+
         return current_stream_state
 
     def __init__(self, space_account: list = None, **kwargs):
@@ -105,7 +105,7 @@ class GetSpaceIds(TwitterStream):
     def stream_slices(self, stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
         if not self.space_account:
             return
-            
+
         yield {"user_ids": self.space_account, "stream_state": stream_state or {}}
 
     def path(
@@ -139,30 +139,30 @@ class GetSpaceIds(TwitterStream):
     ) -> Iterable[Mapping]:
         try:
             data = response.json()
-            
+
             if 'errors' in data:
                 logger.warning(f"Spaces by creator IDs API errors: {data['errors']}")
-            
+
             if 'data' in data and data['data']:
                 stream_state = stream_slice.get("stream_state", {})
                 last_cursor_value = stream_state.get(self.cursor_field)
-                
+
                 for space in data['data']:
                     created_at = space.get('created_at')
                     if last_cursor_value is None or (created_at and created_at > last_cursor_value):
                         for field in ['topics', 'host_ids', 'invited_user_ids', 'speaker_ids']:
                             if field in space and isinstance(space[field], list):
                                 space[field] = json.dumps(space[field])
-                        
+
                         if 'includes' in data:
                             includes = data['includes']
                             for key in ['users', 'topics', 'tweets', 'media', 'places', 'polls']:
                                 if key in includes:
                                     space[f'expanded_{key}'] = json.dumps(includes[key])
-                        
+
                         yield space
-                    
+
         except Exception as e:
             logger.error(f"Error parsing spaces by creator IDs response: {e}")
-        
+
         self._apply_rate_limiting()

@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Mapping, MutableMapping, Optional, Union
+from typing import Any, Iterable, Mapping, MutableMapping, Optional, Union, List
 import logging
 import requests
 import time
@@ -12,10 +12,11 @@ logger = logging.getLogger("airbyte")
 class TwitterStream(HttpStream):
     url_base = "https://api.x.com/2/"
 
-    def __init__(self, start_time: Union[str, datetime, None] = None, account_id: str = None, **kwargs):
+    def __init__(self, start_time: Union[str, datetime, None] = None, account_ids:
+                 List[str] = [], **kwargs):
         super().__init__(**kwargs)
         self.start_time = start_time
-        self.account_id = account_id
+        self.account_ids = account_ids
 
         # Set default start_time if not provided (5 days before current time)
         if not self.start_time:
@@ -88,15 +89,21 @@ class Account(TwitterStream):
         data = response.json()['data']
         yield data
 
-class Tweet(TwitterStream):
+class AccountsAdditional(TwitterStream):
     primary_key = "id"
 
-    def __init__(self, start_time: Union[str, datetime, None] = None, account_id: str = None, **kwargs):
-        super().__init__(start_time=start_time, account_id=account_id, **kwargs)
+    def __init__(self, start_time: Union[str, datetime, None] = None, account_ids:
+                 List[str]= [], **kwargs):
+        super().__init__(start_time=start_time, account_ids=account_ids, **kwargs)
 
     @property
     def use_cache(self) -> bool:
         return True
+
+    def stream_slices(self, stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
+        limit_date = datetime.today() - timedelta(31)
+        for account in self.account_ids:
+            yield {"account_id": account}
 
     def path(
         self,
@@ -104,7 +111,59 @@ class Tweet(TwitterStream):
         stream_slice: Mapping[str, Any] = None,
         next_page_token: Mapping[str, Any] = None
     ) -> str:
-        return f"users/{self.account_id}/tweets"
+        return f"users/{stream_slice['account_id']}?user.fields=public_metrics,description,url,most_recent_tweet_id,pinned_tweet_id,created_at,verified_type,verified_followers_count,name,username,verified,parody"
+
+    def parse_response(
+        self,
+        response: requests.Response,
+        stream_slice: Mapping[str, Any] = None,
+        **kwargs
+    ) -> Iterable[Mapping]:
+        logger.debug("Response: %s", response.json())
+        data = response.json()['data']
+        yield {
+            "parody": data.get("parody"),
+            "username": data.get("username"),
+            "most_recent_tweet_id": data.get("most_recent_tweet_id"),
+            "created_at": data.get("created_at"),
+            "verified_type": data.get("verified_type"),
+            "followers_count": data.get("public_metrics").get("followers_count"),
+            "following_count": data.get("public_metrics").get("following_count"),
+            "tweet_count": data.get("public_metrics").get("tweet_count"),
+            "listed_count": data.get("public_metrics").get("listed_count"),
+            "like_count": data.get("public_metrics").get("like_count"),
+            "media_count": data.get("public_metrics").get("media_count"),
+            "verified": data.get("verified"),
+            "id": data.get("id"),
+            "description": data.get("description"),
+            "name": data.get("name")
+        }
+
+class Tweet(TwitterStream):
+    primary_key = "id"
+
+    def __init__(self, start_time: Union[str, datetime, None] = None, account_ids:
+                 List[str]= [], **kwargs):
+        super().__init__(start_time=start_time, account_ids=account_ids, **kwargs)
+
+    @property
+    def use_cache(self) -> bool:
+        return True
+
+    def stream_slices(self, stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
+        limit_date = datetime.today() - timedelta(31)
+        for account in self.account_ids:
+            yield {"account_id": account}
+
+
+    def path(
+        self,
+        stream_state: Mapping[str, Any] = None,
+        stream_slice: Mapping[str, Any] = None,
+        next_page_token: Mapping[str, Any] = None
+    ) -> str:
+        logger.info("Getting tweet from account %s", stream_slice.get('account_id'))
+        return f"users/{stream_slice['account_id']}/tweets"
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         if 'meta' in response.json() and 'next_token' in response.json()['meta'] and response.json()['meta']['result_count'] > 0:
@@ -152,7 +211,8 @@ class TweetMetrics(HttpSubStream, Tweet):
         next_page_token: Mapping[str, Any] = None
     ) -> str:
         tweet_id = stream_slice.get("id")
-        logger.debug("Fetching tweet %s from Account id %s", tweet_id, self.account_id)
+        account_id = stream_slice.get("author_id")
+        logger.debug("Fetching tweet %s from Account id %s", tweet_id, account_id)
         return f"tweets/{tweet_id}"
 
     def stream_slices(self, stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
@@ -160,7 +220,7 @@ class TweetMetrics(HttpSubStream, Tweet):
         for parent_slice in super().stream_slices(sync_mode=SyncMode.full_refresh):
             tweet = parent_slice["parent"]
             if datetime.strptime(tweet.get("created_at"), "%Y-%m-%dT%H:%M:%S.%fZ") > limit_date:
-                yield {"id": tweet.get('id')}
+                yield {"id": tweet.get('id'), "author_id": tweet.get("author_id")}
             else:
                 logger.info("Not calling full metrics endpoint for tweet %s, tweet too old", tweet.get('id'))
 

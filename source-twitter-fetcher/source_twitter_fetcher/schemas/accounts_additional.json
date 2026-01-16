@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "parody": {
+      "type": "boolean",
+      "description": "Indicates if the account is a parody."
+    },
+    "username": {
+      "type": "string",
+      "description": "The Twitter username of the account."
+    },
+    "most_recent_tweet_id": {
+      "type": "string",
+      "description": "The ID of the most recent tweet by the account."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The date and time when the account was created."
+    },
+    "verified_type": {
+      "type": "string",
+      "description": "The type of verification (e.g., 'blue')."
+    },
+    "followers_count": {
+      "type": "integer",
+      "description": "The number of followers the account has."
+    },
+    "following_count": {
+      "type": "integer",
+      "description": "The number of accounts the user is following."
+    },
+    "tweet_count": {
+      "type": "integer",
+      "description": "The number of tweets posted by the account."
+    },
+    "listed_count": {
+      "type": "integer",
+      "description": "The number of lists the account is a member of."
+    },
+    "like_count": {
+      "type": "integer",
+      "description": "The number of likes the account has received."
+    },
+    "media_count": {
+      "type": "integer",
+      "description": "The number of media attachments in the account's tweets."
+    },
+    "verified": {
+      "type": "boolean",
+      "description": "Indicates if the account is verified."
+    },
+    "id": {
+      "type": "string",
+      "description": "The unique identifier for the account."
+    },
+    "description": {
+      "type": "string",
+      "description": "The bio or description of the account."
+    },
+    "name": {
+      "type": "string",
+      "description": "The display name of the account."
+    }
+  }
+
+}
+

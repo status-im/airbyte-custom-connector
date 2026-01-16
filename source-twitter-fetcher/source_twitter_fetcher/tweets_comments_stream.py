@@ -13,7 +13,7 @@ logger = logging.getLogger("airbyte")
 class TweetComments(HttpSubStream, Tweet):
     primary_key = "id"
     cursor_field = "created_at"
-    
+
     def __init__(self, start_time: Union[str, datetime, None] = None, comment_days_limit: int = 2, filtered_author_ids: List[str] = None, **kwargs):
         super().__init__(start_time=start_time, **kwargs)
         self.comment_days_limit = comment_days_limit
@@ -24,8 +24,8 @@ class TweetComments(HttpSubStream, Tweet):
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         """Handle pagination for Twitter search API"""
         response_json = response.json()
-        if 'meta' in response_json and 'next_token' in response_json['meta'] and response_json['meta'].get('result_count', 0) > 0:
-            return response_json['meta']['next_token']
+        if "meta" in response_json and "next_token" in response_json["meta"] and response_json["meta"].get("result_count", 0) > 0:
+            return response_json["meta"]["next_token"]
         return None
 
     def get_updated_state(
@@ -41,7 +41,7 @@ class TweetComments(HttpSubStream, Tweet):
 
         if current_state is None:
             return {self.cursor_field: latest_created_at}
-        
+
         return {self.cursor_field: max(latest_created_at, current_state)}
 
     def path(
@@ -77,7 +77,7 @@ class TweetComments(HttpSubStream, Tweet):
         # Get tweet IDs from the parent Tweet stream
         for parent_slice in super().stream_slices(sync_mode=sync_mode):
             tweet = parent_slice["parent"]
-            yield {"tweet_id": tweet.get('id')}
+            yield {"tweet_id": tweet.get("id"), "account_id": tweet.get("author_id")}
 
     def parse_response(
         self,
@@ -85,17 +85,17 @@ class TweetComments(HttpSubStream, Tweet):
         stream_slice: Mapping[str, Any] = None,
         **kwargs
     ) -> Iterable[Mapping]:
-        if 'data' in response.json():
-            data = response.json()['data']
+        if "data" in response.json():
+            data = response.json()["data"]
             for tweet in data:
                 # Skip tweets from filtered author IDs or containing "RT"
-                if (tweet.get('author_id') not in self.filtered_author_ids and 
-                    not tweet.get('text', '').startswith('RT')): #filter out Retweets
+                if (tweet.get("author_id") not in self.filtered_author_ids and
+                    not tweet.get("text", "").startswith("RT")): #filter out Retweets
                     # Check if the tweet is within the time limit
-                    tweet_date = datetime.strptime(tweet.get('created_at'), "%Y-%m-%dT%H:%M:%S.%fZ")
+                    tweet_date = datetime.strptime(tweet.get("created_at"), "%Y-%m-%dT%H:%M:%S.%fZ")
                     if tweet_date >= self.limit_date:
                         # Add account_id to the tweet data
-                        tweet['account_id'] = self.account_id
+                        tweet["account_id"] = stream_slice.get("account_id")
                         yield tweet
         # Add rate limiting delay like other Twitter streams
-        time.sleep(2) 
+        time.sleep(2)

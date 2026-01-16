@@ -2,15 +2,6 @@
 
 This is the repository for fetching Twitter information, written in Python.
 
-## Todos
-
-* [ ] Implements first version based on original script
-  * [ ] Fetch the Data users of each count.
-  * [ ] Fetch Tweets details 
-* [ ] Improve version:
-  * limit the data fetching based on input date
-
-
 ## Usage
 
 This connector fetch information from Twitter based on their API: https://developer.twitter.com/en/docs/twitter-api
@@ -26,8 +17,14 @@ twitter:
     client_secret: "Secret from the Twitter Developer Account"
     access_token: "Token generated from the generated Twitter account"
     refresh_token: "Refresh token obtain from the Twitter Account"
+    bearer_token: "Bearer Token form Twitter Dev Portal"
+    token_expiry_date: "Expiry date off the Token Access"
   account_id: "Id of the Twitter account"
-  start_time: 'AAAA-MM-DDTHH:mm:SSZ" # Start of the period of tweets sync
+  start_time: "AAAA-MM-DDTHH:mm:SSZ" # Start of the period of tweets sync
+  tags: ["List", "Hashtag", "mentions", "keyword"]
+  tags_frequent_extractions: False
+  space_ids: ["id of space to monitores"]
+  space_account: ["Id of account making the space to monitores"]
 ```
 
 To obtain the `account_id`, run the following command:
@@ -35,11 +32,6 @@ To obtain the `account_id`, run the following command:
 curl -X GET "https://api.x.com/2/users/me" \
     -H "Authorization: Bearer $access_token"
 ```
-
-### Output
-
-The connector will return the following:
-
 
 ## Local development
 
@@ -66,16 +58,17 @@ python main.py read --config sample_files/config-example.json --catalog sample_f
 ### Locally running the connector docker image
 
 ```bash
-docker build -t airbyte/twitter-fetcher:dev .
+docker build -t harbor.status.im/bi/airbyte/source-twitter-fetcher:dev .
 # Running the spec command against your patched connector
-docker run airbyte/twitter-fetcher:dev spec
+docker run harbor.status.im/bi/airbyte/source-twitter-fetcher:dev spec
 ````
 
 #### Run
 Then run any of the connector commands as follows:
-```
-docker run --rm airbyte/twitter-fetcher:dev spec
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/twitter-fetcher:dev check --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/twitter-fetcher:dev discover --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files airbyte/twitter-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
+
+```bash
+docker run --rm harbor.status.im/bi/airbyte/source-twitter-fetcher:dev spec
+docker run --rm -v $(pwd)/sample_files:/sample_files harbor.status.im/bi/airbyte/source-twitter-fetcher:dev check --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files harbor.status.im/bi/airbyte/source-twitter-fetcher:dev discover --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files -v $(pwd)/sample_files:/sample_files harbor.status.im/bi/airbyte/source-twitter-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
 ```

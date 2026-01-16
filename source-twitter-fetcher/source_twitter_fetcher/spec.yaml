@@ -13,7 +13,7 @@ connectionSpecification:
 
     2. **User Authentication (OAuth 2.0)** for user-context streams:
        - Account, Tweet, TweetMetrics, TweetComments, Space streams
-       - Requires: client_id, client_secret, access_token, refresh_token, account_id
+       - Requires: client_id, client_secret, access_token, refresh_token, account_ids
   required:
     - credentials
   properties:
@@ -54,10 +54,13 @@ connectionSpecification:
           title: Token Expiry Date
           type: string
           description: "Expiry date of the Access Token (optional)"
-    account_id:
-      type: string
+    account_ids:
+      type: array
       title: "Account ID"
       description: "Twitter User ID to fetch account-specific data from (required for user-context streams: Account, Tweet, TweetMetrics, TweetComments)"
+      items:
+        type: string
+        minItems: 0
     start_time:
       type:         string
       description:  "Start date of fetching data. If not provided, defaults to 5 days before current time."
