@@ -1,0 +1,47 @@
+name: Check Docker Image Tag Update
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-docker-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+        # Fetch all history for all tags and branches
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: '**/metadata.yaml'
+
+      - name: Check for updated dockerImageTag
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            dir=$(dirname "$file")
+            echo "Checking $dir/metadata.yaml..."
+            if [ -f "$dir/metadata.yaml" ]; then
+              # Get the previous commit hash for the file
+              prev_commit=$(git rev-parse HEAD^)
+              # Get the previous value of dockerImageTag
+              prev_tag=$(git show "$prev_commit:$file" | grep 'dockerImageTag:' | awk '{print $2}')
+              # Get the current value of dockerImageTag
+              curr_tag=$(grep 'dockerImageTag:' "$file" | awk '{print $2}')
+
+              if [ "$prev_tag" == "$curr_tag" ]; then
+                echo "::error file=$file::dockerImageTag has not been updated in $dir/metadata.yaml"
+                exit 1
+              else
+                echo "dockerImageTag updated in $dir/metadata.yaml"
+              fi
+            fi
+          done
+
