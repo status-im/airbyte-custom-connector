@@ -122,29 +122,23 @@ class UserAction(HttpSubStream):
         **kwargs
     ) -> Iterable[Optional[Mapping[str, Any]]]:
         """
-        Override stream_slices to iterate over all users AND all action types.
-        For each user from parent, yield 3 slices (one per action type).
+        Override stream_slices to iterate over all users.
+        Fetch all actions per user (no filter), then filter locally.
+        This reduces API calls by 3x compared to separate calls per action type.
         """
         # Reset parent's pagination state so we get ALL users
         self.parent._next_page = 0
 
         user_count = 0
-        slice_count = 0
         for parent_slice in super().stream_slices(sync_mode=SyncMode.full_refresh):
             user_count += 1
             username = parent_slice.get('parent', {}).get('username')
             if user_count <= 10 or user_count % 100 == 0:
-                logger.info(f"Generating slices for user {user_count}: {username}")
+                logger.info(f"Generating slice for user {user_count}: {username}")
 
-            # For each user, generate a slice for EACH action type
-            for action_type in ALLOWED_ACTION_TYPES:
-                slice_count += 1
-                yield {
-                    "parent": parent_slice.get('parent'),
-                    "action_type": action_type
-                }
+            yield {"parent": parent_slice.get('parent')}
 
-        logger.info(f"Finished generating slices: {slice_count} total from {user_count} users")
+        logger.info(f"Finished generating slices: {user_count} users")
 
     def path(
         self,
@@ -156,19 +150,15 @@ class UserAction(HttpSubStream):
 
     def request_params(self, stream_state, stream_slice=None, next_page_token: Mapping[str, Any] = None):
         username = stream_slice.get('parent', {}).get('username')
-        action_type = stream_slice.get('action_type')
-        slice_key = f"{username}_{action_type}"
 
-        # Reset offset when switching to a new user/action_type combination
-        if slice_key != self._current_slice_key:
-            self._current_slice_key = slice_key
+        # Reset offset when switching to a new user
+        if username != self._current_slice_key:
+            self._current_slice_key = username
             self._offset = 0
-            logger.info(f"Requesting user_actions for {username} filter={action_type}")
+            logger.info(f"Requesting user_actions for {username}")
 
-        params = {
-            "username": username,
-            "filter": action_type  # Discourse filter only accepts ONE action type
-        }
+        # Fetch ALL actions (no filter), we'll filter locally for speed
+        params = {"username": username}
         if next_page_token:
             params.update(next_page_token)
         return params
@@ -201,17 +191,17 @@ class UserAction(HttpSubStream):
         **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
-        logger.debug("Response user_actions for %s (filter=%s): %s",
-                     stream_slice.get('parent', {}).get('username'),
-                     stream_slice.get('action_type'),
-                     data)
-        for elt in data.get("user_actions", []):
-            user_action = {key: elt.get(key) for key in USER_ACTION_KEYS}
-            yield user_action
+        username = stream_slice.get('parent', {}).get('username')
+        logger.debug("Response user_actions for %s: %s", username, data)
 
-        # Proactive rate limiting: wait 1.5s between requests to avoid hitting
-        # Discourse's rate limit (~60 req/min).
-        time.sleep(1.5)
+        # Filter locally for allowed action types (LIKE=1, NEW_TOPIC=4, REPLY=5)
+        for elt in data.get("user_actions", []):
+            if elt.get("action_type") in ALLOWED_ACTION_TYPES:
+                user_action = {key: elt.get(key) for key in USER_ACTION_KEYS}
+                yield user_action
+
+        # Reduced rate limiting - rely on backoff_time for 429 handling
+        time.sleep(0.5)
 
 
 class Post(DiscourseStream):
