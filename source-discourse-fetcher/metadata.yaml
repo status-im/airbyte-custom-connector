@@ -9,7 +9,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: d12c5a88-5e78-452d-b957-eb4b2fd6e1dd
-  dockerImageTag: 1.3.0
+  dockerImageTag: 2.0.0
   dockerRepository: harbor.status.im/bi/airbyte/source-discourse-fetcher
   githubIssueLabel: source-discourse-fetcher
   icon: discourse-fetcher.svg

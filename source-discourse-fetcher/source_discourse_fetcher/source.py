@@ -4,10 +4,12 @@
 
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 import logging
+import time
 import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
+from airbyte_cdk.models import SyncMode
 
 logger = logging.getLogger("airbyte")
 
@@ -49,8 +51,15 @@ class DiscourseStream(HttpStream):
 
 class User(DiscourseStream):
     primary_key="id"
-    next_page = 0
-    use_cache = True
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._next_page = 0  # Instance attribute for pagination
+
+    @property
+    def use_cache(self) -> bool:
+        return True
+
     def path(
        self,
        stream_state: Mapping[str, Any] = None,
@@ -61,7 +70,7 @@ class User(DiscourseStream):
 
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
-        next_page = {"page": self.next_page } if len(response.json()) > 0 else None
+        next_page = {"page": self._next_page} if len(response.json()) > 0 else None
         return next_page
 
 
@@ -84,12 +93,52 @@ class User(DiscourseStream):
             logger.debug("Response %s", elt)
             user = { key : elt.get(key) for key in USER_KEYS }
             yield user
-        self.next_page = self.next_page + 1
+        self._next_page = self._next_page + 1
 
 
-class UserAction(HttpSubStream, User):
+class UserAction(HttpSubStream):
+    """
+    Fetches user actions (likes, topic creations, replies) for all users.
+    """
     primary_key = "id"
-    next_page_offset = 0
+    url_base = ""
+
+    def __init__(self, api_key: str, api_username: str, url: str, parent: User, **kwargs):
+        super().__init__(parent=parent, **kwargs)
+        self.api_key = api_key
+        self.api_username = api_username
+        self.url = url[:-1] if url.endswith("/") else url
+        self._current_slice_key = None
+        self._offset = 0
+
+    def request_headers(
+        self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None
+    ) -> MutableMapping[str, Any]:
+        return {"Api-Key": f"{self.api_key}", "Api-Username": f"{self.api_username}"}
+
+    def stream_slices(
+        self,
+        stream_state: Mapping[str, Any] = None,
+        **kwargs
+    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        """
+        Override stream_slices to iterate over all users.
+        Fetch all actions per user (no filter), then filter locally.
+        This reduces API calls by 3x compared to separate calls per action type.
+        """
+        # Reset parent's pagination state so we get ALL users
+        self.parent._next_page = 0
+
+        user_count = 0
+        for parent_slice in super().stream_slices(sync_mode=SyncMode.full_refresh):
+            user_count += 1
+            username = parent_slice.get('parent', {}).get('username')
+            if user_count <= 10 or user_count % 100 == 0:
+                logger.info(f"Generating slice for user {user_count}: {username}")
+
+            yield {"parent": parent_slice.get('parent')}
+
+        logger.info(f"Finished generating slices: {user_count} users")
 
     def path(
         self,
@@ -100,10 +149,16 @@ class UserAction(HttpSubStream, User):
         return f"{self.url}/user_actions.json"
 
     def request_params(self, stream_state, stream_slice=None, next_page_token: Mapping[str, Any] = None):
-        username = stream_slice.get('parent').get('username')
-        params = {
-            "username": username
-        }
+        username = stream_slice.get('parent', {}).get('username')
+
+        # Reset offset when switching to a new user
+        if username != self._current_slice_key:
+            self._current_slice_key = username
+            self._offset = 0
+            logger.info(f"Requesting user_actions for {username}")
+
+        # Fetch ALL actions (no filter), we'll filter locally for speed
+        params = {"username": username}
         if next_page_token:
             params.update(next_page_token)
         return params
@@ -116,7 +171,7 @@ class UserAction(HttpSubStream, User):
                 wait_seconds = data.get("extras", {}).get("wait_seconds")
                 if wait_seconds:
                     logger.info(f"Rate limited, waiting {wait_seconds} seconds as requested by API")
-                    return float(wait_seconds) + 1 
+                    return float(wait_seconds) + 1
             except Exception:
                 pass
         return None  # Fall back to default exponential backoff
@@ -125,9 +180,8 @@ class UserAction(HttpSubStream, User):
         data = response.json()
         user_actions = data.get("user_actions", [])
         if len(user_actions) > 0:
-            self.next_page_offset += len(user_actions)
-            return {"offset": self.next_page_offset}
-        self.next_page_offset = 0
+            self._offset += len(user_actions)
+            return {"offset": self._offset}
         return None
 
     def parse_response(
@@ -137,12 +191,17 @@ class UserAction(HttpSubStream, User):
         **kwargs
     ) -> Iterable[Mapping]:
         data = response.json()
-        logger.debug("Response user_actions %s", data)
+        username = stream_slice.get('parent', {}).get('username')
+        logger.debug("Response user_actions for %s: %s", username, data)
+
+        # Filter locally for allowed action types (LIKE=1, NEW_TOPIC=4, REPLY=5)
         for elt in data.get("user_actions", []):
-            # Filter by allowed action types: LIKE (1), NEW_TOPIC (4), REPLY (5)
             if elt.get("action_type") in ALLOWED_ACTION_TYPES:
                 user_action = {key: elt.get(key) for key in USER_ACTION_KEYS}
                 yield user_action
+
+        # Reduced rate limiting - rely on backoff_time for 429 handling
+        time.sleep(0.5)
 
 
 class Post(DiscourseStream):
@@ -165,9 +224,8 @@ class Post(DiscourseStream):
         data: dict = response.json()
         for elt in data.get("latest_posts"):
             post = { key : elt.get(key) for key in POST_KEYS }
-            # Make RAG project assignment easier
             post["base_url"] = self.url
-            post["post_url"] = self.url + post["post_url"] # post_url always starts with '/'
+            post["post_url"] = self.url + post["post_url"]
             yield post
 
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
@@ -326,10 +384,13 @@ class SourceDiscourseFetcher(AbstractSource):
             "url": config['url']
         }
         user = User(**args)
+        # Create a SEPARATE User instance for UserActions to use as parent
+        # This prevents pagination state conflicts with the main user stream
+        user_for_actions = User(**args)
         group = Group(**args)
         return [
             user,
-            UserAction(parent=user, **args),
+            UserAction(parent=user_for_actions, **args),
             Post(**args),
             Topic(**args),
             group,
