@@ -6,6 +6,7 @@ from airbyte_cdk.sources.streams.http import HttpStream
 
 class EtherscanStream(HttpStream):
     primary_key = "hash"
+    pagination_offset = 50
     url_base = "https://api.etherscan.io/"
     ETHEREUM_DECIMALS = 18
 
@@ -23,10 +24,15 @@ class EtherscanStream(HttpStream):
             for wallet in self.wallets
         }
 
+        self.page_counter = {
+            wallet["address"]: 1
+            for wallet in self.wallets
+        }
+
     def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
         for wallet in self.wallets:
             selected = self.historical_mapping[wallet["address"]]
-            self.logger.info(f"Fetching data for {wallet['name']} from {selected['start_date']} to {selected['end_date']}")
+            self.logger.info(f"{self.name} > stream_slice: Fetching data for {wallet['name']} from {selected['start_date']} to {selected['end_date']}")
             yield {
                 "address": wallet["address"],
                 "name": wallet["name"],
@@ -45,11 +51,47 @@ class EtherscanStream(HttpStream):
             match = re.search(r"\((\d+)\s*/", str(result))
             seconds = int(match.group(1))
         
-        self.logger.info(f"backoff_time: {seconds}s")
+        self.logger.info(f"{self.name} > backoff_time: {seconds}s")
         return seconds
 
     def next_page_token(self, response: requests.Response):
-        return None
+        def find_address(wallets: list[str], trx: dict) -> Optional[str]:
+            if trx["to"] in wallets:
+                return trx["to"]
+            if trx["from"] in wallets:
+                return trx["from"]
+            
+            return None
+        
+        result: list[dict] = response.json().get("result", [])
+        if not result or not isinstance(result, list):
+            return None
+        
+        wallet_address = find_address(list(self.page_counter.keys()), result[0])
+        if not wallet_address:
+            return None
+        
+        self.page_counter[wallet_address] += 1
+        params = {
+            "page": self.page_counter[wallet_address]
+        }
+
+        return params
+
+    def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
+        params = {
+            "chainid": self.chain_id,
+            "address": stream_slice["address"],
+            "apikey": self.api_key,
+            "sort": "desc",
+            "module": "account",
+            "offset": self.pagination_offset
+        }
+        if next_page_token:
+            params["page"] = self.page_counter[stream_slice["address"]]
+        
+        self.logger.info(f"{self.name} > request_params: {params}")
+        return params
 
     def to_datetime(self, timestamp: str) -> datetime.datetime:
         return datetime.datetime.fromtimestamp(int(timestamp))
@@ -85,12 +127,8 @@ class WalletTransactions(EtherscanStream):
     
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
         params = {
-            "chainid": self.chain_id,
-            "module": "account",
+            **super().request_params(stream_state, stream_slice, next_page_token),
             "action": "txlist",
-            "address": stream_slice["address"],
-            "apikey": self.api_key,
-            "sort": "desc"
         }
         return params
 
@@ -146,12 +184,8 @@ class WalletInternalTransactions(EtherscanStream):
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
         params = {
-            "chainid": self.chain_id,
-            "module": "account",
+            **super().request_params(stream_state, stream_slice, next_page_token),
             "action": "txlistinternal",
-            "address": stream_slice["address"],
-            "apikey": self.api_key,
-            "sort": "desc"
         }
         return params
     
@@ -204,12 +238,8 @@ class WalletTokenTransactions(EtherscanStream):
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
         params = {
-            "chainid": self.chain_id,
-            "module": "account",
+            **super().request_params(stream_state, stream_slice, next_page_token),
             "action": "tokentx",
-            "address": stream_slice["address"],
-            "apikey": self.api_key,
-            "sort": "desc"
         }
         return params
 
