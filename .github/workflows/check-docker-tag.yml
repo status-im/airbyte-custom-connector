@@ -29,8 +29,9 @@ jobs:
           echo "Modified directories:"
           echo "$MODIFIED_DIRS"
 
+          MODIFIED_DIRS_JSON=$(echo "$MODIFIED_DIRS" | jq -R . | jq -s .)
           # Set the output for use in other steps
-          echo "modified_dirs=$MODIFIED_DIRS" >> $GITHUB_OUTPUT
+          echo "$MODIFIED_DIRS" >> $GITHUB_OUTPUT
 
       - name: Print modified directories
         run: |
