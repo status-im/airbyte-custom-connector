@@ -1,4 +1,4 @@
-import requests, logging, re, datetime
+import requests, logging, re, datetime, time
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
@@ -6,10 +6,11 @@ from airbyte_cdk.sources.streams.http import HttpStream
 
 class EtherscanStream(HttpStream):
     primary_key = "hash"
-    pagination_offset = 50
+    pagination_offset = 100
     url_base = "https://api.etherscan.io/"
     ETHEREUM_DECIMALS = 18
-
+    sleep_seconds = 1
+    
     def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
         super().__init__(**kwargs)
         self.api_key = api_key
@@ -33,6 +34,7 @@ class EtherscanStream(HttpStream):
         for wallet in self.wallets:
             selected = self.historical_mapping[wallet["address"]]
             self.logger.info(f"{self.name} > stream_slice: Fetching data for {wallet['name']} from {selected['start_date']} to {selected['end_date']}")
+            time.sleep(self.sleep_seconds)
             yield {
                 "address": wallet["address"],
                 "name": wallet["name"],
@@ -71,24 +73,28 @@ class EtherscanStream(HttpStream):
         if not wallet_address:
             return None
         
+        if not self.is_valid(wallet_address, self.to_datetime(result[-1]["timeStamp"])):
+            return None
+
         self.page_counter[wallet_address] += 1
         params = {
-            "page": self.page_counter[wallet_address]
+            "page": self.page_counter[wallet_address],
+            "address": wallet_address
         }
-
+        time.sleep(self.sleep_seconds)
         return params
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
         params = {
             "chainid": self.chain_id,
-            "address": stream_slice["address"],
+            "address": stream_slice["address"] if not next_page_token else next_page_token["address"],
             "apikey": self.api_key,
             "sort": "desc",
             "module": "account",
             "offset": self.pagination_offset
         }
         if next_page_token:
-            params["page"] = self.page_counter[stream_slice["address"]]
+            params["page"] = next_page_token["page"]
         
         self.logger.info(f"{self.name} > request_params: {params}")
         return params
@@ -138,8 +144,6 @@ class WalletTransactions(EtherscanStream):
         txs: list[dict] = data.get("result", [])
         
         for trx in txs:
-            if not isinstance(trx, dict):
-                continue
             timestamp = self.to_datetime(trx["timeStamp"])
             if self.has_finished(stream_slice["address"], timestamp):
                 break
@@ -195,8 +199,6 @@ class WalletInternalTransactions(EtherscanStream):
         txs: list[dict] = data.get("result", [])
         
         for trx in txs:
-            if not isinstance(trx, dict):
-                continue
             timestamp = self.to_datetime(trx["timeStamp"])            
             if self.has_finished(stream_slice["address"], timestamp):
                 break
@@ -258,8 +260,6 @@ class WalletTokenTransactions(EtherscanStream):
         txs: list[dict] = data.get("result", [])
 
         for trx in txs:
-            if not isinstance(trx, dict):
-                continue
             timestamp = self.to_datetime(trx["timeStamp"])
             if self.has_finished(stream_slice["address"], timestamp):
                 break
