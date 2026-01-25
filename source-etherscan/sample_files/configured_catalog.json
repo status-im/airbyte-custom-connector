@@ -7,7 +7,7 @@
         "supported_sync_modes": ["full_refresh", "incremental"]
       },
       "sync_mode": "incremental",
-      "destination_sync_mode": "append_dedup"
+      "destination_sync_mode": "append"
     },
     {
       "stream": {
@@ -16,7 +16,7 @@
         "supported_sync_modes": ["full_refresh", "incremental"]
       },
       "sync_mode": "incremental",
-      "destination_sync_mode": "append_dedup"
+      "destination_sync_mode": "append"
     },
     {
       "stream": {
@@ -25,7 +25,7 @@
         "supported_sync_modes": ["full_refresh", "incremental"]
       },
       "sync_mode": "incremental",
-      "destination_sync_mode": "append_dedup"
+      "destination_sync_mode": "append"
     }
   ]
 }

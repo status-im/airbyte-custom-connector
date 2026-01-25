@@ -61,7 +61,3 @@ connectionSpecification:
               - "2026-01-01"
               - "2026-12-02"
             order: 5
-
-supported_destination_sync_modes:
-  - overwrite
-  - append

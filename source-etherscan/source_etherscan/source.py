@@ -3,9 +3,12 @@ from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.models import SyncMode
 
 class EtherscanStream(HttpStream):
     primary_key = "hash"
+    cursor_field = "blockNumber"
+    
     pagination_offset = 100
     url_base = "https://api.etherscan.io/"
     ETHEREUM_DECIMALS = 18
@@ -16,21 +19,32 @@ class EtherscanStream(HttpStream):
         self.api_key = api_key
         self.wallets = wallets
         self.chain_id = chain_id
-        
-        self.historical_mapping = {
-            wallet["address"]: {
-                "start_date": self.get_ref_date(wallet.get("start_date")),
-                "end_date": self.get_ref_date(wallet.get("end_date")),
-            }
-            for wallet in self.wallets
-        }
-
+        self.historical_mapping = {}
         self.page_counter = {
             wallet["address"]: 1
             for wallet in self.wallets
         }
 
-    def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
+    def stream_slices(self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None) -> Iterable[Optional[Mapping[str, Any]]]:
+        
+        if not sync_mode:
+            return []
+        
+        self.logger.info(f"{self.name} > SyncMode: {sync_mode}")
+        yesterday = datetime.datetime.now().date() - datetime.timedelta(days=1)
+        start_date = yesterday
+        if sync_mode == SyncMode.full_refresh:
+            # https://en.wikipedia.org/wiki/Ethereum
+            start_date = datetime.date(year=2015, month=7, day=30)
+        
+        self.historical_mapping = {
+            wallet["address"]: {
+                "start_date": start_date,
+                "end_date": yesterday,
+            }
+            for wallet in self.wallets
+        }
+        
         for wallet in self.wallets:
             selected = self.historical_mapping[wallet["address"]]
             self.logger.info(f"{self.name} > stream_slice: Fetching data for {wallet['name']} from {selected['start_date']} to {selected['end_date']}")
@@ -47,6 +61,8 @@ class EtherscanStream(HttpStream):
     def backoff_time(self, response: requests.Response) -> Optional[float]:
         output: dict = response.json()
         result = output.get("result")
+        if not result:
+            return None
         
         seconds = 0
         if "rate limit reached" in str(result).lower():
@@ -85,6 +101,10 @@ class EtherscanStream(HttpStream):
         return params
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
+
+        if not stream_slice:
+            return {}
+        
         params = {
             "chainid": self.chain_id,
             "address": stream_slice["address"] if not next_page_token else next_page_token["address"],
@@ -110,17 +130,6 @@ class EtherscanStream(HttpStream):
     def has_finished(self, wallet_address: str, timestamp: datetime.datetime) -> bool:
         start_date = self.historical_mapping[wallet_address]["start_date"]
         return timestamp.date() < start_date
-    
-    @staticmethod
-    def get_ref_date(date: Optional[str]) -> datetime.date:
-        """
-        Convert the Airbyte config dates to dates must be in YYYY-MM-DD format
-        """
-        previous_day = datetime.datetime.now().date() - datetime.timedelta(days=1)
-        if not date or (isinstance(date, str) and len(date) == 0):
-            return previous_day
-        
-        return datetime.datetime.strptime(date, "%Y-%m-%d").date()
 
 
 class WalletTransactions(EtherscanStream):
@@ -303,7 +312,6 @@ class SourceEtherscan(AbstractSource):
     url = "https://api.etherscan.io/v2/api"
 
     def check_connection(self, logger: logging.Logger, config: Mapping[str, Any]) -> Tuple[bool, any]:
-        
         logger.info(f"URL: {self.url}")
         failed = []
         wallets: list[dict] = config["wallets"]
@@ -314,13 +322,6 @@ class SourceEtherscan(AbstractSource):
                 "action": "balance",
                 "address": wallet["address"]
             }
-            # Just to verify that the dates are in YYYY-MM-DD format
-            start_date = EtherscanStream.get_ref_date(wallet.get("start_date"))
-            end_date = EtherscanStream.get_ref_date(wallet.get("end_date"))
-            if start_date > end_date:
-                failed.append(f"Wallet {wallet['address']} has a start date ({start_date}) greater than its end date ({end_date})")
-                continue
-
             logger.info(f"Params: {params}")
             params["apikey"] = config["api_key"]
             response = requests.get(self.url, params=params)
@@ -339,4 +340,3 @@ class SourceEtherscan(AbstractSource):
             WalletTokenTransactions(**config),
         ]
         return streams
-
