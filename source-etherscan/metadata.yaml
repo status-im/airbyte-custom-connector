@@ -14,7 +14,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: d5062131-04b9-4baf-bec7-8ab1c6b6bd00
-  dockerImageTag: 1.2.1
+  dockerImageTag: 1.2.2
   dockerRepository: harbor.status.im/bi/airbyte/source-etherscan
   githubIssueLabel: source-etherscan
   icon: etherscan.svg
