@@ -7,7 +7,7 @@ from airbyte_cdk.models import SyncMode
 
 class EtherscanStream(HttpStream):
     primary_key = "hash"
-    cursor_field = "blockNumber"
+    cursor_field = "block"
     
     pagination_offset = 100
     url_base = "https://api.etherscan.io/"
@@ -34,7 +34,7 @@ class EtherscanStream(HttpStream):
         yesterday = datetime.datetime.now().date() - datetime.timedelta(days=1)
         start_date = yesterday
         if sync_mode == SyncMode.full_refresh:
-            # https://en.wikipedia.org/wiki/Ethereum
+            # Syncing since ethereum first transaction  
             start_date = datetime.date(year=2015, month=7, day=30)
         
         self.historical_mapping = {
@@ -47,7 +47,7 @@ class EtherscanStream(HttpStream):
         
         for wallet in self.wallets:
             selected = self.historical_mapping[wallet["address"]]
-            self.logger.info(f"{self.name} > stream_slice: Fetching data for {wallet['name']} from {selected['start_date']} to {selected['end_date']}")
+            self.logger.debug(f"{self.name} > stream_slice: Fetching data for {wallet['name']} from {selected['start_date']} to {selected['end_date']}")
             time.sleep(self.sleep_seconds)
             yield {
                 "address": wallet["address"],
@@ -116,7 +116,7 @@ class EtherscanStream(HttpStream):
         if next_page_token:
             params["page"] = next_page_token["page"]
         
-        self.logger.info(f"{self.name} > request_params: {params}")
+        self.logger.debug(f"{self.name} > request_params: {params}")
         return params
 
     def to_datetime(self, timestamp: str) -> datetime.datetime:
