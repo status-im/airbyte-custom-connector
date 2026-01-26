@@ -1,4 +1,5 @@
 import requests, logging, re, datetime, time
+from urllib.parse import urlparse, parse_qsl
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
@@ -22,6 +23,13 @@ class EtherscanStream(HttpStream):
         self.historical_mapping = {}
         self.page_counter = {
             wallet["address"]: 1
+            for wallet in self.wallets
+        }
+        self.wallet_info = {
+            wallet["address"]: {
+                "tags": wallet["tags"],
+                "name": wallet["name"]
+            }
             for wallet in self.wallets
         }
 
@@ -72,20 +80,12 @@ class EtherscanStream(HttpStream):
         self.logger.info(f"{self.name} > backoff_time: {seconds}s")
         return seconds
 
-    def next_page_token(self, response: requests.Response):
-        def find_address(wallets: list[str], trx: dict) -> Optional[str]:
-            if trx["to"] in wallets:
-                return trx["to"]
-            if trx["from"] in wallets:
-                return trx["from"]
-            
-            return None
-        
+    def next_page_token(self, response: requests.Response):        
         result: list[dict] = response.json().get("result", [])
         if not result or not isinstance(result, list):
             return None
         
-        wallet_address = find_address(list(self.page_counter.keys()), result[0])
+        wallet_address = self.get_params(response).get("address")
         if not wallet_address:
             return None
         
@@ -131,6 +131,9 @@ class EtherscanStream(HttpStream):
         start_date = self.historical_mapping[wallet_address]["start_date"]
         return timestamp.date() < start_date
 
+    def get_params(self, response: requests.Response) -> dict:
+        parsed_url = urlparse(response.request.path_url)
+        return dict(parse_qsl(parsed_url.query))
 
 class WalletTransactions(EtherscanStream):
     """
@@ -151,7 +154,9 @@ class WalletTransactions(EtherscanStream):
         
         data: dict = response.json()
         txs: list[dict] = data.get("result", [])
-        
+        params = self.get_params(response)
+        selected = self.wallet_info.get(params["address"], {})
+
         for trx in txs:
             timestamp = self.to_datetime(trx["timeStamp"])
             if self.has_finished(stream_slice["address"], timestamp):
@@ -161,9 +166,9 @@ class WalletTransactions(EtherscanStream):
                 continue
             
             point = {
-                "wallet_address": stream_slice["address"],
-                "wallet_name": stream_slice["name"],
-                "tags": stream_slice["tags"],
+                "wallet_address": params["address"],
+                "wallet_name": selected["name"],
+                "tags": selected["tags"],
                 "hash": trx["hash"],
                 "block": int(trx["blockNumber"]),
                 "timestamp": timestamp,
@@ -206,7 +211,9 @@ class WalletInternalTransactions(EtherscanStream):
         
         data: dict = response.json()
         txs: list[dict] = data.get("result", [])
-        
+        params = self.get_params(response)
+        selected = self.wallet_info.get(params["address"], {})
+
         for trx in txs:
             timestamp = self.to_datetime(trx["timeStamp"])            
             if self.has_finished(stream_slice["address"], timestamp):
@@ -216,9 +223,9 @@ class WalletInternalTransactions(EtherscanStream):
                 continue
 
             point = {
-                "wallet_address": stream_slice["address"],
-                "wallet_name": stream_slice["name"],
-                "tags": stream_slice["tags"],
+                "wallet_address": params["address"],
+                "wallet_name": selected["name"],
+                "tags": selected["tags"],
                 "hash": trx["hash"],
                 "block": int(trx["blockNumber"]),
                 "timestamp": timestamp,
@@ -267,6 +274,8 @@ class WalletTokenTransactions(EtherscanStream):
         
         data: dict = response.json()
         txs: list[dict] = data.get("result", [])
+        params = self.get_params(response)
+        selected = self.wallet_info.get(params["address"], {})
 
         for trx in txs:
             timestamp = self.to_datetime(trx["timeStamp"])
@@ -277,10 +286,11 @@ class WalletTokenTransactions(EtherscanStream):
                 continue
 
             method_call = trx["functionName"] if len(trx["functionName"]) > 0 else None
+            
             point = {
-                "wallet_address": stream_slice["address"],
-                "wallet_name": stream_slice["name"],
-                "tags": stream_slice["tags"],
+                "wallet_address": params["address"],
+                "wallet_name": selected.get("name"),
+                "tags": selected.get("tags"),
                 "hash": trx["hash"],
                 "method_id": trx["methodId"],
                 "method_call": method_call,
@@ -334,9 +344,21 @@ class SourceEtherscan(AbstractSource):
         return len(failed) == 0, "\n".join(failed) if failed else None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
+        params = {
+            **config,
+            "wallets": [
+                {
+                    "tags": wallet["tags"],
+                    "name": wallet["name"],
+                    # Etherscan addresses are always lowercase
+                    "address": wallet["address"].lower()
+                }
+                for wallet in config["wallets"]
+            ]
+        }
         streams = [
-            WalletTransactions(**config),
-            WalletInternalTransactions(**config),
-            WalletTokenTransactions(**config),
+            WalletTransactions(**params),
+            WalletInternalTransactions(**params),
+            WalletTokenTransactions(**params),
         ]
         return streams

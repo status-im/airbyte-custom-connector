@@ -41,23 +41,3 @@ connectionSpecification:
             items:
               type: string
             order: 3
-          start_date:
-            type: 
-              - string
-              - "null"
-            title: "Historical start date for backfills"
-            description: 'Optional start date to add historical data. If not provided, defaults to yesterday. Format: YYYY-MM-DD'
-            examples:
-              - "2026-01-01"
-              - "2026-12-02"
-            order: 4
-          end_date:
-            type: 
-              - string
-              - "null"
-            title: "Historical end date for backfills"
-            description: 'Optional end date to add historical data. If not provided, defaults to yesterday. Format: YYYY-MM-DD'
-            examples:
-              - "2026-01-01"
-              - "2026-12-02"
-            order: 5
