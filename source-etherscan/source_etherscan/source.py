@@ -1,13 +1,14 @@
 import requests, logging, re, datetime, time
 from urllib.parse import urlparse, parse_qsl
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple, Union
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.models import SyncMode
 
 class EtherscanStream(HttpStream):
-    primary_key = "hash"
+    # Required if there are internal transactions within a transaction
+    primary_key = ["hash", "block", "from_address", "to_address", "movement"]
     cursor_field = "block"
     
     pagination_offset = 100
@@ -159,10 +160,10 @@ class WalletTransactions(EtherscanStream):
 
         for trx in txs:
             timestamp = self.to_datetime(trx["timeStamp"])
-            if self.has_finished(stream_slice["address"], timestamp):
+            if self.has_finished(params["address"], timestamp):
                 break
             
-            if not self.is_valid(stream_slice["address"], timestamp):
+            if not self.is_valid(params["address"], timestamp):
                 continue
             
             point = {
@@ -184,9 +185,12 @@ class WalletTransactions(EtherscanStream):
                 "gas_used": trx["gasUsed"],
                 "gas_decimals": self.ETHEREUM_DECIMALS
             }
-            if trx["from"] == stream_slice["address"]:
+            if len(point["to_address"]) == 0:
+                point["to_address"] = point["wallet_address"]
+
+            if point["from_address"] == point["wallet_address"]:
                 point["movement"] = "out"
-            elif trx["to"] == stream_slice["address"]:
+            elif point["to_address"] == point["wallet_address"]:
                 point["movement"] = "in"
             
             yield point
@@ -216,10 +220,10 @@ class WalletInternalTransactions(EtherscanStream):
 
         for trx in txs:
             timestamp = self.to_datetime(trx["timeStamp"])            
-            if self.has_finished(stream_slice["address"], timestamp):
+            if self.has_finished(params["address"], timestamp):
                 break
             
-            if not self.is_valid(stream_slice["address"], timestamp):
+            if not self.is_valid(params["address"], timestamp):
                 continue
 
             point = {
@@ -238,9 +242,12 @@ class WalletInternalTransactions(EtherscanStream):
                 "token_decimal": self.ETHEREUM_DECIMALS,
                 "chain_id": int(self.chain_id),
             }
-            if trx["from"] == stream_slice["address"]:
+            if len(point["to_address"]) == 0:
+                point["to_address"] = point["wallet_address"]
+
+            if point["from_address"] == point["wallet_address"]:
                 point["movement"] = "out"
-            elif trx["to"] == stream_slice["address"]:
+            elif point["to_address"] == point["wallet_address"]:
                 point["movement"] = "in"
 
             yield point
@@ -279,10 +286,10 @@ class WalletTokenTransactions(EtherscanStream):
 
         for trx in txs:
             timestamp = self.to_datetime(trx["timeStamp"])
-            if self.has_finished(stream_slice["address"], timestamp):
+            if self.has_finished(params["address"], timestamp):
                 break
             
-            if not self.is_valid(stream_slice["address"], timestamp):
+            if not self.is_valid(params["address"], timestamp):
                 continue
 
             method_call = trx["functionName"] if len(trx["functionName"]) > 0 else None
@@ -310,9 +317,12 @@ class WalletTokenTransactions(EtherscanStream):
                 "gas_decimals": self.ETHEREUM_DECIMALS,
                 "chain_id": int(self.chain_id),
             }
-            if trx["from"] == stream_slice["address"]:
+            if len(point["to_address"]) == 0:
+                point["to_address"] = point["wallet_address"]
+
+            if point["from_address"] == point["wallet_address"]:
                 point["movement"] = "out"
-            elif trx["to"] == stream_slice["address"]:
+            elif point["to_address"] == point["wallet_address"]:
                 point["movement"] = "in"
 
             yield point
