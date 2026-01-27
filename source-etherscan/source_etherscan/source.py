@@ -1,4 +1,4 @@
-import requests, logging, re, datetime
+import requests, logging, re, datetime, time
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
@@ -14,11 +14,13 @@ class EtherscanStream(HttpStream):
         self.api_key = api_key
         self.wallets = wallets
         self.chain_id = chain_id
-        
+        self.current_wallet = ""
+
         self.historical_mapping = {
             wallet["address"]: {
                 "start_date": self.get_ref_date(wallet.get("start_date")),
                 "end_date": self.get_ref_date(wallet.get("end_date")),
+                "page": 0,
             }
             for wallet in self.wallets
         }
@@ -32,23 +34,43 @@ class EtherscanStream(HttpStream):
                 "name": wallet["name"],
                 "tags": wallet["tags"],
             }
-    
-    def path(self, **kwargs) -> str:
+
+    def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None) -> str:
+        self.current_wallet = stream_slice['address']
         return "v2/api"
-    
+
     def backoff_time(self, response: requests.Response) -> Optional[float]:
         output: dict = response.json()
         result = output.get("result")
-        
+
         seconds = 0
         if "rate limit reached" in str(result).lower():
             match = re.search(r"\((\d+)\s*/", str(result))
             seconds = int(match.group(1))
-        
+
         self.logger.info(f"backoff_time: {seconds}s")
         return seconds
 
     def next_page_token(self, response: requests.Response):
+        address=self.current_wallet
+        page = self.historical_mapping[address]["page"]
+        res = response.json().get("result")
+        if isinstance(res, str):
+            self.logger.info("API rate limit : %s", res)
+            time.sleep(1)
+            return {"page": page }
+        if not isinstance(res, list):
+            self.logger.error("Different format: %s", res)
+            return None
+        if len(res) > 0:
+            nb_trx = len(res)
+            first_hash = res[0]['hash']
+            self.logger.info(
+                "NPT - WT - Calling page %s for wallet %s - nb trx %s - firs-hash %s",
+                (page +1), address, nb_trx, first_hash)
+            self.historical_mapping[address]["page"] = page + 1
+            return {"page": page + 1}
+        self.logger.info("NPT - WT -Not Calling next page for wallet %s after page %s", address, (page + 1))
         return None
 
     def to_datetime(self, timestamp: str) -> datetime.datetime:
@@ -58,57 +80,70 @@ class EtherscanStream(HttpStream):
         start_date = self.historical_mapping[wallet_address]["start_date"]
         end_date = self.historical_mapping[wallet_address]["end_date"]
         return timestamp.date() <= end_date and timestamp.date() >= start_date
-    
+
     def has_finished(self, wallet_address: str, timestamp: datetime.datetime) -> bool:
         start_date = self.historical_mapping[wallet_address]["start_date"]
         return timestamp.date() < start_date
-    
+
     @staticmethod
     def get_ref_date(date: Optional[str]) -> datetime.date:
         """
         Convert the Airbyte config dates to dates must be in YYYY-MM-DD format
         """
+
         previous_day = datetime.datetime.now().date() - datetime.timedelta(days=1)
         if not date or (isinstance(date, str) and len(date) == 0):
             return previous_day
-        
+
         return datetime.datetime.strptime(date, "%Y-%m-%d").date()
 
 
 class WalletTransactions(EtherscanStream):
     """
-    A transaction where an EOA (Externally Owned Address, or typically referred to as a wallet address) sends ETH directly to another EOA. 
-    When viewing an address on Etherscan, this type of transaction will be shown under the Transaction tab. 
+    A transaction where an EOA (Externally Owned Address, or typically referred to as a wallet address) sends ETH directly to another EOA.
+    When viewing an address on Etherscan, this type of transaction will be shown under the Transaction tab.
     """
     def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
         super().__init__(api_key, wallets, chain_id, **kwargs)
-    
+
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
+        self.logger.info(
+        "Addr between stream slice and current_wallet are the same %s ? - STr %s - cw %s",
+        (stream_slice["address"], self.current_wallet == stream_slice["address"]), self.current_wallet)
         params = {
             "chainid": self.chain_id,
             "module": "account",
             "action": "txlist",
             "address": stream_slice["address"],
             "apikey": self.api_key,
-            "sort": "desc"
+            "sort": "desc",
+            "offset": 50
         }
+        if next_page_token:
+            params.update(next_page_token)
         return params
 
+
     def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
-        
+
         data: dict = response.json()
-        txs: list[dict] = data.get("result", [])
-        
+        if isinstance(data.get("result"), str):
+            self.logger.error("%s", data.get("result"))
+            txs = []
+        else:
+            txs: list[dict] = data.get("result", [])
+
         for trx in txs:
             if not isinstance(trx, dict):
+                self.logger.info("WHat is that - %s", trx)
                 continue
             timestamp = self.to_datetime(trx["timeStamp"])
             if self.has_finished(stream_slice["address"], timestamp):
                 break
-            
+
             if not self.is_valid(stream_slice["address"], timestamp):
                 continue
-            
+
             point = {
                 "wallet_address": stream_slice["address"],
                 "wallet_name": stream_slice["name"],
@@ -132,41 +167,49 @@ class WalletTransactions(EtherscanStream):
                 point["movement"] = "out"
             elif trx["to"] == stream_slice["address"]:
                 point["movement"] = "in"
-            
+
             yield point
 
 
 class WalletInternalTransactions(EtherscanStream):
     """
-    This refers to a transfer of ETH that is carried out through a smart contract as an intermediary. 
+    This refers to a transfer of ETH that is carried out through a smart contract as an intermediary.
     When viewing an address on Etherscan, this type of transaction will be shown under the Internal Txns tab
     """
     def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
         super().__init__(api_key, wallets, chain_id, **kwargs)
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
+        self.logger.info(
+        "Addr between stream slice and current_wallet are the same %s ? - STr %s - cw %s",
+        (stream_slice["address"], self.current_wallet == stream_slice["address"]), self.current_wallet)
+
         params = {
             "chainid": self.chain_id,
             "module": "account",
             "action": "txlistinternal",
             "address": stream_slice["address"],
             "apikey": self.api_key,
-            "sort": "desc"
+            "sort": "desc",
+            "offset": 50
         }
+        if next_page_token:
+            params.update(next_page_token)
         return params
-    
+
     def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
-        
+
         data: dict = response.json()
         txs: list[dict] = data.get("result", [])
-        
+
         for trx in txs:
             if not isinstance(trx, dict):
-                continue
-            timestamp = self.to_datetime(trx["timeStamp"])            
+                self.logger.warning("not correct result")
+                break
+            timestamp = self.to_datetime(trx["timeStamp"])
             if self.has_finished(stream_slice["address"], timestamp):
                 break
-            
+
             if not self.is_valid(stream_slice["address"], timestamp):
                 continue
 
@@ -196,21 +239,28 @@ class WalletInternalTransactions(EtherscanStream):
 
 class WalletTokenTransactions(EtherscanStream):
     """
-    Transactions of ERC-20 or ERC-721 tokens are labelled as Token Transfer transactions. 
+    Transactions of ERC-20 or ERC-721 tokens are labelled as Token Transfer transactions.
     When viewing an address on Etherscan, this type of transaction will be shown under either the Erc20 Token Txns or Erc721 Token Txns tab, depending on the respective token type.
     """
     def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
         super().__init__(api_key, wallets, chain_id, **kwargs)
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
+        self.logger.info(
+        "Addr between stream slice and current_wallet are the same %s ? - STr %s - cw %s",
+        (stream_slice["address"], self.current_wallet == stream_slice["address"]), self.current_wallet)
+
         params = {
             "chainid": self.chain_id,
             "module": "account",
             "action": "tokentx",
             "address": stream_slice["address"],
             "apikey": self.api_key,
-            "sort": "desc"
+            "sort": "desc",
+            "offset": 50
         }
+        if next_page_token:
+            params.update(next_page_token)
         return params
 
     def camel_to_title(self, text: str) -> str:
@@ -221,19 +271,20 @@ class WalletTokenTransactions(EtherscanStream):
         name = re.sub(r'(?<!^)(?=[A-Z])', ' ', name)
         name = name.replace("_", " ")
         return name.title()
-    
+
     def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
-        
+
         data: dict = response.json()
         txs: list[dict] = data.get("result", [])
 
         for trx in txs:
             if not isinstance(trx, dict):
-                continue
+                self.logger.warning("Not crrect result")
+                break
             timestamp = self.to_datetime(trx["timeStamp"])
             if self.has_finished(stream_slice["address"], timestamp):
                 break
-            
+
             if not self.is_valid(stream_slice["address"], timestamp):
                 continue
 
@@ -269,11 +320,11 @@ class WalletTokenTransactions(EtherscanStream):
             yield point
 
 class SourceEtherscan(AbstractSource):
-    
+
     url = "https://api.etherscan.io/v2/api"
 
     def check_connection(self, logger: logging.Logger, config: Mapping[str, Any]) -> Tuple[bool, any]:
-        
+
         logger.info(f"URL: {self.url}")
         failed = []
         wallets: list[dict] = config["wallets"]
@@ -297,7 +348,7 @@ class SourceEtherscan(AbstractSource):
             logger.info(f"Status Code: {response.status_code}")
             if response.status_code == 200:
                 continue
-            
+
             failed.append(f"Failed connection check for {wallet}")
 
         return len(failed) == 0, "\n".join(failed) if failed else None
