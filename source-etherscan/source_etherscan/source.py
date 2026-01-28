@@ -33,6 +33,7 @@ class EtherscanStream(HttpStream):
             }
             for wallet in self.wallets
         }
+        self.is_balance_stream = self.name.endswith('balance')
 
     def stream_slices(self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None) -> Iterable[Optional[Mapping[str, Any]]]:
         
@@ -56,7 +57,8 @@ class EtherscanStream(HttpStream):
         
         for wallet in self.wallets:
             selected = self.historical_mapping[wallet["address"]]
-            self.logger.debug(f"{self.name} > stream_slice: Fetching data for {wallet['name']} from {selected['start_date']} to {selected['end_date']}")
+            msg = f"{self.name} > stream_slice: Fetching data for {wallet['name']}" + ("" if self.is_balance_stream else f" from {selected['start_date']} to {selected['end_date']}")
+            self.logger.info(msg)
             time.sleep(self.sleep_seconds)
             yield {
                 "address": wallet["address"],
@@ -78,11 +80,18 @@ class EtherscanStream(HttpStream):
             match = re.search(r"\((\d+)\s*/", str(result))
             seconds = int(match.group(1))
         
+        elif self.is_balance_stream:
+            seconds = 1
+        
         self.logger.info(f"{self.name} > backoff_time: {seconds}s")
         return seconds
 
     def next_page_token(self, response: requests.Response):        
         
+        if self.is_balance_stream:
+            time.sleep(self.sleep_seconds)
+            return None
+
         result: Union[list[dict], str] = response.json().get("result", [])
                 
         wallet_address = self.get_params(response).get("address")
@@ -123,10 +132,14 @@ class EtherscanStream(HttpStream):
             "module": "account",
             "offset": self.pagination_offset
         }
+        if self.is_balance_stream:
+            params.pop("sort")
+            params.pop("offset")
+
         if next_page_token:
             params["page"] = next_page_token["page"]
         
-        self.logger.debug(f"{self.name} > request_params: {params}")
+        self.logger.info(f"{self.name} > request_params: {params}")
         return params
 
     def to_datetime(self, timestamp: str) -> datetime.datetime:
@@ -204,7 +217,6 @@ class WalletTransactions(EtherscanStream):
             
             yield point
 
-
 class WalletInternalTransactions(EtherscanStream):
     """
     This refers to a transfer of ETH that is carried out through a smart contract as an intermediary. 
@@ -260,7 +272,6 @@ class WalletInternalTransactions(EtherscanStream):
                 point["movement"] = "in"
 
             yield point
-
 
 class WalletTokenTransactions(EtherscanStream):
     """
@@ -336,6 +347,43 @@ class WalletTokenTransactions(EtherscanStream):
 
             yield point
 
+class NativeBalance(EtherscanStream):
+    """
+    Native balance (ETH) for the wallets
+
+    NOTE: Used for debugging purposes
+    """
+    primary_key = None
+    cursor_field = []
+
+    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
+        super().__init__(api_key, wallets, chain_id, **kwargs)
+
+    def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
+        params = {
+            **super().request_params(stream_state, stream_slice, next_page_token),
+            "action": "balance",
+        }
+        return params
+
+    def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
+        
+        data: dict = response.json()
+        params = self.get_params(response)
+        wallet_address = params["address"]
+        wallet = self.wallet_info[wallet_address]
+        point = {
+            "timestamp": datetime.datetime.now(),
+            "wallet_address": wallet_address,
+            "wallet_name": wallet["name"],
+            "tags": wallet["tags"],
+            "token_symbol": "ETH",
+            "token_decimal": self.ETHEREUM_DECIMALS,
+            "amount": data["result"],
+            "chain_id": int(self.chain_id)
+        }
+        yield point
+
 class SourceEtherscan(AbstractSource):
     
     url = "https://api.etherscan.io/v2/api"
@@ -379,5 +427,6 @@ class SourceEtherscan(AbstractSource):
             WalletTransactions(**params),
             WalletInternalTransactions(**params),
             WalletTokenTransactions(**params),
+            NativeBalance(**params)
         ]
         return streams
