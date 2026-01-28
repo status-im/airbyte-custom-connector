@@ -82,15 +82,24 @@ class EtherscanStream(HttpStream):
         return seconds
 
     def next_page_token(self, response: requests.Response):        
-        result: list[dict] = response.json().get("result", [])
-        if not result or not isinstance(result, list):
-            return None
         
+        result: Union[list[dict], str] = response.json().get("result", [])
+                
         wallet_address = self.get_params(response).get("address")
         if not wallet_address:
             return None
         
-        if not self.is_valid(wallet_address, self.to_datetime(result[-1]["timeStamp"])):
+        if isinstance(result, str):
+            params = {
+                "page": self.page_counter[wallet_address],
+                "address": wallet_address
+            }
+            seconds = self.backoff_time(response)
+            if seconds:
+                time.sleep(seconds)
+            return params
+        
+        if not result or not self.is_valid(wallet_address, self.to_datetime(result[-1]["timeStamp"])):
             return None
 
         self.page_counter[wallet_address] += 1
