@@ -157,6 +157,15 @@ class EtherscanStream(HttpStream):
     def get_params(self, response: requests.Response) -> dict:
         parsed_url = urlparse(response.request.path_url)
         return dict(parse_qsl(parsed_url.query))
+    
+    def camel_to_title(self, text: str) -> str:
+        if len(text) == 0:
+            return None
+
+        name = text.split("(", 1)[0]
+        name = re.sub(r'(?<!^)(?=[A-Z])', ' ', name)
+        name = name.replace("_", " ")
+        return name.title()
 
 class WalletTransactions(EtherscanStream):
     """
@@ -188,6 +197,8 @@ class WalletTransactions(EtherscanStream):
             if not self.is_valid(params["address"], timestamp):
                 continue
             
+            method_call = trx["functionName"] if len(trx["functionName"]) > 0 else None
+
             point = {
                 "wallet_address": params["address"],
                 "wallet_name": selected["name"],
@@ -205,7 +216,11 @@ class WalletTransactions(EtherscanStream):
                 "chain_id": int(self.chain_id),
                 "gas_price": trx["gasPrice"],
                 "gas_used": trx["gasUsed"],
-                "gas_decimals": self.ETHEREUM_DECIMALS
+                "gas_decimals": self.ETHEREUM_DECIMALS,
+                "method_id": trx["methodId"],
+                "method_call": method_call,
+                "method_name": self.camel_to_title(method_call) if method_call else trx["methodId"],
+                "is_error": bool(int(trx["isError"]))
             }
             if len(point["to_address"]) == 0:
                 point["to_address"] = point["wallet_address"]
@@ -262,6 +277,10 @@ class WalletInternalTransactions(EtherscanStream):
                 "token_symbol": "ETH",
                 "token_decimal": self.ETHEREUM_DECIMALS,
                 "chain_id": int(self.chain_id),
+                "gas": trx["gas"],
+                "gas_used": trx["gasUsed"],
+                "gas_decimals": self.ETHEREUM_DECIMALS,
+                "is_error": bool(int(trx["isError"]))
             }
             if len(point["to_address"]) == 0:
                 point["to_address"] = point["wallet_address"]
@@ -287,15 +306,6 @@ class WalletTokenTransactions(EtherscanStream):
             "action": "tokentx",
         }
         return params
-
-    def camel_to_title(self, text: str) -> str:
-        if len(text) == 0:
-            return None
-
-        name = text.split("(", 1)[0]
-        name = re.sub(r'(?<!^)(?=[A-Z])', ' ', name)
-        name = name.replace("_", " ")
-        return name.title()
     
     def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
         
@@ -336,6 +346,7 @@ class WalletTokenTransactions(EtherscanStream):
                 "gas_used": trx["gasUsed"],
                 "gas_decimals": self.ETHEREUM_DECIMALS,
                 "chain_id": int(self.chain_id),
+                "is_error": False
             }
             if len(point["to_address"]) == 0:
                 point["to_address"] = point["wallet_address"]
