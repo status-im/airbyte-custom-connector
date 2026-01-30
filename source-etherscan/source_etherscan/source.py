@@ -86,12 +86,7 @@ class EtherscanStream(HttpStream):
         self.logger.info(f"{self.name} > backoff_time: {seconds}s")
         return seconds
 
-    def next_page_token(self, response: requests.Response):        
-        
-        if self.is_balance_stream:
-            time.sleep(self.sleep_seconds)
-            return None
-
+    def next_page_token(self, response: requests.Response):
         result: Union[list[dict], str] = response.json().get("result", [])
                 
         wallet_address = self.get_params(response).get("address")
@@ -104,8 +99,7 @@ class EtherscanStream(HttpStream):
                 "address": wallet_address
             }
             seconds = self.backoff_time(response)
-            if seconds:
-                time.sleep(seconds)
+            time.sleep(seconds)
             return params
         
         if not result or not self.is_valid(wallet_address, self.to_datetime(result[-1]["timeStamp"])):
@@ -143,22 +137,38 @@ class EtherscanStream(HttpStream):
         return params
 
     def to_datetime(self, timestamp: str) -> datetime.datetime:
+        """
+        Convert the default Etherscan timestamp to a `datetime`
+        """
         return datetime.datetime.fromtimestamp(int(timestamp))
 
     def is_valid(self, wallet_address: str, timestamp: datetime.datetime) -> bool:
+        """
+        Check if the transaction is between the specified wallet's start and end date
+        """
         start_date = self.historical_mapping[wallet_address]["start_date"]
         end_date = self.historical_mapping[wallet_address]["end_date"]
         return timestamp.date() <= end_date and timestamp.date() >= start_date
     
     def has_finished(self, wallet_address: str, timestamp: datetime.datetime) -> bool:
+        """
+        Check if the given timestamp is before the start date. 
+        If `"sort": "desc"` is modified then `start_date` should be replaced with `end_date`
+        """
         start_date = self.historical_mapping[wallet_address]["start_date"]
         return timestamp.date() < start_date
 
     def get_params(self, response: requests.Response) -> dict:
+        """
+        Get the parameters used for the GET request
+        """
         parsed_url = urlparse(response.request.path_url)
         return dict(parse_qsl(parsed_url.query))
     
     def camel_to_title(self, text: str) -> str:
+        """
+        Convert transaction Method information into etherscan.io format
+        """
         if len(text) == 0:
             return None
 
@@ -166,7 +176,17 @@ class EtherscanStream(HttpStream):
         name = re.sub(r'(?<!^)(?=[A-Z])', ' ', name)
         name = name.replace("_", " ")
         return name.title()
-
+    
+    def get_transactions(self, response: requests.Response) -> list:
+        """
+        Get the transactions from the current request.
+        Avoids `TypeError: 'NoneType' object is not iterable`
+        """
+        data: dict = response.json()
+        txs: list[dict] = data.get("result", [])
+        txs = txs if txs else []
+        return txs
+    
 class WalletTransactions(EtherscanStream):
     """
     A transaction where an EOA (Externally Owned Address, or typically referred to as a wallet address) sends ETH directly to another EOA. 
@@ -183,9 +203,7 @@ class WalletTransactions(EtherscanStream):
         return params
 
     def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
-        
-        data: dict = response.json()
-        txs: list[dict] = data.get("result", [])
+        txs = self.get_transactions(response)
         params = self.get_params(response)
         selected = self.wallet_info.get(params["address"], {})
 
@@ -225,9 +243,9 @@ class WalletTransactions(EtherscanStream):
             if len(point["to_address"]) == 0:
                 point["to_address"] = point["wallet_address"]
 
-            if point["from_address"] == point["wallet_address"]:
+            if point["from_address"].lower() == point["wallet_address"].lower():
                 point["movement"] = "out"
-            elif point["to_address"] == point["wallet_address"]:
+            elif point["to_address"].lower() == point["wallet_address"].lower():
                 point["movement"] = "in"
             
             yield point
@@ -248,9 +266,7 @@ class WalletInternalTransactions(EtherscanStream):
         return params
     
     def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
-        
-        data: dict = response.json()
-        txs: list[dict] = data.get("result", [])
+        txs = self.get_transactions(response)
         params = self.get_params(response)
         selected = self.wallet_info.get(params["address"], {})
 
@@ -285,9 +301,9 @@ class WalletInternalTransactions(EtherscanStream):
             if len(point["to_address"]) == 0:
                 point["to_address"] = point["wallet_address"]
 
-            if point["from_address"] == point["wallet_address"]:
+            if point["from_address"].lower() == point["wallet_address"].lower():
                 point["movement"] = "out"
-            elif point["to_address"] == point["wallet_address"]:
+            elif point["to_address"].lower() == point["wallet_address"].lower():
                 point["movement"] = "in"
 
             yield point
@@ -308,9 +324,7 @@ class WalletTokenTransactions(EtherscanStream):
         return params
     
     def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
-        
-        data: dict = response.json()
-        txs: list[dict] = data.get("result", [])
+        txs = self.get_transactions(response)
         params = self.get_params(response)
         selected = self.wallet_info.get(params["address"], {})
 
@@ -351,9 +365,9 @@ class WalletTokenTransactions(EtherscanStream):
             if len(point["to_address"]) == 0:
                 point["to_address"] = point["wallet_address"]
 
-            if point["from_address"] == point["wallet_address"]:
+            if point["from_address"].lower() == point["wallet_address"].lower():
                 point["movement"] = "out"
-            elif point["to_address"] == point["wallet_address"]:
+            elif point["to_address"].lower() == point["wallet_address"].lower():
                 point["movement"] = "in"
 
             yield point
@@ -369,6 +383,10 @@ class NativeBalance(EtherscanStream):
 
     def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
         super().__init__(api_key, wallets, chain_id, **kwargs)
+
+    def next_page_token(self, response: requests.Response):
+        time.sleep(self.sleep_seconds)
+        return None
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
         params = {
@@ -429,7 +447,7 @@ class SourceEtherscan(AbstractSource):
                     "tags": wallet["tags"],
                     "name": wallet["name"],
                     # Etherscan addresses are always lowercase
-                    "address": wallet["address"].lower()
+                    "address": wallet["address"]
                 }
                 for wallet in config["wallets"]
             ]

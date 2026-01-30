@@ -74,7 +74,7 @@
       "type": "integer",
       "description": "Decimals for gas"
     },
-        "method_id": {
+    "method_id": {
       "type": "string",
       "description": "Method identifier"
     },
