@@ -89,6 +89,10 @@
     "chain_id": {
       "type": "integer",
       "description": "Chain identifier"
+    },
+    "is_error": {
+      "type": ["boolean"],
+      "description": "If the transaction is faulty or not"
     }
   }
 }

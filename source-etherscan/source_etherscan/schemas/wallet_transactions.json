@@ -73,6 +73,22 @@
     "gas_decimals": {
       "type": "integer",
       "description": "Decimals for gas"
+    },
+    "method_id": {
+      "type": "string",
+      "description": "Method identifier"
+    },
+    "method_call": {
+      "type": ["string", "null"],
+      "description": "Decoded method call"
+    },
+    "method_name": {
+      "type": ["string", "null"],
+      "description": "Human-friendly method name"
+    },
+    "is_error": {
+      "type": ["boolean"],
+      "description": "If the transaction is faulty or not"
     }
   }
 }
