@@ -14,7 +14,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: 464a7cea-0317-485e-9a9c-bcd06155bfff
-  dockerImageTag: 1.0.0
+  dockerImageTag: v2.0.0
   dockerRepository: harbor.status.im/bi/airbyte/source-luma-fetcher
   githubIssueLabel: source-luma-fetcher
   icon: luma-fetcher.svg

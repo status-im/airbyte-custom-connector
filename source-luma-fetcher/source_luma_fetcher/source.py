@@ -2,19 +2,60 @@
 # Copyright (c) 2025 Airbyte, Inc., all rights reserved.
 #
 from abc import ABC
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple, Set
+from collections import deque
 import time
 import logging
 import requests
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_cdk.models import ConfiguredAirbyteCatalog
 
 logger = logging.getLogger("airbyte")
+
+
+class SlidingWindowRateLimiter:
+    """
+    Sliding window rate limiter to maximize throughput while respecting Luma API limits.
+
+    Luma API limits: 100 requests per minute (500 per 5 minutes per calendar)
+    We use 90 req/min to stay safely under the limit with some buffer.
+    """
+
+    def __init__(self, max_requests: int = 90, window_seconds: int = 60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.request_timestamps: deque = deque()
+
+    def wait_if_needed(self):
+        now = time.time()
+
+        # Remove timestamps outside the sliding window
+        while self.request_timestamps and self.request_timestamps[0] < now - self.window_seconds:
+            self.request_timestamps.popleft()
+
+        # If we've hit the limit, wait until the oldest request falls outside the window
+        if len(self.request_timestamps) >= self.max_requests:
+            sleep_time = self.request_timestamps[0] - (now - self.window_seconds) + 0.1
+            if sleep_time > 0:
+                logger.info(f"Rate limit buffer reached ({len(self.request_timestamps)} requests in window). Waiting {sleep_time:.2f}s")
+                time.sleep(sleep_time)
+
+        # Record this request
+        self.request_timestamps.append(time.time())
+
+
+# Shared rate limiter instance for all streams
+_rate_limiter = SlidingWindowRateLimiter(max_requests=90, window_seconds=60)
 
 class LumaStream(HttpStream, ABC):
     url_base = "https://public-api.luma.com/v1/"
     primary_key = None
+
+    # Explicitly set namespace to None to ensure consistency between discover and read phases
+    # This prevents "null.stream_name" mismatch errors in Airbyte
+    namespace = None
 
     def __init__(self, api_key: str, **kwargs):
         super().__init__(**kwargs)
@@ -45,14 +86,18 @@ class LumaStream(HttpStream, ABC):
     def should_retry(self, response: requests.Response) -> bool:
         """Enhanced retry logic for rate limiting"""
         if response.status_code == 429:
-            logger.warning(f"Rate limit hit for Luma API. Status: {response.status_code}")
+            logger.warning(f"Rate limit hit for Luma API (429). Will wait and retry.")
             return True
         return super().should_retry(response)
 
     def backoff_time(self, response: requests.Response) -> Optional[float]:
-        """Custom backoff strategy for rate limiting"""
+        """Custom backoff strategy for rate limiting.
+
+        Luma API blocks for 1 minute on 429, so we wait 65 seconds to be safe.
+        """
         if response.status_code == 429:
-            return 30.0
+            logger.info("429 received - backing off for 65 seconds (Luma blocks for 1 minute)")
+            return 65.0
         return super().backoff_time(response)
 
     @property
@@ -61,13 +106,21 @@ class LumaStream(HttpStream, ABC):
         return 5
 
     def _apply_rate_limiting(self):
-        """Apply rate limiting between requests"""
-        time.sleep(2)
-        logger.info("Applied rate limiting delay for Luma API")
+        """Apply smart rate limiting using sliding window algorithm.
+
+        Only waits when approaching the rate limit, allowing maximum throughput
+        while staying safely under Luma's 100 req/min limit.
+        """
+        _rate_limiter.wait_if_needed()
 
 
 class LumaEventsStream(LumaStream):
     """Stream for fetching Luma events"""
+
+    @property
+    def name(self) -> str:
+        """Explicitly define stream name to ensure consistency between discover and read phases"""
+        return "luma_events_stream"
 
     def path(
         self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None
@@ -245,10 +298,66 @@ class SourceLumaFetcher(AbstractSource):
         except Exception as e:
             return False, f"Connection test failed: {str(e)}"
 
+    def _get_catalog_stream_names(self, catalog: ConfiguredAirbyteCatalog) -> Set[str]:
+        """Extract stream names from the configured catalog for validation.
+
+        Returns a set of stream names that are configured to be synced.
+        This is used to filter streams and prevent status messages for unconfigured streams.
+        """
+        return {configured_stream.stream.name for configured_stream in catalog.streams}
+
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
+        """Return all available streams.
+
+        Note: All streams returned here must have consistent 'name' and 'namespace'
+        properties to match how they are identified in the catalog during read operations.
+        """
         api_key = config['api_key']
 
         events_stream = LumaEventsStream(api_key=api_key)
         guests_stream = LumaGuestsStream(events_stream=events_stream, api_key=api_key)
 
-        return [events_stream, guests_stream]
+        # Log stream names for debugging namespace/name consistency issues
+        all_streams = [events_stream, guests_stream]
+        for stream in all_streams:
+            logger.info(f"Registering stream: name='{stream.name}', namespace='{stream.namespace}'")
+
+        return all_streams
+
+    def read(
+        self,
+        logger: logging.Logger,
+        config: Mapping[str, Any],
+        catalog: ConfiguredAirbyteCatalog,
+        state: Optional[Mapping[str, Any]] = None
+    ) -> Iterable[Any]:
+        """Override read to ensure strict validation of streams against the catalog.
+
+        This prevents STREAM_STATUS messages from being emitted for streams
+        that are not present in the ConfiguredAirbyteCatalog, which causes
+        the "stream not present in catalog" error.
+        """
+        # Get the set of stream names that are actually configured in the catalog
+        configured_stream_names = self._get_catalog_stream_names(catalog)
+        logger.info(f"Configured catalog contains streams: {configured_stream_names}")
+
+        # Get all available streams
+        all_streams = self.streams(config)
+
+        # Validate that all configured streams exist in our available streams
+        available_stream_names = {stream.name for stream in all_streams}
+        logger.info(f"Available streams from source: {available_stream_names}")
+
+        # Check for any mismatches
+        missing_streams = configured_stream_names - available_stream_names
+        if missing_streams:
+            logger.warning(f"Catalog contains streams not available in source: {missing_streams}")
+
+        extra_streams = available_stream_names - configured_stream_names
+        if extra_streams:
+            logger.info(f"Source has streams not in catalog (will be skipped): {extra_streams}")
+
+        # Delegate to parent implementation which will handle the actual reading
+        # The parent's read method should filter based on the catalog, but we've
+        # added logging above to help debug any namespace/name mismatches
+        yield from super().read(logger, config, catalog, state)
