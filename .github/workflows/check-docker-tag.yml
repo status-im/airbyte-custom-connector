@@ -1,4 +1,4 @@
-name: Check Docker Image Tag Update
+name: PR check
 
 on:
   pull_request:
@@ -8,6 +8,35 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
+  get-modified-directories:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history to compare changes
+
+      - name: Get modified directories
+        id: get-directories
+        run: |
+          # Get the list of modified files
+          MODIFIED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+
+          # Extract unique directories at depth 1
+          MODIFIED_DIRS=$(echo "$MODIFIED_FILES" | xargs -I {} dirname {} | sed 's|/[^/]*$||' | sort -u)
+
+          # Output the directories
+          echo "Modified directories:"
+          echo "$MODIFIED_DIRS"
+
+          MODIFIED_DIRS_JSON=$(echo "$MODIFIED_DIRS" | jq -R . | jq -s .)
+          # Set the output for use in other steps
+          echo "$MODIFIED_DIRS" >> $GITHUB_OUTPUT
+
+      - name: Print modified directories
+        run: |
+          echo "Modified directories: ${{ steps.get-directories.outputs.modified_dirs }}"
+
   check-docker-tag:
     runs-on: ubuntu-latest
     steps:
@@ -18,7 +47,7 @@ jobs:
           fetch-depth: 0
 
       - name: Get changed files
-        id: changed-files
+        id: changed-files-metadata
         uses: tj-actions/changed-files@v44
         with:
           files: '**/metadata.yaml'
@@ -45,3 +74,34 @@ jobs:
             fi
           done
 
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Ruff
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff
+
+      - name: Get changed files
+        id: changed-file-python
+        uses: tj-actions/changed-files@v44
+        with:
+          files: '**/*.py'
+
+      - name: Run Ruff on changed directories
+        run: |
+          # Extract unique directories from changed Python files
+          dirs=$(dirname ${{ steps.changed-files.outputs.all_changed_files }} | sort -u)
+          for dir in $dirs; do
+            if [ -d "$dir" ]; then
+              echo "Running Ruff in $dir..."
+              ruff check "$dir"
+            fi
+          done

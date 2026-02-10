@@ -4,7 +4,9 @@ from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from airbyte_cdk.sources.streams.http.requests_native_auth import TokenAuthenticator
-import logging, json, requests
+import logging
+import json
+import requests
 from datetime import datetime, timezone
 import requests.auth
 import pandas as pd
@@ -72,7 +74,7 @@ class RedditStream(HttpStream, ABC):
     def request_headers(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None) -> Mapping[str, Any]:
         headers = super().request_headers(stream_state, stream_slice, next_page_token)
         # Ensure proper User-Agent for all requests
-        headers["User-Agent"] = f"python:airbyte-reddit-connector:v1.0 (by u/airbyte-user)"
+        headers["User-Agent"] = "python:airbyte-reddit-connector:v1.0 (by u/airbyte-user)"
         return headers
 
     def backoff_time(self, response: requests.Response) -> Optional[float]:
@@ -247,7 +249,7 @@ class MultiSubredditComments(HttpSubStream):
 
     def request_headers(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None) -> Mapping[str, Any]:
         headers = super().request_headers(stream_state, stream_slice, next_page_token)
-        headers["User-Agent"] = f"python:airbyte-reddit-connector:v1.0 (by u/airbyte-user)"
+        headers["User-Agent"] = "python:airbyte-reddit-connector:v1.0 (by u/airbyte-user)"
         return headers
 
     def backoff_time(self, response: requests.Response) -> Optional[float]:
@@ -317,7 +319,7 @@ class MultiSubredditComments(HttpSubStream):
                     created_timestamp = self.to_utc_timestamp(created_utc)
                 else:
                     created_timestamp = None
-                    logger.debug(f"Comment has no created_utc timestamp")
+                    logger.debug("Comment has no created_utc timestamp")
 
                 comment_id = child_data.get("id", f"unknown_{hash(str(child_data))}")
 
