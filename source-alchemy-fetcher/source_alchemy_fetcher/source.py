@@ -20,19 +20,19 @@ class HistoricalRates(HttpStream):
 
     @staticmethod
     def to_utc_format(date: Union[str, datetime.date], midnight: bool = True) -> str:
-        
+
         if isinstance(date, str):
             date = datetime.datetime.strptime(date, "%Y-%m-%d")
-        
+
         format = "%Y-%m-%dT" + ("00:00:00" if midnight else "23:59:59") + "Z"
         return date.strftime(format)
-    
+
     @staticmethod
     def to_date(date: Optional[Union[str, datetime.datetime, datetime.date]]) -> datetime.date:
-        
+
         if isinstance(date, datetime.date):
             return date
-        
+
         if isinstance(date, datetime.datetime):
             return date.date()
 
@@ -56,7 +56,7 @@ class HistoricalRates(HttpStream):
 
         Output:
             - the payload
-        """        
+        """
         payload = {
             "startTime": HistoricalRates.to_utc_format(
                 HistoricalRates.to_date(token_info.get("start_date"))
@@ -74,7 +74,7 @@ class HistoricalRates(HttpStream):
                 "network": token_info["network"],
                 "address": token_info["address"]
             })
-        
+
         else:
             payload.update({
                 "symbol": token_info["symbol"]
@@ -113,7 +113,7 @@ class HistoricalRates(HttpStream):
         self.logger.info(f"API Budget: {api_budget}")
         super().__init__(authenticator, api_budget)
         self.tokens = tokens
-        
+
 
     @property
     def url_base(self) -> str:
@@ -125,9 +125,9 @@ class HistoricalRates(HttpStream):
 
     def path(self, *, stream_state = None, stream_slice = None, next_page_token = None):
         return "tokens/historical"
-    
+
     def stream_slices(self, **kwargs) -> Iterable[Optional[Mapping[str, Any]]]:
-        
+
         for token_info in self.tokens:
             current_token_info = copy.deepcopy(token_info)
             current_start = token_info["start_date"]
@@ -149,7 +149,7 @@ class HistoricalRates(HttpStream):
 
     def request_body_json(self, stream_slice: Mapping[str, Any] = None, **kwargs) -> Optional[Mapping]:
         return stream_slice["payload"]
-    
+
     def request_headers(self, **kwargs) -> MutableMapping[str, Any]:
         return {"Content-Type": "application/json"}
 
@@ -190,12 +190,12 @@ class HistoricalRates(HttpStream):
 
     def next_page_token(self, response: requests.Response) -> None:
         return None
-    
+
     def backoff_time(self, response: requests.Response) -> Optional[float]:
-        
+
         if response.status_code != 429:
             return None
-        
+
         message: str = response.json()["error"]["message"]
         seconds = 60 * 15
         logger.error(f"{message} Sleeping for {seconds} seconds")
@@ -212,7 +212,8 @@ class SourceAlchemyFetcher(AbstractSource):
         "arb-mainnet": 42161,
         "base-mainnet": 8453,
         "frax-mainnet": 252,
-        "zora-mainnet": 7777777
+        "zora-mainnet": 7777777,
+        "linea-mainnet": 59144
     }
 
     def update_tokens(self, tokens: List[Mapping[str, Any]]) -> List[Mapping[str, Any]]:
@@ -222,18 +223,18 @@ class SourceAlchemyFetcher(AbstractSource):
             network = current.get("network")
             if network == "null":
                 current.pop("network")
-            
+
             current.update({
                 "start_date": HistoricalRates.to_date(current.get("start_date")),
                 "end_date": HistoricalRates.to_date(current.get("end_date")),
                 "chain_id": self.chain_id_mapping.get(current.get("network"))
             })
             new_tokens.append(current)
-        
+
         return new_tokens
 
     def check_connection(self, logger: logging.Logger, config: Mapping[str, Any]) -> Tuple[bool, Any]:
-        
+
         url = "https://api.g.alchemy.com/prices/v1/tokens/historical"
         headers = {
             "Content-Type": "application/json",
@@ -247,7 +248,7 @@ class SourceAlchemyFetcher(AbstractSource):
             if start_date > end_date:
                 failed.append(f"start_date cannot be greater than end_date - {token['symbol']}")
                 continue
-            
+
             payload = HistoricalRates.create_payload(token)
             date = datetime.datetime.now().date().replace(month=1, day=1)
             payload["startTime"] = HistoricalRates.to_utc_format(date)
@@ -260,12 +261,12 @@ class SourceAlchemyFetcher(AbstractSource):
 
             output: dict = response.json()
             error: Union[str, dict[str, str]] = output.get("error")
-            
+
             if error:
                 failed.append(error["message"])
             elif response.status_code != 200:
                 failed.append(f"Could not make a request for {payload['symbol']} with payload - {payload}")
-            
+
         return len(failed) == 0, "\n".join(failed) if failed else None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
@@ -273,4 +274,3 @@ class SourceAlchemyFetcher(AbstractSource):
         return [
             HistoricalRates(self.update_tokens(config["tokens"]), auth)
         ]
-        

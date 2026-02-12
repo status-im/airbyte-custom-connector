@@ -24,7 +24,7 @@ connectionSpecification:
             title: Chain Name
             type: string
             description: The chain name as it is in Alchemy
-            type: 
+            type:
               - string
               - "null"
             enum:
@@ -35,13 +35,14 @@ connectionSpecification:
               - base-mainnet
               - frax-mainnet
               - zora-mainnet
+              - linea-mainnet
             default: "null"
             order: 0
           address:
             title: Address
             type: string
             description: Token contract address
-            type: 
+            type:
               - string
               - "null"
             default: "null"
@@ -56,7 +57,7 @@ connectionSpecification:
               - ["ETH", "BTC", "USDT"]
             order: 3
           start_date:
-            type: 
+            type:
               - string
               - "null"
             title: "Historical start date for backfills"
@@ -66,7 +67,7 @@ connectionSpecification:
               - "2026-12-02"
             order: 4
           end_date:
-            type: 
+            type:
               - string
               - "null"
             title: "Historical end date for backfills"
