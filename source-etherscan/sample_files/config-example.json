@@ -5,9 +5,7 @@
         {
             "address": "blah-blah-blah",
             "name": "blah-blah-blah",
-            "tags": ["Blah"],
-            "start_date": "2008-01-01",
-            "end_date": null
+            "tags": ["Blah"]
         }
     ]
 }
