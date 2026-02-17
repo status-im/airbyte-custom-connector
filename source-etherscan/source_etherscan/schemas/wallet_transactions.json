@@ -5,33 +5,33 @@
   "type": "object",
   "properties": {
     "wallet_address": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "The address of the wallet"
     },
     "wallet_name": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Name of the wallet (optional)"
     },
     "tags": {
-      "type": "array",
+      "type": ["array", "null"],
       "items": { "type": "string" },
       "description": "Tags associated with the wallet"
     },
     "hash": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Transaction hash"
     },
     "block": {
-      "type": "integer",
+      "type": ["integer", "null"],
       "description": "Block number of the transaction"
     },
     "timestamp": {
-      "type": "string",
+      "type": ["string", "null"],
       "format": "date-time",
       "description": "Timestamp of the transaction"
     },
     "from_address": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Sender address"
     },
     "movement": {
@@ -39,43 +39,43 @@
       "description": "Movement type or direction"
     },
     "to_address": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Recipient address"
     },
     "amount": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Amount transferred (in base unit)"
     },
     "token_name": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Name of the token"
     },
     "token_symbol": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Token symbol"
     },
     "token_decimal": {
-      "type": "integer",
+      "type": ["integer", "null"],
       "description": "Token decimals"
     },
     "chain_id": {
-      "type": "integer",
+      "type": ["integer", "null"],
       "description": "Chain identifier"
     },
     "gas_price": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Gas price used"
     },
     "gas_used": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Gas used by transaction"
     },
     "gas_decimals": {
-      "type": "integer",
+      "type": ["integer", "null"],
       "description": "Decimals for gas"
     },
     "method_id": {
-      "type": "string",
+      "type": ["string", "null"],
       "description": "Method identifier"
     },
     "method_call": {
@@ -87,7 +87,7 @@
       "description": "Human-friendly method name"
     },
     "is_error": {
-      "type": ["boolean"],
+      "type": ["boolean", "null"],
       "description": "If the transaction is faulty or not"
     }
   }
