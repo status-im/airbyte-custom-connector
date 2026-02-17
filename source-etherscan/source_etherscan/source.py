@@ -7,25 +7,18 @@ from airbyte_cdk.sources.streams.http import HttpStream
 from airbyte_cdk.models import SyncMode
 
 class EtherscanStream(HttpStream):
-    # Required if there are internal transactions within a transaction
-    primary_key = ["hash", "block", "from_address", "to_address", "movement", "token_symbol"]
-    cursor_field = "block"
-
-    pagination_offset = 100
+    pagination_offset = 150
     url_base = "https://api.etherscan.io/"
     ETHEREUM_DECIMALS = 18
-    sleep_seconds = 2
 
-    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
+    primary_key = None
+    cursor_field = []
+
+    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, backfill: bool, sleep_seconds: int, **kwargs):
         super().__init__(**kwargs)
         self.api_key = api_key
         self.wallets = wallets
         self.chain_id = chain_id
-        self.historical_mapping = {}
-        self.page_counter = {
-            wallet["address"]: 1
-            for wallet in self.wallets
-        }
         self.wallet_info = {
             wallet["address"]: {
                 "tags": wallet["tags"],
@@ -34,18 +27,12 @@ class EtherscanStream(HttpStream):
             for wallet in self.wallets
         }
         self.is_balance_stream = self.name.endswith('balance')
+        self.sleep_seconds = sleep_seconds
+        self.logger.info(f"{self.name} > Sleep per request: {self.sleep_seconds}s")
 
-    def stream_slices(self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None) -> Iterable[Optional[Mapping[str, Any]]]:
-
-        if not sync_mode:
-            return []
-
-        self.logger.info(f"{self.name} > SyncMode: {sync_mode}")
         yesterday = datetime.datetime.now().date() - datetime.timedelta(days=1)
-        start_date = yesterday
-        if sync_mode == SyncMode.full_refresh:
-            # Syncing since ethereum first transaction
-            start_date = datetime.date(year=2015, month=7, day=30)
+        # Syncing since Ethereum first transaction
+        start_date = yesterday if not backfill else datetime.date(year=2015, month=7, day=30)
 
         self.historical_mapping = {
             wallet["address"]: {
@@ -54,6 +41,8 @@ class EtherscanStream(HttpStream):
             }
             for wallet in self.wallets
         }
+
+    def stream_slices(self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None) -> Iterable[Optional[Mapping[str, Any]]]:
 
         for wallet in self.wallets:
             selected = self.historical_mapping[wallet["address"]]
@@ -87,34 +76,34 @@ class EtherscanStream(HttpStream):
         return seconds
 
     def next_page_token(self, response: requests.Response):
-        result: Union[list[dict], str] = response.json().get("result", [])
 
-        wallet_address = self.get_params(response).get("address")
-        if not wallet_address:
+        if self.is_balance_stream:
             return None
 
+        result = response.json().get("result", [])
         if isinstance(result, str):
-            params = {
-                "page": self.page_counter[wallet_address],
-                "address": wallet_address
-            }
             seconds = self.backoff_time(response)
             time.sleep(seconds)
-            return params
+            # Retry same page
+            current_page = int(self.get_params(response).get("page", 1))
+            return {"page": current_page}
 
-        if not result or not self.is_valid(wallet_address, self.to_datetime(result[-1]["timeStamp"])):
+        if not result:
             return None
 
-        self.page_counter[wallet_address] += 1
-        params = {
-            "page": self.page_counter[wallet_address],
-            "address": wallet_address
-        }
+        params = self.get_params(response)
+        current_page = int(params.get("page", 1))
+        # Last page may have less records
+        if len(result) < self.pagination_offset:
+            return None
+
+        to_lower = lambda result: {key.lower(): value for key, value in result.items()}
+        earliest_date = self.to_datetime(to_lower(result[-1])["timestamp"])
+        params = {"page": current_page + 1} if self.is_valid(params["address"], earliest_date) else None
         time.sleep(self.sleep_seconds)
         return params
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
-
         if not stream_slice:
             return {}
 
@@ -124,14 +113,13 @@ class EtherscanStream(HttpStream):
             "apikey": self.api_key,
             "sort": "desc",
             "module": "account",
-            "offset": self.pagination_offset
+            "offset": self.pagination_offset,
+            "page": next_page_token["page"] if next_page_token else 1
         }
         if self.is_balance_stream:
             params.pop("sort")
             params.pop("offset")
-
-        if next_page_token:
-            params["page"] = next_page_token["page"]
+            params.pop("page")
 
         self.logger.info(f"{self.name} > request_params: {params}")
         return params
@@ -192,8 +180,8 @@ class WalletTransactions(EtherscanStream):
     A transaction where an EOA (Externally Owned Address, or typically referred to as a wallet address) sends ETH directly to another EOA.
     When viewing an address on Etherscan, this type of transaction will be shown under the Transaction tab.
     """
-    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
-        super().__init__(api_key, wallets, chain_id, **kwargs)
+    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, backfill: bool, sleep_seconds: int, **kwargs):
+        super().__init__(api_key, wallets, chain_id, backfill, sleep_seconds, **kwargs)
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
         params = {
@@ -255,8 +243,8 @@ class WalletInternalTransactions(EtherscanStream):
     This refers to a transfer of ETH that is carried out through a smart contract as an intermediary.
     When viewing an address on Etherscan, this type of transaction will be shown under the Internal Txns tab
     """
-    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
-        super().__init__(api_key, wallets, chain_id, **kwargs)
+    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, backfill: bool, sleep_seconds: int, **kwargs):
+        super().__init__(api_key, wallets, chain_id, backfill, sleep_seconds, **kwargs)
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
         params = {
@@ -313,8 +301,8 @@ class WalletTokenTransactions(EtherscanStream):
     Transactions of ERC-20 or ERC-721 tokens are labelled as Token Transfer transactions.
     When viewing an address on Etherscan, this type of transaction will be shown under either the Erc20 Token Txns or Erc721 Token Txns tab, depending on the respective token type.
     """
-    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
-        super().__init__(api_key, wallets, chain_id, **kwargs)
+    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, backfill: bool, sleep_seconds: int, **kwargs):
+        super().__init__(api_key, wallets, chain_id, backfill, sleep_seconds, **kwargs)
 
     def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
         params = {
@@ -381,8 +369,8 @@ class NativeBalance(EtherscanStream):
     primary_key = None
     cursor_field = []
 
-    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, **kwargs):
-        super().__init__(api_key, wallets, chain_id, **kwargs)
+    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, backfill: bool, sleep_seconds: int, **kwargs):
+        super().__init__(api_key, wallets, chain_id, backfill, sleep_seconds, **kwargs)
 
     def next_page_token(self, response: requests.Response):
         time.sleep(self.sleep_seconds)

@@ -1,6 +1,8 @@
 {
     "api_key": "My REST API Key",
     "chain_id": "1",
+    "sleep_seconds": 1,
+    "backfill": false,
     "wallets": [
         {
             "address": "blah-blah-blah",
