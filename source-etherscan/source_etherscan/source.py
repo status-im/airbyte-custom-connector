@@ -9,7 +9,9 @@ from airbyte_cdk.models import SyncMode
 class EtherscanStream(HttpStream):
     pagination_offset = 150
     url_base = "https://api.etherscan.io/"
-    ETHEREUM_DECIMALS = 18
+    WEI_DECIMALS = 18
+    GWEI_DECIMALS = 9
+    EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000"
 
     primary_key = None
     cursor_field = []
@@ -218,11 +220,11 @@ class WalletTransactions(EtherscanStream):
                 "amount": trx["value"],
                 "token_name": "Ethereum",
                 "token_symbol": "ETH",
-                "token_decimal": self.ETHEREUM_DECIMALS,
+                "token_decimal": self.WEI_DECIMALS,
                 "chain_id": int(self.chain_id),
                 "gas_price": trx["gasPrice"],
                 "gas_used": trx["gasUsed"],
-                "gas_decimals": self.ETHEREUM_DECIMALS,
+                "gas_decimals": self.WEI_DECIMALS,
                 "method_id": trx["methodId"],
                 "method_call": method_call,
                 "method_name": self.camel_to_title(method_call) if method_call else trx["methodId"],
@@ -279,11 +281,11 @@ class WalletInternalTransactions(EtherscanStream):
                 "amount": trx["value"],
                 "token_name": "Ethereum",
                 "token_symbol": "ETH",
-                "token_decimal": self.ETHEREUM_DECIMALS,
+                "token_decimal": self.WEI_DECIMALS,
                 "chain_id": int(self.chain_id),
                 "gas": trx["gas"],
                 "gas_used": trx["gasUsed"],
-                "gas_decimals": self.ETHEREUM_DECIMALS,
+                "gas_decimals": self.WEI_DECIMALS,
                 "is_error": bool(int(trx["isError"]))
             }
             if len(point["to_address"]) == 0:
@@ -346,7 +348,7 @@ class WalletTokenTransactions(EtherscanStream):
                 "token_address": trx["contractAddress"],
                 "gas_price": trx["gasPrice"],
                 "gas_used": trx["gasUsed"],
-                "gas_decimals": self.ETHEREUM_DECIMALS,
+                "gas_decimals": self.WEI_DECIMALS,
                 "chain_id": int(self.chain_id),
                 "is_error": False
             }
@@ -366,8 +368,6 @@ class NativeBalance(EtherscanStream):
 
     NOTE: Used for debugging purposes
     """
-    primary_key = None
-    cursor_field = []
 
     def __init__(self, api_key: str, wallets: list[dict], chain_id: str, backfill: bool, sleep_seconds: int, **kwargs):
         super().__init__(api_key, wallets, chain_id, backfill, sleep_seconds, **kwargs)
@@ -394,11 +394,104 @@ class NativeBalance(EtherscanStream):
             "wallet_name": wallet["name"],
             "tags": wallet["tags"],
             "token_symbol": "ETH",
-            "token_decimal": self.ETHEREUM_DECIMALS,
+            "token_decimal": self.WEI_DECIMALS,
             "amount": data["result"],
             "chain_id": int(self.chain_id)
         }
         yield point
+
+
+class MinedBlocks(EtherscanStream):
+    """
+    Get newly minted ETH block rewards earned by the wallet
+    """
+    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, backfill: bool, sleep_seconds: int, **kwargs):
+        super().__init__(api_key, wallets, chain_id, backfill, sleep_seconds, **kwargs)
+
+    def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
+        params = {
+            **super().request_params(stream_state, stream_slice, next_page_token),
+            "action": "getminedblocks",
+        }
+        return params
+
+    def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
+        txs = self.get_transactions(response)
+        params = self.get_params(response)
+        selected = self.wallet_info.get(params["address"], {})
+
+        for trx in txs:
+            timestamp = self.to_datetime(trx["timeStamp"])
+            if self.has_finished(params["address"], timestamp):
+                break
+
+            if not self.is_valid(params["address"], timestamp):
+                continue
+
+            point = {
+                "wallet_address": params["address"],
+                "wallet_name": selected.get("name"),
+                "tags": selected.get("tags"),
+                "block": int(trx["blockNumber"]),
+                "timestamp": timestamp,
+                "from_address": self.EMPTY_ADDRESS,
+                "movement": "in",
+                "to_address": params["address"],
+                "amount": trx["blockReward"],
+                "token_name": "Ethereum",
+                "token_symbol": "ETH",
+                "token_decimal": self.WEI_DECIMALS,
+                "chain_id": int(self.chain_id),
+                "is_error": False
+            }
+
+            yield point
+
+class BeaconWithdrawals(EtherscanStream):
+
+    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, backfill: bool, sleep_seconds: int, **kwargs):
+        super().__init__(api_key, wallets, chain_id, backfill, sleep_seconds, **kwargs)
+
+    def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
+        params = {
+            **super().request_params(stream_state, stream_slice, next_page_token),
+            "action": "txsBeaconWithdrawal",
+        }
+        return params
+
+    def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
+        txs = self.get_transactions(response)
+        params = self.get_params(response)
+        selected = self.wallet_info.get(params["address"], {})
+
+        for trx in txs:
+            timestamp = self.to_datetime(trx["timestamp"])
+            if self.has_finished(params["address"], timestamp):
+                break
+
+            if not self.is_valid(params["address"], timestamp):
+                continue
+
+            point = {
+                "wallet_address": params["address"],
+                "wallet_name": selected.get("name"),
+                "tags": selected.get("tags"),
+                "block": int(trx["blockNumber"]),
+                "timestamp": timestamp,
+                "from_address": self.EMPTY_ADDRESS,
+                "movement": "in",
+                "to_address": params["address"],
+                "amount": trx["amount"],
+                "token_name": "Ethereum",
+                "token_symbol": "ETH",
+                "token_decimal": self.GWEI_DECIMALS,
+                "chain_id": int(self.chain_id),
+                "is_error": False,
+                "withdrawal_index": trx["withdrawalIndex"],
+                "validator_index": trx["validatorIndex"],
+            }
+
+            yield point
 
 class SourceEtherscan(AbstractSource):
 
@@ -443,6 +536,8 @@ class SourceEtherscan(AbstractSource):
             WalletTransactions(**params),
             WalletInternalTransactions(**params),
             WalletTokenTransactions(**params),
-            NativeBalance(**params)
+            NativeBalance(**params),
+            MinedBlocks(**params),
+            BeaconWithdrawals(**params)
         ]
         return streams
