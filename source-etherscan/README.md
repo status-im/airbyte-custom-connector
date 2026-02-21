@@ -2,40 +2,31 @@
 
 ## Usage
 
-This Airbyte connector fetch information from Etherscan API.
+This Airbyte connector extracts data from the Etherscan API.
 
-It get:
-* Internal balance
-* Internal transaction
-* Specific ERC20 balance
-* Specific ERC20 transaction
+- `WalletTransactions` -  Etherscan **Transactions** tab
+- `WalletInternalTransactions` - Etherscan **Internal Transactions** tab
+- `WalletTokenTransactions` - Etherscan **Token Transfers (ERC-20)** tab
+- `MinedBlocks` - Etherscan **Beacon Chain > Produced Blocks** tab
+- `BeaconWithdrawals` - Etherscan **Beacon Chain > Withdrawals** tab
+- `NativeBalance` - `ETH` balance as in the **Overview**
+- `TokenBalance` - ERC-20 token balance as in **TOKEN HOLDINGS**
 
-### Configuration
+## Data Backfill
 
-The connector takes the following input:
+To fetch all of the transactions and beacon chain data from the beginning, you must:
 
-```yaml
-api_key: 'example-key'
-chain_id: 1
-wallets:
-  - name: 'example'
-    address: '0x0000000000000000000000000000000000000000'
-    tag: 'Test'
-tokens:
-  - name: 'SNT'
-    address: '0x744d70fdbe2ba4cf95131626614a1763df805b9e'
-```
+1. Set the `backfill` config variable to `True`
+2. Delete / drop the Airbyte tables and schema (**Optional**)
+3. Make sure that the Sync mode is `Full refresh | Append` mode, instead of `Full refresh | Overwrite`. **Overwrite** will cause the streams to run in parallel instead of sequentially.
 
 ## Local development
 
 ### Prerequisites
 
-#### Activate Virtual Environment and install dependencies
 From this connector directory, create a virtual environment:
 ```
 python -m venv .venv
-```
-```
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
