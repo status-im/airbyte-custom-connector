@@ -1,6 +1,6 @@
 import requests, logging, re, datetime, time
 from urllib.parse import urlparse, parse_qsl
-from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple, Union
+from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream
@@ -17,7 +17,7 @@ class EtherscanStream(HttpStream):
     cursor_field = []
 
     def __init__(self, api_key: str, wallets: list[dict], chain_id: str, backfill: bool, sleep_seconds: int, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__()
         self.api_key = api_key
         self.wallets = wallets
         self.chain_id = chain_id
@@ -364,7 +364,7 @@ class WalletTokenTransactions(EtherscanStream):
 
 class NativeBalance(EtherscanStream):
     """
-    Native balance (ETH) for the wallets
+    Current native balance (ETH) for the wallets
 
     NOTE: Used for debugging purposes
     """
@@ -396,6 +396,59 @@ class NativeBalance(EtherscanStream):
             "token_symbol": "ETH",
             "token_decimal": self.WEI_DECIMALS,
             "amount": data["result"],
+            "chain_id": int(self.chain_id)
+        }
+        yield point
+
+class TokenBalance(EtherscanStream):
+    """
+    Current ERC-20 token balance
+
+    NOTE: Used for debugging purposes
+    """
+
+    def __init__(self, api_key: str, wallets: list[dict], chain_id: str, backfill: bool, sleep_seconds: int, tokens: list[dict[str, str]], **kwargs):
+        super().__init__(api_key, wallets, chain_id, backfill, sleep_seconds, **kwargs)
+        self.tokens = tokens
+
+    def next_page_token(self, response: requests.Response):
+        time.sleep(self.sleep_seconds)
+        return None
+
+    def request_params(self, stream_state: Mapping[str, Any], stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None) -> MutableMapping[str, Any]:
+        params = {
+            **super().request_params(stream_state, stream_slice, next_page_token),
+            "action": "tokenbalance",
+            "contractaddress": stream_slice["token_address"]
+        }
+        self.logger.info(f"{self.name} > request_params: {stream_slice['token_symbol']} ({stream_slice['token_address']})")
+        return params
+
+    def stream_slices(self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None) -> Iterable[Optional[Mapping[str, Any]]]:
+
+        for current_stream_slice in super().stream_slices(sync_mode, cursor_field, stream_state):
+            for token in self.tokens:
+                time.sleep(self.sleep_seconds)
+                yield {
+                    **current_stream_slice,
+                    "token_symbol": token["name"],
+                    "token_address": token["address"]
+                }
+
+    def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
+        data: dict = response.json()
+        params = self.get_params(response)
+        wallet_address = params["address"]
+        wallet = self.wallet_info[wallet_address]
+        point = {
+            "timestamp": datetime.datetime.now(),
+            "wallet_address": wallet_address,
+            "wallet_name": wallet["name"],
+            "tags": wallet["tags"],
+            "amount": data["result"],
+            "token_symbol": stream_slice["token_symbol"],
+            "token_address": stream_slice["token_address"],
+            "token_decimal": self.WEI_DECIMALS,
             "chain_id": int(self.chain_id)
         }
         yield point
@@ -537,6 +590,7 @@ class SourceEtherscan(AbstractSource):
             WalletInternalTransactions(**params),
             WalletTokenTransactions(**params),
             NativeBalance(**params),
+            TokenBalance(**params),
             MinedBlocks(**params),
             BeaconWithdrawals(**params)
         ]

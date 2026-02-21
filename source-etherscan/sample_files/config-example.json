@@ -1,13 +1,19 @@
 {
     "api_key": "My REST API Key",
     "chain_id": "1",
-    "sleep_seconds": 1,
-    "backfill": false,
+    "sleep_seconds": 2,
+    "backfill": true,
     "wallets": [
         {
             "address": "blah-blah-blah",
             "name": "blah-blah-blah",
             "tags": ["Blah"]
         }
+    ],
+    "tokens": [
+      {
+        "name": "erc20-token-name",
+        "address": "erc20-address"
+      }
     ]
 }
