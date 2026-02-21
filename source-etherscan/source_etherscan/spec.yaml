@@ -9,6 +9,7 @@ connectionSpecification:
     - sleep_seconds
     - api_key
     - chain_id
+    - pagination_offset
   properties:
     api_key:
         title: 'Api Key'
@@ -20,6 +21,11 @@ connectionSpecification:
         type: boolean
         description: 'If True all of the wallet transactions will be fetched'
         default: false
+    pagination_offset:
+        title: 'Pagination Offset'
+        type: integer
+        description: 'Number of records to pull from the REST API per page'
+        default: 150
     sleep_seconds:
         title: 'Sleep seconds'
         type: integer
@@ -31,7 +37,7 @@ connectionSpecification:
         description: 'Id of the blockchain'
     wallets:
         title: Wallets
-        description: "List of wallet to scan"
+        description: "List of wallets to monitor their transactions and balance"
         type: array
         items:
             type: object
@@ -53,3 +59,20 @@ connectionSpecification:
                     items:
                         type: string
                     order: 3
+    tokens:
+        title: Tokens
+        description: "List of tokens that will be monitored within the specified wallets"
+        type: array
+        items:
+            type: object
+            properties:
+                name:
+                    title: "Token symbol"
+                    type: string
+                    description: "The token's symbol"
+                    order: 1
+                address:
+                    title: Address
+                    type: string
+                    description: 'Address of the token'
+                    order: 2
