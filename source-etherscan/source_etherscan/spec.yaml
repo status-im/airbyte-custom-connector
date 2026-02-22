@@ -9,7 +9,7 @@ connectionSpecification:
     - sleep_seconds
     - api_key
     - chain_id
-    - wallets
+    - pagination_offset
   properties:
     api_key:
         title: 'Api Key'
@@ -21,6 +21,11 @@ connectionSpecification:
         type: boolean
         description: 'If True all of the wallet transactions will be fetched'
         default: false
+    pagination_offset:
+        title: 'Pagination Offset'
+        type: integer
+        description: 'Number of records to pull from the REST API per page'
+        default: 150
     sleep_seconds:
         title: 'Sleep seconds'
         type: integer

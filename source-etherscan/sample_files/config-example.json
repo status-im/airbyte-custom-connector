@@ -3,6 +3,7 @@
     "chain_id": "1",
     "sleep_seconds": 2,
     "backfill": true,
+    "pagination_offset": 250,
     "wallets": [
         {
             "address": "blah-blah-blah",
