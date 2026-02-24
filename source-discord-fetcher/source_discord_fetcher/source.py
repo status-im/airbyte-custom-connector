@@ -194,7 +194,8 @@ class ChannelMessagesStream(DiscordFetcherStream):
     def next_page_token(self, response: requests.Response) -> Optional[Mapping[str, Any]]:
         messages = response.json()
         if messages and len(messages) == 100:  # Discord's max limit
-            return {"before": messages[-1]["id"]}
+            # Continue forward in time using "after" (consistent with initial request direction).
+            return {"after": messages[-1]["id"]}
         return None
 
     def request_params(
