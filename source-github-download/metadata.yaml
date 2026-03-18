@@ -1,0 +1,29 @@
+data:
+  allowedHosts:
+  registries:
+    oss:
+      enabled: true
+    cloud:
+      enabled: false
+  remoteRegistries:
+    pypi:
+      enabled: true
+      packageName: airbyte-source-github-download
+  connectorBuildOptions:
+    baseImage: docker.io/airbyte/python-connector-base:1.1.0
+  connectorSubtype: api
+  connectorType: source
+  definitionId: a1b2c3d4-5678-9012-abcd-ef0123456789
+  dockerImageTag: 1.0.0
+  dockerRepository: harbor.status.im/bi/airbyte/source-github-download
+  githubIssueLabel: source-github-download
+  icon: github.svg
+  license: MIT
+  name: GitHub Download
+  releaseDate: TODO
+  supportLevel: community
+  releaseStage: alpha
+  documentationUrl: https://docs.airbyte.com/integrations/sources/github-download
+  tags:
+    - language:python
+metadataSpecVersion: "1.0"
