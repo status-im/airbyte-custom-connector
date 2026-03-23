@@ -214,6 +214,34 @@ class AppReportStream(Stream):
             
         return slices
     
+    def _cast_record_types(self, record: Dict[str, Any]) -> Dict[str, Any]:
+        """Cast record values to match the types declared in the JSON schema.
+        CSV readers return everything as strings, so integer fields need explicit conversion."""
+        if not hasattr(self, "_schema_properties"):
+            self._schema_properties = self.get_json_schema().get("properties", {})
+        properties = self._schema_properties
+
+        for field, value in record.items():
+            if value is None:
+                continue
+            field_schema = properties.get(field)
+            if not field_schema:
+                continue
+            field_type = field_schema.get("type", [])
+            if isinstance(field_type, str):
+                field_type = [field_type]
+            if "integer" in field_type:
+                try:
+                    record[field] = int(value)
+                except (ValueError, TypeError):
+                    record[field] = None
+            elif "number" in field_type:
+                try:
+                    record[field] = float(value)
+                except (ValueError, TypeError):
+                    record[field] = None
+        return record
+
     def read_records(
         self,
         sync_mode: SyncMode,
@@ -258,4 +286,4 @@ class AppReportStream(Stream):
             
             records = read_and_filter_report(file_path, expected_date)
             for record in records:
-                yield record
+                yield self._cast_record_types(record)

@@ -129,11 +129,6 @@ def download_report_instance(instance_id: str, report_name: str, processing_date
                 if decompress_gzip_to_csv(gz_file_path, csv_file_path):
                     print(f"File downloaded and decompressed successfully to: {csv_file_path}")
                     downloaded_files.add(csv_file_name)
-                    # Clean up the gzipped file
-                    try:
-                        os.remove(gz_file_path)
-                    except Exception as e:
-                        print(f"Warning: Could not remove temporary gzip file: {e}")
                     return csv_file_path
                 else:
                     print(f"Failed to decompress file to CSV")
