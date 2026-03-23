@@ -14,7 +14,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: b62a9143-1b59-41b2-9942-bae709e7da6b
-  dockerImageTag: 1.1.0
+  dockerImageTag: 2.2.0
   dockerRepository: harbor.status.im/bi/airbyte/source-discord-fetcher
   githubIssueLabel: source-discord-fetcher
   icon: discord-fetcher.svg

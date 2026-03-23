@@ -3,13 +3,13 @@
   "type": "object",   
   "properties": {
     "id": {
-      "type": ["null", "number"]
-    },
-    "type": {
       "type": ["null", "string"]
     },
+    "type": {
+      "type": ["null", "integer"]
+    },
     "guild_id": {
-      "type": ["null", "number"]
+      "type": ["null", "string"]
     },
     "position": {
       "type": ["null", "number"]
@@ -21,13 +21,13 @@
       "type": ["null", "string"]
     },
     "last_message_id": {
-      "type": ["null", "number"]
+      "type": ["null", "string"]
     },
     "managed":{
       "type": ["null", "boolean"]
     },
     "parent_id":{
-      "type": ["null", "number"]
+      "type": ["null", "string"]
     },
     "last_pin_timestamp":{
       "type": ["null", "string"]

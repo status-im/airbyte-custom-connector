@@ -5,7 +5,7 @@
     "id": {
       "type": [
         "null",
-        "number"
+        "string"
       ]
     },
     "username": {
@@ -65,13 +65,13 @@
     "guild_id":{
       "type": [
         "null",
-        "integer"
+        "string"
       ]
     },
     "roles":{
       "type": "array",
       "items": {
-        "type": ["null", "number"]
+        "type": ["null", "string"]
       }
     }
   }
