@@ -17,9 +17,9 @@ from datetime import datetime, timezone, timedelta
 logger = logging.getLogger("airbyte")
 
 GUILD_KEYS = ["id", "name", "owner_id", "roles", "description", "chain", "max_members", "approximate_member_count"]
-CHANNEL_KEYS = ["id", "type", "guild_id", "position", "name", "topic", "last_message_id", "managed", "parent_id", "last_pin_timestamp", "message_count", "member_count", "falgs", "total_message_sent"]
+CHANNEL_KEYS = ["id", "type", "guild_id", "position", "name", "topic", "last_message_id", "managed", "parent_id", "last_pin_timestamp", "message_count", "member_count", "flags", "total_message_sent"]
 USER_KEYS = [ "id", "username", "discriminator", "global_name", "bot", "mfa_enabled", "verified", "email", "premium_type", "public_flags"]
-ROLES_KEYS = ["id", "name", "color", "hoist", "position", "permissions", "managed", "mentionable", "falgs", "guild_id"]
+ROLES_KEYS = ["id", "name", "color", "hoist", "position", "permissions", "managed", "mentionable", "flags", "guild_id"]
 
 MAX_USERS = 1000
 # Basic full refresh stream

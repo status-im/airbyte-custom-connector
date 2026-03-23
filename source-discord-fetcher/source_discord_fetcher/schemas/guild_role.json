@@ -5,7 +5,7 @@
     "id": {
       "type": [
         "null",
-        "number"
+        "string"
       ]
     },
     "name": {
@@ -59,7 +59,7 @@
     "guild_id": {
       "type": [
         "null",
-        "integer"
+        "string"
       ]
     }
 
