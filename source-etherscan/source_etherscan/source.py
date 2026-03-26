@@ -432,7 +432,8 @@ class TokenBalance(EtherscanStream):
                 yield {
                     **current_stream_slice,
                     "token_symbol": token["name"],
-                    "token_address": token["address"]
+                    "token_address": token["address"],
+                    "token_decimal": token["token_decimal"]
                 }
 
     def parse_response(self, response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
@@ -448,7 +449,7 @@ class TokenBalance(EtherscanStream):
             "amount": data["result"],
             "token_symbol": stream_slice["token_symbol"],
             "token_address": stream_slice["token_address"],
-            "token_decimal": self.WEI_DECIMALS,
+            "token_decimal": stream_slice["token_decimal"],
             "chain_id": int(self.chain_id)
         }
         yield point
