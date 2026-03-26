@@ -71,6 +71,11 @@ connectionSpecification:
                     type: string
                     description: "The token's symbol"
                     order: 1
+                token_decimal:
+                    title: "Token decimal"
+                    type: integer
+                    description: "The token's decimals"
+                    default: 18
                 address:
                     title: Address
                     type: string

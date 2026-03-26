@@ -14,7 +14,8 @@
     "tokens": [
       {
         "name": "erc20-token-name",
-        "address": "erc20-address"
+        "address": "erc20-address",
+        "token_decimal": 18
       }
     ]
 }
