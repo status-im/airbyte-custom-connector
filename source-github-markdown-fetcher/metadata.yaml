@@ -1,0 +1,25 @@
+data:
+  allowedHosts:
+  registries:
+    oss:
+      enabled: false
+    cloud:
+      enabled: false
+  connectorBuildOptions:
+    baseImage: docker.io/airbyte/python-connector-base:1.0.0@sha256:dd17e347fbda94f7c3abff539be298a65af2d7fc27a307d89297df1081a45c27
+  connectorSubtype: api
+  connectorType: source
+  definitionId: c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f
+  dockerImageTag: 1.0.0
+  dockerRepository: harbor.status.im/bi/airbyte/source-github-markdown-fetcher
+  githubIssueLabel: source-github-markdown-fetcher
+  icon: github-markdown-fetcher.svg
+  license: MIT
+  name: GitHub Markdown Fetcher
+  releaseDate: TODO
+  supportLevel: community
+  releaseStage: alpha
+  documentationUrl: https://docs.airbyte.com/integrations/sources/github-markdown-fetcher
+  tags:
+    - language:python
+metadataSpecVersion: "1.0"
