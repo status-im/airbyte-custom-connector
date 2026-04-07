@@ -1,0 +1,29 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: GitHub Markdown Fetcher Source Spec
+  type: object
+  required:
+    - repo_rfps
+    - rfps_path
+    - repo_prizes
+    - prizes_path
+  properties:
+    repo_rfps:
+      type: string
+      description: "GitHub repository for RFPs in owner/repo format (e.g. logos-co/rfp)"
+    rfps_path:
+      type: string
+      description: "Path to the RFPs directory in the repository"
+      default: "RFPs"
+    repo_prizes:
+      type: string
+      description: "GitHub repository for Lambda Prizes in owner/repo format (e.g. logos-co/lambda-prize)"
+    prizes_path:
+      type: string
+      description: "Path to the prizes directory in the repository"
+      default: "prizes"
+    github_token:
+      type: string
+      description: "GitHub personal access token (optional, raises rate limit)"
+      airbyte_secret: true

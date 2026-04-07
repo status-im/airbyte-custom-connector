@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "number": {
+      "type": ["null", "string"]
+    },
+    "title": {
+      "type": ["null", "string"]
+    },
+    "status": {
+      "type": ["null", "string"]
+    },
+    "circle": {
+      "type": ["null", "string"]
+    },
+    "overview": {
+      "type": ["null", "string"]
+    },
+    "effort": {
+      "type": ["null", "string"]
+    },
+    "prize": {
+      "type": ["null", "string"]
+    },
+    "github_url": {
+      "type": ["null", "string"]
+    },
+    "raw_markdown": {
+      "type": ["null", "string"]
+    }
+  }
+}
