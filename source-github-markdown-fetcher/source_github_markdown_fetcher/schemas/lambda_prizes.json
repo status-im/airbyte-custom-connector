@@ -28,6 +28,17 @@
     },
     "raw_markdown": {
       "type": ["null", "string"]
+    },
+    "created_at": {
+      "type": ["null", "string"],
+      "format": "date-time"
+    },
+    "last_modified_at": {
+      "type": ["null", "string"],
+      "format": "date-time"
+    },
+    "created_by": {
+      "type": ["null", "string"]
     }
   }
 }
