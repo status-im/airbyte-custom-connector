@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": ["null", "string"]
+    },
+    "number": {
+      "type": ["null", "integer"]
+    },
+    "title": {
+      "type": ["null", "string"]
+    },
+    "url": {
+      "type": ["null", "string"]
+    },
+    "state": {
+      "type": ["null", "string"]
+    },
+    "created_at": {
+      "type": ["null", "string"]
+    },
+    "updated_at": {
+      "type": ["null", "string"]
+    },
+    "closed_at": {
+      "type": ["null", "string"]
+    },
+    "repository": {
+      "type": ["null", "string"]
+    },
+    "position": {
+      "type": ["null", "integer"]
+    },
+    "body": {
+      "type": ["null", "string"]
+    },
+    "assignees": {
+      "type": ["null", "array"],
+      "items": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": ["null", "string"]
+          },
+          "avatar_url": {
+            "type": ["null", "string"]
+          }
+        }
+      }
+    },
+    "labels": {
+      "type": ["null", "array"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "journey_type": {
+      "type": ["null", "string"]
+    },
+    "target_release": {
+      "type": ["null", "string"]
+    },
+    "blocked_teams": {
+      "type": ["null", "array"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "action_labels": {
+      "type": ["null", "array"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "rnd_team": {
+      "type": ["null", "string"]
+    },
+    "rnd_milestones": {
+      "type": ["null", "array"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "rnd_date": {
+      "type": ["null", "string"]
+    },
+    "rnd_state": {
+      "type": ["null", "string"]
+    },
+    "doc_packet_link": {
+      "type": ["null", "string"]
+    },
+    "docs_link": {
+      "type": ["null", "string"]
+    },
+    "docs_tracking": {
+      "type": ["null", "string"]
+    },
+    "docs_state": {
+      "type": ["null", "string"]
+    },
+    "red_team_tracking": {
+      "type": ["null", "string"]
+    },
+    "red_team_state": {
+      "type": ["null", "string"]
+    },
+    "computed_action_labels": {
+      "type": ["null", "array"],
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

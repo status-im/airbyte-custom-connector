@@ -1,0 +1,29 @@
+data:
+  allowedHosts:
+  registries:
+    oss:
+      enabled: true
+    cloud:
+      enabled: false
+  remoteRegistries:
+    pypi:
+      enabled: true
+      packageName: airbyte-source-logos-journeys
+  connectorBuildOptions:
+    baseImage: docker.io/airbyte/python-connector-base:1.1.0
+  connectorSubtype: api
+  connectorType: source
+  definitionId: c7f3a1e2-9b4d-4e6f-8a2c-1d5e7f9b3c4a
+  dockerImageTag: 1.0.0
+  dockerRepository: harbor.status.im/bi/airbyte/source-logos-journeys
+  githubIssueLabel: source-logos-journeys
+  icon: logos-journeys.svg
+  license: MIT
+  name: Logos Journeys
+  releaseDate: TODO
+  supportLevel: community
+  releaseStage: alpha
+  documentationUrl: https://docs.airbyte.com/integrations/sources/logos-journeys
+  tags:
+    - language:python
+metadataSpecVersion: "1.0"
