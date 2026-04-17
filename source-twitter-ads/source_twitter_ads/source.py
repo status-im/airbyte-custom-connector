@@ -7,7 +7,14 @@ from airbyte_cdk.sources.streams import Stream
 import requests
 from requests_oauthlib import OAuth1
 
-from .stream import Account, AdvertisementCampaign, PromotedTweetActive, PromotedTweetBilling, PromotedTweetEngagement
+from .stream import (
+    Account,
+    AdvertisementCampaign,
+    PromotedTweet,
+    PromotedTweetActive,
+    PromotedTweetBilling,
+    PromotedTweetEngagement,
+)
 
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
@@ -30,17 +37,17 @@ class SourceTwitterFetcher(AbstractSource):
       "start_time": datetime.strptime(config['start_time'], DATE_FORMAT)
     }
     account = Account(**args)
-    campaing = AdvertisementCampaign(parent=account, **args)
-
-    #promoted_tweet_active = PromotedTweetActive(**args)
-    #promoted_tweet_billing = PromotedTweetBilling(parent=promoted_tweet_active, **args)
-    #promoted_tweet_engagement = PromotedTweetEngagement(parent=promoted_tweet_active, **args)
-
+    campaign = AdvertisementCampaign(parent=account, **args)
+    promoted_tweet = PromotedTweet(parent=account, **args)
+    promoted_tweet_active = PromotedTweetActive(**args)
+    promoted_tweet_billing = PromotedTweetBilling(parent=promoted_tweet_active, **args)
+    promoted_tweet_engagement = PromotedTweetEngagement(parent=promoted_tweet_active, **args)
 
     return [
       account,
-      campaing
-        #promoted_tweet_active,
-      #promoted_tweet_billing,
-      #promoted_tweet_engagement
+      campaign,
+      promoted_tweet,
+      promoted_tweet_active,
+      promoted_tweet_billing,
+      promoted_tweet_engagement,
     ]

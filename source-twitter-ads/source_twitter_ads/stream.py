@@ -132,9 +132,59 @@ class PromotedTweetActive(TwitterAdsStream):
     time.sleep(2)
 
 
-class PromotedTweetBilling(HttpSubStream, PromotedTweetActive):
-  #gets billing info for each promotted tweet
+class PromotedTweet(HttpSubStream, TwitterAdsStream):
+  # Maps promoted-tweet entity_id (used by the stats endpoint) to the real tweet_id
+  # (used by the public tweets API). Needed to join paid spend back to organic tweets.
   primary_key = "id"
+
+  def path(
+    self,
+    stream_state: Mapping[str, Any] = None,
+    stream_slice: Mapping[str, Any] = None,
+    next_page_token: Mapping[str, Any] = None
+  ) -> str:
+    account_id = stream_slice.get("parent").get("id")
+    return f"accounts/{account_id}/promoted_tweets"
+
+  def parse_response(
+    self,
+    response: requests.Response,
+    stream_slice: Mapping[str, Any] = None,
+    **kwargs
+  ) -> Iterable[Mapping]:
+    if 'data' not in response.json():
+      account_name = stream_slice.get("parent").get("name")
+      logger.warn("No data in the promoted_tweets response for %s account", account_name)
+      return
+    account_id = stream_slice.get("parent").get("id")
+    for promoted_tweet in response.json()['data']:
+      promoted_tweet["account_id"] = account_id
+      yield promoted_tweet
+
+
+# Window-based stats streams (billing + engagement) fetch the last 7 days of daily data.
+# Twitter's billing is a sliding 7-day window and amounts can be revised, so we re-pull
+# and let downstream dedup on (account_id, id, date).
+STATS_WINDOW_DAYS = 7
+
+
+def _stats_window(now: datetime = None):
+  """Compute the (start, end) window for the stats endpoint.
+
+  Returns a tuple of (start_datetime, end_datetime) where both are midnight-aligned,
+  end is today, and start is STATS_WINDOW_DAYS before end. Computed once per slice so
+  request_params and parse_response see identical values even if the sync crosses midnight.
+  """
+  today = (now or datetime.now()).replace(hour=0, minute=0, second=0, microsecond=0)
+  return today - timedelta(days=STATS_WINDOW_DAYS), today
+
+
+class _DailyStatsSubStream(HttpSubStream, PromotedTweetActive):
+  """Shared behaviour for daily stats substreams (billing, engagement).
+
+  Each slice carries the window dates so parse_response can derive a `date` per day
+  without recomputing `now()`.
+  """
 
   def path(
     self,
@@ -150,15 +200,23 @@ class PromotedTweetBilling(HttpSubStream, PromotedTweetActive):
     stream_state: Mapping[str, Any] = None,
     **kwargs
   ) -> Iterable[Optional[Mapping[str, Any]]]:
+    window_start, window_end = _stats_window()
     for parent_slice in super().stream_slices(sync_mode=sync_mode):
       active_tweet = parent_slice["parent"]
       if "ALL_ON_TWITTER" in active_tweet.get("placements", []):
         yield {
-          "account_id": active_tweet['account_id'],
+          "account_id": active_tweet["account_id"],
           "promoted_tweet_id": active_tweet.get("entity_id"),
           "activity_start_time": active_tweet.get("activity_start_time"),
-          "activity_end_time": active_tweet.get("activity_end_time")
+          "activity_end_time": active_tweet.get("activity_end_time"),
+          "window_start_date": window_start.strftime(DATE_FORMAT_2),
+          "window_end_date": window_end.strftime(DATE_FORMAT_2),
         }
+
+
+class PromotedTweetBilling(_DailyStatsSubStream):
+  # Daily billing metrics per promoted tweet (one row per tweet per day in the window).
+  primary_key = ["id", "date"]
 
   def request_params(
     self,
@@ -166,16 +224,14 @@ class PromotedTweetBilling(HttpSubStream, PromotedTweetActive):
     stream_state: Mapping[str, Any] = None,
     stream_slice: Mapping[str, Any] = None
   ) -> MutableMapping[str, Any]:
-    promoted_tweet_id = stream_slice.get("promoted_tweet_id") if stream_slice else None
     return {
       "entity": "PROMOTED_TWEET",
-      "entity_ids": promoted_tweet_id,
+      "entity_ids": stream_slice.get("promoted_tweet_id"),
       "granularity": "DAY",
       "placement": "ALL_ON_TWITTER",
       "metric_groups": "BILLING",
-      "start_time": (datetime.now() - timedelta(days=7)).strftime(DATE_FORMAT_2),
-      "end_time": datetime.now().strftime(DATE_FORMAT_2),
-
+      "start_time": stream_slice["window_start_date"],
+      "end_time": stream_slice["window_end_date"],
     }
 
   def parse_response(
@@ -184,48 +240,52 @@ class PromotedTweetBilling(HttpSubStream, PromotedTweetActive):
     stream_slice: Mapping[str, Any] = None,
     **kwargs
   ) -> Iterable[Mapping]:
-    if 'data' in response.json():
-      data = response.json()['data']
-      for record in data:
-        billing_data = {
-          "id": stream_slice.get("promoted_tweet_id"),
-          "activity_start_time": stream_slice.get("activity_start_time"),
-          "activity_end_time": stream_slice.get("activity_end_time"),
-          "billed_engagements": record.get("billed_engagements", []),
-          "billed_charge_local_micro": record.get("billed_charge_local_micro", []),
-          "account_id": stream_slice['account_id'],
-          **record
-        }
-        yield billing_data
-      time.sleep(1)
+    if 'data' not in response.json():
+      return
+    start_day = datetime.strptime(stream_slice["window_start_date"], DATE_FORMAT_2).date()
+    for record in response.json()['data']:
+      for data_point in record.get("id_data", []):
+        metrics = data_point.get("metrics") or {}
+        engagements = metrics.get("billed_engagements") or []
+        charges = metrics.get("billed_charge_local_micro") or []
+        # Twitter returns one element per day in the requested window; zip() guards
+        # against the rare case where the two arrays have different lengths.
+        for i, (engagement, charge) in enumerate(zip(engagements, charges)):
+          yield {
+            "id": stream_slice["promoted_tweet_id"],
+            "account_id": stream_slice["account_id"],
+            "activity_start_time": stream_slice.get("activity_start_time"),
+            "activity_end_time": stream_slice.get("activity_end_time"),
+            "date": (start_day + timedelta(days=i)).strftime(DATE_FORMAT_2),
+            "placement": "ALL_ON_TWITTER",
+            "granularity": "DAY",
+            "billed_engagements": engagement,
+            "billed_charge_local_micro": charge,
+          }
+    time.sleep(1)
 
-class PromotedTweetEngagement(HttpSubStream, PromotedTweetActive):
-  # fetches engagement metrics on promoted tweets
-  primary_key = "id"
 
-  def path(
-    self,
-    stream_state: Mapping[str, Any] = None,
-    stream_slice: Mapping[str, Any] = None,
-    next_page_token: Mapping[str, Any] = None
-  ) -> str:
-    return f"stats/accounts/{stream_slice['account_id']}"
+class PromotedTweetEngagement(_DailyStatsSubStream):
+  # Daily engagement metrics per promoted tweet (one row per tweet per day in the window).
+  primary_key = ["id", "date"]
 
-  def stream_slices(
-    self,
-    sync_mode=None,
-    stream_state: Mapping[str, Any] = None,
-    **kwargs
-  ) -> Iterable[Optional[Mapping[str, Any]]]:
-    for parent_slice in super().stream_slices(sync_mode=sync_mode):
-      active_tweet = parent_slice["parent"]
-      if "ALL_ON_TWITTER" in active_tweet.get("placements", []):
-        yield {
-          "promoted_tweet_id":  active_tweet.get("entity_id"),
-          "activity_start_time":  active_tweet.get("activity_start_time"),
-          "activity_end_time":  active_tweet.get("activity_end_time"),
-          "account_id":       active_tweet.get("account_id")
-        }
+  # Metrics returned by the stats endpoint under `ENGAGEMENT`. Each metric comes back as
+  # an array of length N (one value per day) when granularity=DAY.
+  ENGAGEMENT_METRICS = (
+    "impressions",
+    "likes",
+    "engagements",
+    "clicks",
+    "retweets",
+    "replies",
+    "follows",
+    "app_clicks",
+    "card_engagements",
+    "qualified_impressions",
+    "tweets_send",
+    "poll_card_vote",
+    "carousel_swipes",
+  )
 
   def request_params(
     self,
@@ -233,15 +293,15 @@ class PromotedTweetEngagement(HttpSubStream, PromotedTweetActive):
     stream_state: Mapping[str, Any] = None,
     stream_slice: Mapping[str, Any] = None
   ) -> MutableMapping[str, Any]:
-    promoted_tweet_id = stream_slice.get("promoted_tweet_id") if stream_slice else None
     return {
       "entity": "PROMOTED_TWEET",
-      "entity_ids": promoted_tweet_id,
-      "granularity": "TOTAL",
+      "entity_ids": stream_slice.get("promoted_tweet_id"),
+      "granularity": "DAY",
       "placement": "ALL_ON_TWITTER",
       "metric_groups": "ENGAGEMENT",
-      "start_time": (datetime.now().replace(hour=0, minute=0, second=0, microsecond=0) - timedelta(days=7)).strftime(DATE_FORMAT),
-      "end_time": datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).strftime(DATE_FORMAT)
+      # The stats endpoint expects ISO datetimes (not plain dates) for engagement pulls.
+      "start_time": f"{stream_slice['window_start_date']}T00:00:00Z",
+      "end_time": f"{stream_slice['window_end_date']}T00:00:00Z",
     }
 
   def parse_response(
@@ -250,31 +310,30 @@ class PromotedTweetEngagement(HttpSubStream, PromotedTweetActive):
     stream_slice: Mapping[str, Any] = None,
     **kwargs
   ) -> Iterable[Mapping]:
-    if 'data' in response.json():
-      data = response.json()['data']
-      logger.info(data)
-      for record in data:
-        id_data = record.get("id_data", [])
-        for data_point in id_data:
-          metrics = data_point.get("metrics", {})
-          engagement_data = {
-            "id": stream_slice.get("promoted_tweet_id"),
+    if 'data' not in response.json():
+      return
+    start_day = datetime.strptime(stream_slice["window_start_date"], DATE_FORMAT_2).date()
+    for record in response.json()['data']:
+      for data_point in record.get("id_data", []):
+        metrics = data_point.get("metrics") or {}
+        # Every metric is either an array of daily values or None. Use the longest
+        # array to size the day loop so we don't drop days when one metric is None.
+        day_count = max(
+          (len(metrics.get(m) or []) for m in self.ENGAGEMENT_METRICS),
+          default=0,
+        )
+        for i in range(day_count):
+          row = {
+            "id": stream_slice["promoted_tweet_id"],
+            "account_id": stream_slice["account_id"],
             "activity_start_time": stream_slice.get("activity_start_time"),
             "activity_end_time": stream_slice.get("activity_end_time"),
-            "impressions": None if metrics.get("impressions") == None else metrics.get("impressions")[0],
-            "likes": None if  metrics.get("likes") == None else metrics.get("likes")[0],
-            "engagements": None if  metrics.get("engagements") == None else metrics.get("engagements")[0],
-            "clicks": None if metrics.get("clicks") == None else metrics.get("clicks")[0],
-            "retweets": None if metrics.get("retweets") == None else metrics.get("retweets")[0],
-            "replies": None if metrics.get("replies") == None else metrics.get("replies")[0],
-            "follows": None if metrics.get("follows") == None else metrics.get("follows")[0],
-            "app_clicks": None if metrics.get("app_clicks") == None else metrics.get("app_clicks")[0],
-            "card_engagements": None if metrics.get("card_engagements") == None else metrics.get("card_engagements")[0],
-            "qualified_impressions": None if metrics.get("qualified_impressions") == None else metrics.get("qualified_impressions")[0],
-            "tweets_send": None if metrics.get("tweets_send") == None else metrics.get("tweets_send")[0],
-            "poll_card_vote": None if metrics.get("poll_card_vote") == None else metrics.get("poll_card_vote")[0],
-            "carousel_swipes": None if metrics.get("carousel_swipes") == None else metrics.get("carousel_swipes")[0],
-            "account_id": stream_slice['account_id']
+            "date": (start_day + timedelta(days=i)).strftime(DATE_FORMAT_2),
+            "placement": "ALL_ON_TWITTER",
+            "granularity": "DAY",
           }
-          yield engagement_data
-      time.sleep(2)
+          for metric in self.ENGAGEMENT_METRICS:
+            values = metrics.get(metric)
+            row[metric] = values[i] if values and i < len(values) else None
+          yield row
+    time.sleep(2)
