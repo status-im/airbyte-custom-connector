@@ -1,0 +1,40 @@
+{
+  "streams": [
+    {
+      "stream": {
+        "name": "peers",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh", "incremental"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["hour"]
+      },
+      "sync_mode": "incremental",
+      "destination_sync_mode": "append",
+      "cursor_field": ["hour"]
+    },
+    {
+      "stream": {
+        "name": "stake",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh", "incremental"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["hour"]
+      },
+      "sync_mode": "incremental",
+      "destination_sync_mode": "append",
+      "cursor_field": ["hour"]
+    },
+    {
+      "stream": {
+        "name": "ip_peers",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh", "incremental"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["hour"]
+      },
+      "sync_mode": "incremental",
+      "destination_sync_mode": "append",
+      "cursor_field": ["hour"]
+    }
+  ]
+}
