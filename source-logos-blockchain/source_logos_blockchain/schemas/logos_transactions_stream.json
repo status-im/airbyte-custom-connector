@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "slot": {
+      "type": "integer"
+    },
+    "block_id": {
+      "type": "string"
+    },
+    "mantle_tx": {
+      "type": ["null", "object"],
+      "additionalProperties": true,
+      "properties": {
+        "hash": {
+          "type": ["null", "string"]
+        },
+        "execution_gas_price": {
+          "type": ["null", "integer"]
+        },
+        "storage_gas_price": {
+          "type": ["null", "integer"]
+        },
+        "ops": {
+          "type": ["null", "array"],
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "properties": {
+              "opcode": {
+                "type": ["null", "integer"]
+              },
+              "payload": {
+                "type": ["null", "object"],
+                "additionalProperties": true,
+                "properties": {
+                  "channel_id": {
+                    "type": ["null", "string"]
+                  },
+                  "inscription": {
+                    "type": ["null", "array"],
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "parent": {
+                    "type": ["null", "string"]
+                  },
+                  "signer": {
+                    "type": ["null", "string"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ops_proofs": {
+      "type": ["null", "array"],
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "Ed25519Sig": {
+            "type": ["null", "array"],
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  }
+}

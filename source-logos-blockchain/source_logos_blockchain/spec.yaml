@@ -1,0 +1,18 @@
+documentationUrl: https://docsurl.com
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Logos Blockchain
+  type: object
+  required:
+    - url
+    - slot_pagination
+  properties:
+    url:
+        title: 'Host URL'
+        type: string
+        description: 'The URL and port that connect to Logos Blockchain API'
+    slot_pagination:
+        title: 'Slot pagination'
+        type: integer
+        description: 'Number of block slots to return at once'
+        default: 10000
