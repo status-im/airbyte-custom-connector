@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "parent_block": {
+      "type": "string"
+    },
+    "slot": {
+      "type": "integer"
+    },
+    "transactions": {
+      "type": "integer"
+    },
+    "block_root": {
+      "type": "string"
+    },
+    "proof_of_leadership": {
+      "type": ["null", "object"],
+      "properties": {
+        "proof": {
+          "type": ["null", "array"],
+          "items": {
+            "type": "integer"
+          }
+        },
+        "entropy_contribution": {
+          "type": ["null", "string"]
+        },
+        "leader_key": {
+          "type": ["null", "string"]
+        },
+        "voucher_cm": {
+          "type": ["null", "string"]
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}
