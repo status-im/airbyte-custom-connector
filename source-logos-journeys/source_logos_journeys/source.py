@@ -15,17 +15,13 @@ from .utils_github import (
     resolve_refs_batch,
 )
 from .utils_parsing import (
-    compute_action_labels,
-    compute_docs_state,
-    compute_red_team_state,
-    compute_rnd_state,
-    extract_action_labels,
     extract_blocked_teams,
     extract_doc_packet,
     extract_documentation,
     extract_journey_type,
     extract_red_team,
     extract_rnd,
+    extract_status,
     extract_target_release,
 )
 
@@ -105,18 +101,8 @@ class JourneysStream(_BaseStream):
         self._source._milestones_cache = milestones
         self._source._milestone_journey_map = ms_journey_map
 
-        # Second pass: compute states, yield records
+        # Second pass: yield records (status comes from the upstream status:<phase> label)
         for pos, node, c, body, labels, rnd, dp, docs, rt in parsed:
-            all_ms_done = bool(rnd["milestones"]) and all(
-                (milestones.get(u) or {}).get("done", False) for u in rnd["milestones"]
-            )
-            docs_ref = refs.get(docs["link"]) if docs["link"] else None
-            rt_ref = refs.get(rt["tracking"]) if rt["tracking"] else None
-
-            rnd_st = compute_rnd_state(rnd, dp, all_ms_done)
-            docs_st = compute_docs_state(docs["link"], docs_ref)
-            rt_st = compute_red_team_state(rt["tracking"], rt_ref)
-
             assignees = [
                 {"login": a["login"], "avatar_url": a.get("avatarUrl", "")}
                 for a in c.get("assignees", {}).get("nodes", [])
@@ -138,19 +124,15 @@ class JourneysStream(_BaseStream):
                 "labels": labels,
                 "journey_type": extract_journey_type(labels),
                 "target_release": extract_target_release(labels),
+                "status": extract_status(labels),
                 "blocked_teams": extract_blocked_teams(labels),
-                "action_labels": extract_action_labels(labels),
                 "rnd_team": rnd["team"],
                 "rnd_milestones": rnd["milestones"],
                 "rnd_date": rnd["date"],
-                "rnd_state": rnd_st,
                 "doc_packet_link": dp,
                 "docs_link": docs["link"],
                 "docs_tracking": docs["tracking"],
-                "docs_state": docs_st,
                 "red_team_tracking": rt["tracking"],
-                "red_team_state": rt_st,
-                "computed_action_labels": compute_action_labels(rnd_st, docs_st, rt_st),
             }
 
 
