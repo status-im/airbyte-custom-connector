@@ -81,64 +81,22 @@ def extract_target_release(labels: List[str]) -> Optional[str]:
 
 
 def extract_blocked_teams(labels: List[str]) -> List[str]:
+    seen = set()
     out = []
     for name in labels:
-        m = re.match(r"^blocked:(.+)$", name, re.IGNORECASE)
-        if m:
-            out.append(m.group(1).strip())
+        m = re.match(r"^blocked-by:(.+)$", name, re.IGNORECASE)
+        if not m:
+            continue
+        team = m.group(1).strip()
+        if team and team not in seen:
+            seen.add(team)
+            out.append(team)
     return out
 
 
-def extract_action_labels(labels: List[str]) -> List[str]:
-    return [n for n in labels if n.startswith("action:")]
-
-
-# ---------------------------------------------------------------------------
-# State
-# ---------------------------------------------------------------------------
-
-def compute_rnd_state(rnd: dict, doc_packet_content: Optional[str], all_milestones_done: bool = False) -> str:
-    if doc_packet_content:
-        return "doc-packet-delivered"
-    if not rnd["team"] or not rnd["milestones"]:
-        return "to-be-confirmed"
-    if all_milestones_done:
-        return "pending-doc-packet"
-    if not rnd["date"]:
-        return "confirmed"
-    return "in-progress"
-
-
-def compute_docs_state(link: Optional[str], ref: Optional[dict]) -> str:
-    if not link:
-        return "waiting"
-    if not ref or ref["state"] == "error":
-        return "in-progress"
-    if ref["type"] == "url":
-        return "merged"
-    if ref["type"] == "pr":
-        if ref["state"] == "merged":
-            return "merged"
-        return "ready-for-review" if ref["state"] == "open" else "merged"
-    return "in-progress"
-
-
-def compute_red_team_state(tracking: Optional[str], ref: Optional[dict]) -> str:
-    if not tracking:
-        return "waiting"
-    if not ref or ref["state"] == "error":
-        return "in-progress"
-    if ref["type"] == "issue":
-        return "done" if ref["state"] == "closed" else "in-progress"
-    return "done"
-
-
-def compute_action_labels(rnd_state: str, docs_state: str, red_team_state: str) -> List[str]:
-    labels = []
-    if rnd_state != "doc-packet-delivered" or docs_state == "ready-for-review":
-        labels.append("action:rnd")
-    if rnd_state == "doc-packet-delivered" and docs_state != "merged":
-        labels.append("action:docs")
-    if docs_state == "ready-for-review" and red_team_state != "done":
-        labels.append("action:red-team")
-    return labels
+def extract_status(labels: List[str]) -> Optional[str]:
+    for name in labels:
+        m = re.match(r"^status:(.+)$", name, re.IGNORECASE)
+        if m:
+            return m.group(1).strip()
+    return None

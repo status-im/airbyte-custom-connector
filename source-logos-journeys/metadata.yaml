@@ -14,7 +14,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: c7f3a1e2-9b4d-4e6f-8a2c-1d5e7f9b3c4a
-  dockerImageTag: 1.0.0
+  dockerImageTag: 1.0.1
   dockerRepository: harbor.status.im/bi/airbyte/source-logos-journeys
   githubIssueLabel: source-logos-journeys
   icon: logos-journeys.svg
