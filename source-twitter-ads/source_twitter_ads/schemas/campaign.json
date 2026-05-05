@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Campaign",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique identifier for the campaign."
+    },
+    "account_id": {
+      "type": ["string", "null"],
+      "description": "The Twitter Ads account id this campaign belongs to. Carried from the parent /accounts/{id}/campaigns call by the connector; the API response payload itself does not include it. Nullable so the schema stays compatible with rows synced before this field was attached."
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of the campaign."
+    },
+    "funding_instrument_id": {
+      "type": "string",
+      "description": "The funding instrument this campaign bills against."
+    },
+    "entity_status": {
+      "type": "string",
+      "enum": ["ACTIVE", "PAUSED", "DELETED", "DRAFT"],
+      "description": "Configured status of the campaign entity."
+    },
+    "effective_status": {
+      "type": ["string", "null"],
+      "description": "Runtime delivery status (e.g. RUNNING, PAUSED_BY_USER, ENDED). Nullable on older rows."
+    },
+    "servable": {
+      "type": ["boolean", "null"],
+      "description": "Whether the campaign is currently eligible to serve."
+    },
+    "reasons_not_servable": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      },
+      "description": "Reasons the campaign is not servable, when applicable."
+    },
+    "daily_budget_amount_local_micro": {
+      "type": ["number", "null"],
+      "description": "The daily budget amount in local micro currency, or null if not set."
+    },
+    "total_budget_amount_local_micro": {
+      "type": ["number", "null"],
+      "description": "The total budget amount in local micro currency, or null if not set."
+    },
+    "currency": {
+      "type": ["string", "null"],
+      "description": "The currency used for the campaign budgets."
+    },
+    "standard_delivery": {
+      "type": ["boolean", "null"],
+      "description": "Whether standard (vs accelerated) delivery is used."
+    },
+    "frequency_cap": {
+      "type": ["integer", "null"],
+      "description": "Frequency cap for the campaign, or null if not set."
+    },
+    "duration_in_days": {
+      "type": ["integer", "null"],
+      "description": "Duration of the campaign in days, or null if not set."
+    },
+    "start_time": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Campaign start timestamp."
+    },
+    "end_time": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Campaign end timestamp; null for open-ended campaigns."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the campaign was created."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the campaign was last updated."
+    },
+    "deleted": {
+      "type": "boolean",
+      "description": "Soft-delete flag from the API."
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "funding_instrument_id",
+    "entity_status",
+    "created_at",
+    "updated_at",
+    "deleted"
+  ]
+}

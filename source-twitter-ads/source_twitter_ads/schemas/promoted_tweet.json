@@ -1,0 +1,38 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": ["null", "string"]
+      },
+      "account_id": {
+        "type": ["null", "string"]
+      },
+      "line_item_id": {
+        "type": ["null", "string"]
+      },
+      "tweet_id": {
+        "type": ["null", "string"]
+      },
+      "entity_status": {
+        "type": ["null", "string"]
+      },
+      "approval_status": {
+        "type": ["null", "string"]
+      },
+      "paused": {
+        "type": ["null", "boolean"]
+      },
+      "deleted": {
+        "type": ["null", "boolean"]
+      },
+      "created_at": {
+        "type": ["null", "string"],
+        "format": "date-time"
+      },
+      "updated_at": {
+        "type": ["null", "string"],
+        "format": "date-time"
+      }
+    }
+}
