@@ -7,6 +7,10 @@
       "type": "string",
       "description": "The unique identifier for the advertiser user."
     },
+    "account_id": {
+      "type": ["string", "null"],
+      "description": "The Twitter Ads account id this line item belongs to. Carried from the parent /accounts/{id}/line_items call by the connector; the API response payload itself does not include it. Nullable so the schema stays compatible with rows synced before this field was attached."
+    },
     "name": {
       "type": "string",
       "description": "The name of the advertisement campaign."

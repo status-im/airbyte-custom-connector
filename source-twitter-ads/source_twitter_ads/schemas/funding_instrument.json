@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FundingInstrument",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "The unique identifier for the funding instrument."
+    },
+    "account_id": {
+      "type": ["string", "null"],
+      "description": "The Twitter Ads account id this funding instrument belongs to. Carried from the parent /accounts/{id}/funding_instruments call by the connector; the API response payload itself does not include it. Nullable so the schema stays compatible with rows synced before this field was attached."
+    },
+    "type": {
+      "type": ["string", "null"],
+      "description": "Funding instrument type (e.g. CREDIT_CARD, CREDIT_LINE, AGENCY_CREDIT_LINE, INSERTION_ORDER)."
+    },
+    "description": {
+      "type": ["string", "null"],
+      "description": "Human-readable description (e.g. last 4 digits of the credit card, agency name)."
+    },
+    "currency": {
+      "type": "string",
+      "description": "ISO 4217 currency code the funding instrument bills in (e.g. USD, EUR)."
+    },
+    "paused": {
+      "type": ["boolean", "null"],
+      "description": "Whether spending against this funding instrument is paused."
+    },
+    "cancelled": {
+      "type": ["boolean", "null"],
+      "description": "Whether the funding instrument has been cancelled."
+    },
+    "able_to_fund": {
+      "type": ["boolean", "null"],
+      "description": "Whether the funding instrument is currently able to fund campaigns."
+    },
+    "reasons_not_able_to_fund": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      },
+      "description": "Reasons the funding instrument is not able to fund, when applicable."
+    },
+    "credit_limit_local_micro": {
+      "type": ["number", "null"],
+      "description": "Credit limit in local micro currency. Only set for credit-line type instruments."
+    },
+    "credit_remaining_local_micro": {
+      "type": ["number", "null"],
+      "description": "Credit remaining in local micro currency. Only set for credit-line type instruments."
+    },
+    "funded_amount_local_micro": {
+      "type": ["number", "null"],
+      "description": "Funded amount in local micro currency."
+    },
+    "io_header": {
+      "type": ["string", "null"],
+      "description": "Insertion order header, when applicable."
+    },
+    "io_reference": {
+      "type": ["string", "null"],
+      "description": "Insertion order reference, when applicable."
+    },
+    "start_time": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Funding instrument start timestamp."
+    },
+    "end_time": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "Funding instrument end timestamp; null for open-ended instruments."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the funding instrument was created."
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the funding instrument was last updated."
+    },
+    "deleted": {
+      "type": "boolean",
+      "description": "Soft-delete flag from the API."
+    }
+  },
+  "required": [
+    "id",
+    "currency",
+    "created_at",
+    "updated_at",
+    "deleted"
+  ]
+}

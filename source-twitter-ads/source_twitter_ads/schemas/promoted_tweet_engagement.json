@@ -17,43 +17,66 @@
         "format": "date-time"
       },
       "impressions": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "likes": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "engagements": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "clicks": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "retweets": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "replies": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "follows": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "app_clicks": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "card_engagements": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "qualified_impressions": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "tweets_send": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "poll_card_vote": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
       },
       "carousel_swipes": {
-        "type": ["null", "number"]
+        "type": ["null", "array"],
+        "items": { "type": ["null", "integer"] }
+      },
+      "date": {
+        "type": ["null", "string"],
+        "format": "date"
+      },
+      "placement": {
+        "type": ["null", "string"]
+      },
+      "granularity": {
+        "type": ["null", "string"]
       }
     }
-  }
+}
