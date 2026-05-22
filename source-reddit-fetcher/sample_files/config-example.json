@@ -3,5 +3,5 @@
     "client_secret": "your_reddit_client_secret",
     "username": "your_reddit_username",
     "subreddits": ["privacy", "technology", "programming"],
-    "days": 31
+    "keywords": []
 }

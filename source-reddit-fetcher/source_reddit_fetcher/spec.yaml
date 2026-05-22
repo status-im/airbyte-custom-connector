@@ -7,7 +7,7 @@ connectionSpecification:
     - client_id
     - client_secret
     - username
-    - days
+    - subreddits
   additionalProperties: true
   properties:
     client_id:
@@ -32,10 +32,7 @@ connectionSpecification:
       minItems: 1
       examples:
         - ["privacy", "technology", "programming"]
-    days:
-      type: integer
-      title: "Days"
-      description: "How many days in the past to look for votes and comments"
-      minimum: 1
-      maximum: 365
-      default: 30
+    keywords:
+        type: array
+        title: "Keywords"
+        description: "Keywords to search in the Subreddits posts"

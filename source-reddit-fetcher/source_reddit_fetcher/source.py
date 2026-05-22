@@ -5,7 +5,7 @@ from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
 from airbyte_cdk.sources.streams.http.requests_native_auth import TokenAuthenticator
 import logging, json, requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import requests.auth
 import pandas as pd
 import time
@@ -13,6 +13,17 @@ import re
 
 logger = logging.getLogger("airbyte")
 BASE_URL = "https://www.reddit.com"
+
+TYPE_PREFIXES = {
+        "t1": "comment",
+        "t2": "account",
+        "t3": "link",
+        "t4": "message",
+        "t5": "subreddit",
+        "t6": "award"
+    }
+
+
 
 class RedditCredentialsAuthentication(TokenAuthenticator):
 
@@ -54,20 +65,15 @@ class RedditStream(HttpStream, ABC):
     # Reddit API rate limits: 60 requests per minute for OAuth
     _min_request_interval = 1.1  # Slightly more than 1 second to be safe
 
-    def __init__(self, days: int, subreddit: str, authenticator: requests.auth.AuthBase):
+    def __init__(self, subreddits: List[str], authenticator: requests.auth.AuthBase):
         super().__init__(authenticator=authenticator)
 
-        self.subreddit = subreddit
-        today_utc = datetime.now(timezone.utc).date()
-        self.start_date = (today_utc - pd.offsets.Day(days)).date()
+        self.subreddits = subreddits
         self._last_request_time = None  # Instance variable for proper rate limiting
 
     @property
     def http_method(self) -> str:
         return "GET"
-
-    def get_updated_state(self, current_stream_state: Mapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
-        return {}
 
     def request_headers(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None) -> Mapping[str, Any]:
         headers = super().request_headers(stream_state, stream_slice, next_page_token)
@@ -118,111 +124,180 @@ class RedditStream(HttpStream, ABC):
     def to_utc_timestamp(self, timestamp: float) -> datetime:
         return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
+    def next_page_token(self, response: requests.Response) -> Optional[dict[str, Any]]:
+        return None
+
     def request_params(self, stream_state: Optional[Mapping[str, Any]], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
         # Use smaller limit to reduce rate limiting
+        params = { "limit": 25 }
+        if next_page_token:
+            params.update(next_page_token)
+        return params
+
+    def stream_slices(self,
+                      sync_mode,
+                      cursor_field: List[str] = None,
+                      stream_state: Mapping[str, Any] = None
+                    ) -> Iterable[Optional[Mapping[str, Any]]]:
+        for subreddit in self.subreddits:
+            yield {"subreddit": subreddit}
+
+
+class Subreddit(RedditStream):
+    primary_key = "display_name"
+
+    def __init__(self, subreddits: List[str],**kwargs):
+        super().__init__(subreddits, **kwargs)
+        logger.info(f"subs: {self.subreddits}")
+
+    def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
+        subreddit = stream_slice.get("subreddit", self.subreddits[0])
+        logger.info(f"Calling subreddit {subreddit}")
+
+        return f"r/{subreddit}/about"
+
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping]:
+        data: dict[str, Any] = response.json().get("data")
+        yield data
+
+
+class Posts(RedditStream):
+    """Unified posts stream that handles multiple subreddits"""
+
+    primary_key = "id"
+    cursor_field = "created_timestamp"
+
+    def __init__(self, subreddits: List[str], **kwargs):
+        # Use first subreddit for parent initialization
+        super().__init__(subreddits=subreddits, **kwargs)
+        self._last_posts = {}
+        self._last_ids = {}
+
+    def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
+        subreddit = stream_slice.get("subreddit", "statusim")
+        return f"r/{subreddit}/new"
+
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping]:
+        subreddit = stream_slice["subreddit"]
+        data: dict[str, Any] = response.json()
+        children: list[dict] = data.get("data", {}).get("children", [])
+
+        for child in children:
+            data = child.get("data", {})
+
+            row = {
+                "id": data.get("id"),
+                "kind_tag": child.get("kind", ""),
+                "kind_name": TYPE_PREFIXES.get(child.get("kind", ""), "unknown"),
+                "subreddit": subreddit,
+                "post_url": BASE_URL + data.get("permalink", ""),
+                "url": data.get("url", ""),
+                "domain": data.get("domain", ""),
+                "created_timestamp": datetime.fromtimestamp(data.get("created_utc"), tz=timezone.utc),
+                "timezone": "UTC",
+                "title": data.get("title", ""),
+                "text": data.get("selftext", ""),
+                "html_text": data.get("selftext_html", ""),
+                "author": data.get("author", ""),
+                "author_fullname": data.get("author", ""),
+                "downs": data.get("downs", 0),
+                "ups": data.get("ups", 0),
+                "score": data.get("score", 0),
+                "upvote_ratio": data.get("upvote_ratio", 0.0),
+                "subreddit_subscribers": data.get("subreddit_subscribers", 0),
+            }
+            yield row
+
+    def next_page_token(self, response: requests.Response) -> Optional[dict[str, Any]]:
+        data = response.json().get("data")
+        if not data.get('after'):
+            return None
+        last_child= data.get('children')[data.get('dist')-1]
+        last_post_date = last_child.get('data').get("created_utc")
+        last_day = (datetime.now(timezone.utc) - timedelta(days=1)).timestamp()
+
+        if last_post_date > last_day:
+            last_post_id = data.get("after")
+            logger.info(f"NPT - next page token {last_post_id}")
+            return {"before": last_post_id}
+        logger.info("NPT - no next Page token")
+        return None
+
+class SearchPosts(RedditStream):
+    def __init__(self, keywords: List[str],**kwargs):
+        super().__init__(**kwargs)
+        self.keywords = keywords
+
+    def stream_slices(self, sync_mode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None ) -> Iterable[Optional[Mapping[str, Any]]]:
+        for subreddit in self.subreddits:
+            for keyword in self.keywords:
+                yield {"subreddit": subreddit, "keyword": keyword}
+
+
+
+    def request_params(self, stream_state: Optional[Mapping[str, Any]], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
         params = {
-            "limit": 25
+            "limit": 25,
+            "q": stream_slice.get("keyword"),
+            "restrict_sr": "on",
+            "t": "day"
         }
         if next_page_token:
             params.update(next_page_token)
 
         return params
 
-class MultiSubredditPosts(RedditStream):
-    """Unified posts stream that handles multiple subreddits"""
-
-    type_prefixes = {
-        "t1": "comment",
-        "t2": "account",
-        "t3": "link",
-        "t4": "message",
-        "t5": "subreddit",
-        "t6": "award"
-    }
-
-    primary_key = "id"
-    cursor_field = "created_timestamp"
-
-    def __init__(self, days: int, subreddits: List[str], authenticator: requests.auth.AuthBase):
-        # Use first subreddit for parent initialization
-        super().__init__(days=days, subreddit=subreddits[0], authenticator=authenticator)
-        self.subreddits = subreddits
-        self._last_posts = {}
-        self._last_ids = {}
-
-    @property
-
-    def stream_slices(self, sync_mode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None) -> Iterable[Optional[Mapping[str, Any]]]:
-        """Create slices for each subreddit"""
-        for subreddit in self.subreddits:
-            yield {"subreddit": subreddit}
-
     def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
-        subreddit = stream_slice["subreddit"] if stream_slice else self.subreddit
-        return f"r/{subreddit}/new"
+        subreddit = stream_slice.get("subreddit", "statusim")
+        return f"r/{subreddit}/search"
 
     def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping]:
-        subreddit = stream_slice["subreddit"] if stream_slice else self.subreddit
+        subreddit = stream_slice["subreddit"]
         data: dict[str, Any] = response.json()
         children: list[dict] = data.get("data", {}).get("children", [])
 
         for child in children:
             data = child.get("data", {})
-            if not data:
-                continue
+            row = {
+                "id": data.get("id"),
+                "kind_tag": child.get("kind", ""),
+                "kind_name": TYPE_PREFIXES.get(child.get("kind", ""), "unknown"),
+                "subreddit": subreddit,
+                "post_url": BASE_URL + data.get("permalink", ""),
+                "url": data.get("url", ""),
+                "domain": data.get("domain", ""),
+                "created_timestamp": datetime.fromtimestamp(data.get("created_utc"), tz=timezone.utc),
+                "timezone": "UTC",
+                "title": data.get("title", ""),
+                "text": data.get("selftext", ""),
+                "html_text": data.get("selftext_html", ""),
+                "author": data.get("author", ""),
+                "author_fullname": data.get("author", ""),
+                "downs": data.get("downs", 0),
+                "ups": data.get("ups", 0),
+                "score": data.get("score", 0),
+                "upvote_ratio": data.get("upvote_ratio", 0.0),
+                "subreddit_subscribers": data.get("subreddit_subscribers", 0),
+                "keyword": stream_slice.get("keyword")
+            }
+            yield row
 
-            try:
-                created_utc = data.get("created_utc")
-                if created_utc:
-                    created_timestamp = datetime.fromtimestamp(created_utc, tz=timezone.utc)
-                    self._last_posts[subreddit] = created_timestamp.date()
-                else:
-                    created_timestamp = None
-                    logger.debug(f"Post {data.get('id', 'unknown')} has no created_utc timestamp")
+    def next_page_token(self, response: requests.Response) -> Optional[dict[str, Any]]:
+        data = response.json().get("data")
+        if not data.get("after"):
+            return None
+        last_child= data.get('children')[data.get('dist')-1]
+        last_post_date = last_child.get('data').get("created_utc")
+        last_day = (datetime.now(timezone.utc) - timedelta(days=1)).timestamp()
 
-                # Use post ID or generate a unique identifier
-                post_id = data.get("id", f"unknown_{hash(str(data))}")
+        if last_post_date > last_day:
+            last_post_id = data.get("after")
+            logger.info(f"NPT - next page token {last_post_id}")
+            return {"before": last_post_id}
+        logger.info("NPT - no next Page token")
+        return None
 
-                row = {
-                    "id": f"{subreddit}-{post_id}",
-                    "kind_tag": child.get("kind", ""),
-                    "kind_name": self.type_prefixes.get(child.get("kind", ""), "unknown"),
-                    "subreddit": subreddit,
-                    "post_id": post_id,
-                    "post_url": BASE_URL + data.get("permalink", ""),
-                    "url": data.get("url", ""),
-                    "domain": data.get("domain", ""),
-                    "created_timestamp": created_timestamp,
-                    "timezone": "UTC",
-                    "title": data.get("title", ""),
-                    "text": data.get("selftext", ""),
-                    "html_text": data.get("selftext_html", ""),
-                    "author": data.get("author", ""),
-                    "author_fullname": data.get("author", ""),
-                    "downs": data.get("downs", 0),
-                    "ups": data.get("ups", 0),
-                    "score": data.get("score", 0),
-                    "upvote_ratio": data.get("upvote_ratio", 0.0),
-                    "subreddit_subscribers": data.get("subreddit_subscribers", 0),
-                    "raw": json.dumps(data)
-                }
-                yield row
-
-                if created_utc:
-                    self._last_ids[subreddit] = f"t5_{post_id}"
-
-            except Exception as e:
-                logger.warning(f"Failed to parse post {data.get('id', 'unknown')} from r/{subreddit}: {str(e)}")
-                continue
-
-    def next_page_token(self, response: requests.Response, stream_slice: Mapping[str, Any] = None) -> Optional[dict[str, Any]]:
-        subreddit = stream_slice["subreddit"] if stream_slice else self.subreddit
-
-        if subreddit in self._last_posts and self.start_date < self._last_posts[subreddit]:
-            return {"before": self._last_ids[subreddit]}
-
-
-class MultiSubredditComments(HttpSubStream):
+class Comments(HttpSubStream, Posts):
     """Unified comments stream that handles multiple subreddits"""
 
     primary_key = "id"
@@ -230,72 +305,8 @@ class MultiSubredditComments(HttpSubStream):
     url_base = "https://oauth.reddit.com/"
     _min_request_interval = 1.1
 
-    def __init__(self, days: int, subreddits: List[str], authenticator: requests.auth.AuthBase, parent):
-        super().__init__(parent=parent, authenticator=authenticator)
-        self.subreddits = subreddits
-        self.days = days
-        today_utc = datetime.now(timezone.utc).date()
-        self.start_date = (today_utc - pd.offsets.Day(days)).date()
-        self._last_request_time = None
-
-    @property
-    def http_method(self) -> str:
-        return "GET"
-
-    def get_updated_state(self, current_stream_state: Mapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
-        return {}
-
-    def request_headers(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None) -> Mapping[str, Any]:
-        headers = super().request_headers(stream_state, stream_slice, next_page_token)
-        headers["User-Agent"] = f"python:airbyte-reddit-connector:v1.0 (by u/airbyte-user)"
-        return headers
-
-    def backoff_time(self, response: requests.Response) -> Optional[float]:
-        if response.status_code == 429:
-            wait = response.headers.get("Retry-After")
-            if wait:
-                wait_time = float(wait)
-            else:
-                if response.text:
-                    match = re.search(r'please wait (\d+) second', response.text, re.IGNORECASE)
-                    if match:
-                        wait_time = float(match.group(1))
-                    else:
-                        wait_time = 10.0
-                else:
-                    wait_time = 10.0
-
-            logger.warning(f"Rate limited (429)! Waiting {wait_time}s before retry...")
-            return wait_time
-
-        if response.status_code >= 500:
-            return 5.0
-
-        return None
-
-    def _send_request(self, request: requests.PreparedRequest, request_kwargs: Mapping[str, Any]) -> requests.Response:
-        if self._last_request_time:
-            time_since_last = time.time() - self._last_request_time
-            if time_since_last < self._min_request_interval:
-                sleep_time = self._min_request_interval - time_since_last
-                logger.info(f"Rate limiting: sleeping {sleep_time:.2f}s between requests")
-                time.sleep(sleep_time)
-
-        self._last_request_time = time.time()
-        return super()._send_request(request, request_kwargs)
-
-    def to_utc_timestamp(self, timestamp: float) -> datetime:
-        return datetime.fromtimestamp(timestamp, tz=timezone.utc)
-
-    def request_params(self, stream_state: Optional[Mapping[str, Any]], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
-        params = {
-            "limit": 25
-        }
-        if next_page_token:
-            params.update(next_page_token)
-        return params
-
-    @property
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
         post: dict = stream_slice.get("parent")
@@ -305,6 +316,7 @@ class MultiSubredditComments(HttpSubStream):
 
     def parse_response(self, response: requests.Response, *, stream_state: Mapping[str, Any], stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None):
         _, comments = response.json()
+        logging.info(f"Comment found : {comments}")
         post_id = response.url.split("/")[-1].split("?")[0]
         subreddit = stream_slice.get("parent", {}).get("subreddit", "unknown")
 
@@ -341,7 +353,6 @@ class MultiSubredditComments(HttpSubStream):
             except Exception as e:
                 logger.warning(f"Failed to parse comment {child_data.get('id', 'unknown')} from r/{subreddit}: {str(e)}")
                 continue
-
     def next_page_token(self, response: requests.Response):
         _, comments = response.json()
         before = comments.get("data", {}).get("before")
@@ -385,19 +396,19 @@ class SourceRedditFetcher(AbstractSource):
             username=config["username"]
         )
 
-        subreddits = config.get("subreddits", [])
-        if not subreddits and config.get("subreddit"):
-            subreddits = [config["subreddit"]]
+        args = {
+            "subreddits": config.get("subreddits"),
+            "authenticator": auth
+        }
 
-        if not subreddits:
-            # If no subreddits configured, raise an error
-            raise ValueError("No subreddits specified in configuration. Please provide either 'subreddits' array or 'subreddit' string.")
+        subreddits = Subreddit(**args)
+        posts_stream = Posts(**args)
+        comments_stream = Comments(**args, parent=posts_stream)
 
-        logger.info(f"Creating unified streams for {len(subreddits)} subreddit(s): {', '.join(subreddits)}")
-
-        posts_stream = MultiSubredditPosts(days=config["days"], subreddits=subreddits, authenticator=auth)
-        comments_stream = MultiSubredditComments(days=config["days"], subreddits=subreddits, authenticator=auth, parent=posts_stream)
-
-        streams = [posts_stream, comments_stream]
+        streams = [subreddits, posts_stream, comments_stream]
+        if "keywords" in config and len(config["keywords"]) > 0:
+            logging.info(f"Adding Keyword search for {config.get('keywords')}")
+            searchs_stream = SearchPosts(config.get("keywords"), **args)
+            streams.append(searchs_stream)
         logger.info(f"Created unified streams: {[stream.name for stream in streams]}")
         return streams

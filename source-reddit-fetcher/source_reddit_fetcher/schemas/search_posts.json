@@ -61,7 +61,7 @@
     "subreddit_subscribers": {
       "type": ["null", "integer"]
     },
-    "raw": {
+    "keyword": {
       "type": "string"
     }
   }

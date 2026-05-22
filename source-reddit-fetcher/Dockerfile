@@ -1,7 +1,13 @@
 FROM --platform=linux/amd64 airbyte/python-connector-base:1.1.0
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+COPY setup.py requirements.txt ./airbyte/integration_code/
+
+# Force reinstall the correct airbyte-cdk version to avoid conflicts
+RUN pip uninstall -y airbyte-cdk
+RUN pip install ./airbyte/integration_code
+
+
 
 COPY . ./airbyte/integration_code
 RUN pip install ./airbyte/integration_code

@@ -13,7 +13,9 @@ The connector takes the following input:
 - `client_secret` - Reddit's client secret for your account
 - `username` - your Reddit username that has been used to generate the `client_id` and `client_secret`
 - `subreddits` - array of subreddit names to monitor (e.g., ["privacy", "technology", "programming"])
-- `days` - used to calculate the stop date. Before that date votes and comments will not be monitored. Calculation: $stop\ date = today - days$
+- `keywords` - array of keyword to search in the subreddits posts.
+
+The connector will search for the Posts of the Last day.
 
 #### Configuration Example
 
@@ -23,7 +25,7 @@ The connector takes the following input:
     "client_secret": "your_reddit_client_secret", 
     "username": "your_reddit_username",
     "subreddits": ["privacy", "technology", "programming"],
-    "days": 31
+    "keywords": []
 }
 ```
 
@@ -31,10 +33,10 @@ The connector takes the following input:
 
 The connector will return the following streams (one pair per subreddit):
 
-* **Posts streams**: `posts_{subreddit_name}` - Contains posts from each subreddit ([schema](./source_reddit_fetcher/schemas/posts.json))  
+* **Subreddit** - General information from each subreddit in the config ([schema][./source_reddit_fetcher/schemas/subreddit.json])
+* **Posts streams**: `posts_{subreddit_name}` - Contains posts from each subreddit ([schema](./source_reddit_fetcher/schemas/posts.json))
+* **SearchPosts streams**: Post containing the keywords set in parameters ([schema](./source_reddit_fetcher/schemas/search_posts.json.json))
 * **Comments streams**: `comments_{subreddit_name}` - Contains comments from posts in each subreddit ([schema](./source_reddit_fetcher/schemas/comments.json))
-
-
 
 ## Local development
 
@@ -65,9 +67,9 @@ python main.py read --config sample_files/config-example.json --catalog sample_f
 ### Locally running the connector docker image
 
 ```bash
-docker build -t airbyte/source-reddit-fetcher:dev .
+docker build -t harbor.status.im/bi/airbyte/source-reddit-fetcher:dev .
 # Running the spec command against your patched connector
-docker run airbyte/source-reddit-fetcher:dev spec
+docker run harbor.status.im/bi/airbyte/source-reddit-fetcher:dev spec
 ```
 
 #### Run
@@ -77,17 +79,17 @@ Then run any of the connector commands as follows:
 #### Linux / MAC OS
 
 ```
-docker run --rm airbyte/source-reddit-fetcher:dev spec
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-reddit-fetcher:dev check --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-reddit-fetcher:dev discover --config /sample_files/config-example.json
-docker run --rm -v $(pwd)/sample_files:/sample_files airbyte/source-reddit-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json  
+docker run --rm harbor.status.im/bi/airbyte/source-reddit-fetcher:dev spec
+docker run --rm -v $(pwd)/sample_files:/sample_files harbor.status.im/bi/airbyte/source-reddit-fetcher:dev check --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files harbor.status.im/bi/airbyte/source-reddit-fetcher:dev discover --config /sample_files/config-example.json
+docker run --rm -v $(pwd)/sample_files:/sample_files harbor.status.im/bi/airbyte/source-reddit-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json  
 ```
 
 ### Windows
 
 ```
-docker run --rm airbyte/source-reddit-fetcher:dev spec
-docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-reddit-fetcher:dev check --config /sample_files/config-example.json
-docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-reddit-fetcher:dev discover --config /sample_files/config-example.json
-docker run --rm -v "$PWD\sample_files:/sample_files" airbyte/source-reddit-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
+docker run --rm harbor.status.im/bi/airbyte/source-reddit-fetcher:dev spec
+docker run --rm -v "$PWD\sample_files:/sample_files" harbor.status.im/bi/airbyte/source-reddit-fetcher:dev check --config /sample_files/config-example.json
+docker run --rm -v "$PWD\sample_files:/sample_files" harbor.status.im/bi/airbyte/source-reddit-fetcher:dev discover --config /sample_files/config-example.json
+docker run --rm -v "$PWD\sample_files:/sample_files" harbor.status.im/bi/airbyte/source-reddit-fetcher:dev read --config /sample_files/config-example.json --catalog /sample_files/configured_catalog.json
 ```
