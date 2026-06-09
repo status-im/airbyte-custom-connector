@@ -38,6 +38,9 @@
     "customDiscordUsername": {
       "type": ["null", "string"]
     },
+    "twitterFeed": {
+      "type": ["null", "string"]
+    },
     "supervisor": {
       "type": ["null", "string"]
     },
