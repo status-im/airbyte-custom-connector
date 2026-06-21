@@ -4,6 +4,7 @@ from datetime import datetime
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 
+from .followers import AccountFollowers
 from .tweets_stream import Account, AccountsAdditional, Tweet, TweetMetrics
 from .tweets_comments_stream import TweetComments
 from .spaces_stream import Space, GetSpaceIds
@@ -58,6 +59,7 @@ class SourceTwitterFetcher(AbstractSource):
 
         streams = [
             Account(authenticator=auth, account_ids=config["account_ids"]),
+            AccountFollowers(account_ids=config["account_ids"], authenticator=bearer_auth),
             tweet,
             TweetMetrics(**default_args),
             TweetComments(**default_args)
