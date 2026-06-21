@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "ip": {
+      "type": ["null", "string"]
+    },
+    "peer_id": {
+      "type": ["null", "string"]
+    },
+    "node": {
+      "type": ["null", "string"]
+    },
+    "hour": {
+      "type": ["null", "string"]
+    },
+    "lat": {
+      "type": ["null", "number"]
+    },
+    "lon": {
+      "type": ["null", "number"]
+    },
+    "country": {
+      "type": ["null", "string"]
+    },
+    "country_code": {
+      "type": ["null", "string"]
+    },
+    "city": {
+      "type": ["null", "string"]
+    }
+  }
+}

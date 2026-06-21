@@ -1,0 +1,7 @@
+{
+  "username": "strode",
+  "password": "REPLACE_ME",
+  "nodes": ["0"],
+  "base_url": "https://testnet.blockchain.logos.co/internal/node-data",
+  "start_date": "2026-04-22-00"
+}

@@ -1,0 +1,25 @@
+data:
+  allowedHosts:
+  registries:
+    oss:
+      enabled: false
+    cloud:
+      enabled: false
+  connectorBuildOptions:
+    baseImage: docker.io/airbyte/python-connector-base:1.0.0@sha256:dd17e347fbda94f7c3abff539be298a65af2d7fc27a307d89297df1081a45c27
+  connectorSubtype: api
+  connectorType: source
+  definitionId: 5386b986-cf78-49bc-ada2-729e22075b30
+  dockerImageTag: 1.0.0
+  dockerRepository: harbor.status.im/bi/airbyte/source-logos-testnet-logs
+  githubIssueLabel: source-logos-testnet-logs
+  icon: logos-testnet-logs.svg
+  license: MIT
+  name: Logos Testnet Logs
+  releaseDate: TODO
+  supportLevel: community
+  releaseStage: alpha
+  documentationUrl: https://docs.airbyte.com/integrations/sources/logos-testnet-logs
+  tags:
+    - language:python
+metadataSpecVersion: "1.0"
