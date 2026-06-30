@@ -18,6 +18,10 @@ REQUEST_SLEEP_SECONDS = 6
 MAX_RESULTS_PER_QUERY = 1000
 PER_PAGE = 100
 
+RATE_LIMIT_MAX_RETRIES = 5
+RATE_LIMIT_DEFAULT_WAIT_SECONDS = 60
+RATE_LIMIT_MAX_WAIT_SECONDS = 300
+
 
 def _load_schema(name: str) -> dict:
     with open(os.path.join(SCHEMAS_DIR, f"{name}.json"), "r") as f:
@@ -31,12 +35,51 @@ def _github_headers(token: str) -> dict:
     }
 
 
+def _is_rate_limited(resp: requests.Response) -> bool:
+    """GitHub signals both primary and secondary rate limits with 403/429."""
+    if resp.status_code not in (403, 429):
+        return False
+    if resp.headers.get("Retry-After"):
+        return True
+    if resp.headers.get("X-RateLimit-Remaining") == "0":
+        return True
+    return "rate limit" in resp.text.lower()
+
+
+def _rate_limit_wait_seconds(resp: requests.Response, attempt: int) -> int:
+    """Follow GitHub's documented backoff guidance for rate-limit responses."""
+    retry_after = resp.headers.get("Retry-After", "")
+    if retry_after.isdigit():
+        wait = int(retry_after) + 1
+    elif resp.headers.get("X-RateLimit-Remaining") == "0" and resp.headers.get(
+        "X-RateLimit-Reset", ""
+    ).isdigit():
+        reset_at = int(resp.headers["X-RateLimit-Reset"])
+        wait = max(reset_at - int(time.time()), 1) + 1
+    else:
+        # No explicit window: wait at least a minute, then back off exponentially.
+        wait = RATE_LIMIT_DEFAULT_WAIT_SECONDS * (2 ** attempt)
+    return min(wait, RATE_LIMIT_MAX_WAIT_SECONDS)
+
+
 def _search_page(token: str, query: str, page: int, per_page: int) -> dict:
-    resp = requests.get(
-        GITHUB_SEARCH_URL,
-        params={"q": query, "page": page, "per_page": per_page},
-        headers=_github_headers(token),
-    )
+    resp = None
+    for attempt in range(RATE_LIMIT_MAX_RETRIES + 1):
+        resp = requests.get(
+            GITHUB_SEARCH_URL,
+            params={"q": query, "page": page, "per_page": per_page},
+            headers=_github_headers(token),
+        )
+        if _is_rate_limited(resp) and attempt < RATE_LIMIT_MAX_RETRIES:
+            wait = _rate_limit_wait_seconds(resp, attempt)
+            logger.warning(
+                f"GitHub rate limit hit (status {resp.status_code}) on page {page}; "
+                f"waiting {wait}s before retry {attempt + 1}/{RATE_LIMIT_MAX_RETRIES}."
+            )
+            time.sleep(wait)
+            continue
+        break
+
     resp.raise_for_status()
     return resp.json()
 
@@ -160,6 +203,14 @@ class SourceGithubSearchCount(AbstractSource):
                 headers=_github_headers(config["github_token"]),
             )
             if resp.status_code == 200:
+                return True, None
+            if resp.status_code == 401:
+                return False, f"GitHub authentication failed: {resp.text}"
+            if _is_rate_limited(resp):
+                logger.warning(
+                    "GitHub rate limit hit during connection check; "
+                    "treating credentials as valid."
+                )
                 return True, None
             return False, f"GitHub API returned status {resp.status_code}: {resp.text}"
         except Exception as e:
