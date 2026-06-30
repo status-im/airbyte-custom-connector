@@ -14,7 +14,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-  dockerImageTag: 1.1.0
+  dockerImageTag: 1.2.0
   dockerRepository: harbor.status.im/bi/airbyte/source-github-search-count
   githubIssueLabel: source-github-search-count
   license: MIT
