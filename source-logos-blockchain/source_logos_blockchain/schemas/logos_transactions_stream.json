@@ -3,25 +3,19 @@
   "type": "object",
   "additionalProperties": true,
   "properties": {
+    "id": {
+      "type": ["null", "string"]
+    },
     "slot": {
-      "type": "integer"
+      "type": ["null", "integer"]
     },
     "block_id": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "mantle_tx": {
       "type": ["null", "object"],
       "additionalProperties": true,
       "properties": {
-        "hash": {
-          "type": ["null", "string"]
-        },
-        "execution_gas_price": {
-          "type": ["null", "integer"]
-        },
-        "storage_gas_price": {
-          "type": ["null", "integer"]
-        },
         "ops": {
           "type": ["null", "array"],
           "items": {
@@ -39,10 +33,7 @@
                     "type": ["null", "string"]
                   },
                   "inscription": {
-                    "type": ["null", "array"],
-                    "items": {
-                      "type": "integer"
-                    }
+                    "type": ["null", "string"]
                   },
                   "parent": {
                     "type": ["null", "string"]
@@ -64,10 +55,7 @@
         "additionalProperties": true,
         "properties": {
           "Ed25519Sig": {
-            "type": ["null", "array"],
-            "items": {
-              "type": "integer"
-            }
+            "type": ["null", "string"]
           }
         }
       }

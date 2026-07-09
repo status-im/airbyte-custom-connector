@@ -4,9 +4,17 @@ This connector is experimental and will change in future, when Logos moves to ma
 
 ## Usage
 
-This Airbyte connector extracts data from a Logos Blockchain Node.
+This Airbyte connector extracts data from a **[Logos Blockchain Node 0.2](https://github.com/logos-blockchain/logos-blockchain/releases/tag/0.2.0)**.
 
 ## Local development
+
+To run the Airbyte connector locally:
+
+1. Make sure [Logos Blockchain Node 0.2.0](https://github.com/logos-blockchain/logos-blockchain/releases/tag/0.2.0) is set up.
+
+2. By default, the Logos Blockchain node does not expose its IP address externally. For example, if the blockchain is running on a Raspberry Pi and the Airbyte connector is running on a different device, you'll need to establish an `ssh` tunnel: `ssh -N -L 8080:localhost:8080 your-username@ip-address`.
+
+3. Update the [config](./sample_files/config-example.json) `url` field to `http://host.docker.internal:8080/`.
 
 ### Prerequisites
 

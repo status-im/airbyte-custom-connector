@@ -4,28 +4,26 @@
   "additionalProperties": true,
   "properties": {
     "id": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "parent_block": {
-      "type": "string"
+      "type": ["null", "string"]
     },
     "slot": {
-      "type": "integer"
-    },
-    "transactions": {
-      "type": "integer"
+      "type": ["null", "integer"]
     },
     "block_root": {
-      "type": "string"
+      "type": ["null", "string"]
+    },
+    "transactions": {
+      "type": ["null", "integer"]
     },
     "proof_of_leadership": {
       "type": ["null", "object"],
+      "additionalProperties": true,
       "properties": {
         "proof": {
-          "type": ["null", "array"],
-          "items": {
-            "type": "integer"
-          }
+          "type": ["null", "string"]
         },
         "entropy_contribution": {
           "type": ["null", "string"]
@@ -36,8 +34,7 @@
         "voucher_cm": {
           "type": ["null", "string"]
         }
-      },
-      "additionalProperties": true
+      }
     }
   }
 }

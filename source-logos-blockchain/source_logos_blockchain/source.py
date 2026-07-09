@@ -99,6 +99,7 @@ class LogosTransactionsStream(LogosBlockchainStream):
             transactions: list[dict] = block.pop("transactions")
             for transaction in transactions:
                 point = {
+                    "id": transaction["mantle_tx"]["hash"],
                     "block_id": block["header"]["id"],
                     "slot": block["header"]["slot"],
                     **transaction,
@@ -109,7 +110,7 @@ class SourceLogosBlockchain(AbstractSource):
 
     def check_connection(self, logger: logging.Logger, config: Mapping[str, Any]) -> Tuple[bool, any]:
         info = self.get_blockchain_info(config)
-        is_online = info["mode"].lower() == "online"
+        is_online = info["state"].lower() == "online"
         return is_online, None if is_online else f"Logos Node [{config['url']}] is not online..."
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
@@ -129,7 +130,7 @@ class SourceLogosBlockchain(AbstractSource):
         url = self.parse_url(config["url"]) + "/cryptarchia/info"
         response = requests.get(url)
         response.raise_for_status()
-        return response.json()
+        return response.json()["cryptarchia_info"]
 
     def parse_url(self, url: str) -> str:
         url = url[:-1] if url.endswith("/") else url
