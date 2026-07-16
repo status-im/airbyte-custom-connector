@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "hash": {
+      "type": ["null", "string"]
+    },
+    "type": {
+      "type": ["null", "string"],
+      "description": "Transaction variant key from the RPC payload, lowercased (e.g. public, private)"
+    },
+    "accounts": {
+      "type": ["null", "integer"],
+      "description": "Number of account_ids on the transaction"
+    },
+    "account_ids": {
+      "type": ["null", "array"],
+      "items": {
+        "type": ["null", "string"]
+      }
+    },
+    "block_id": {
+      "type": ["null", "integer"]
+    },
+    "block_hash": {
+      "type": ["null", "string"]
+    },
+    "block_timestamp": {
+      "type": ["null", "string"],
+      "format": "date-time"
+    },
+    "timezone": {
+      "type": ["null", "string"]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "block_id": {
+      "type": ["null", "integer"],
+      "description": "Sequential block height, as passed to getBlockById"
+    },
+    "hash": {
+      "type": ["null", "string"]
+    },
+    "prev_block_hash": {
+      "type": ["null", "string"]
+    },
+    "timestamp": {
+      "type": ["null", "string"],
+      "format": "date-time",
+      "description": "Block timestamp, converted from the RPC millisecond epoch"
+    },
+    "timezone": {
+      "type": ["null", "string"]
+    },
+    "total_transactions": {
+      "type": ["null", "integer"]
+    },
+    "public_transactions": {
+      "type": ["null", "integer"]
+    },
+    "private_transactions": {
+      "type": ["null", "integer"]
+    },
+    "status": {
+      "type": ["null", "string"],
+      "description": "The block's bedrock_status as reported by the indexer"
+    },
+    "rpc_method": {
+      "type": ["null", "string"]
+    }
+  }
+}
