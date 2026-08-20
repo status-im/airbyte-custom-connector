@@ -1,0 +1,68 @@
+documentationUrl: https://docs.airbyte.com/integrations/sources/elasticsearch-query
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Elasticsearch Query Spec
+  type: object
+  required:
+    - endpoint
+    - index
+    - start_date
+  properties:
+    endpoint:
+      type: string
+      description: Elasticsearch base URL, with no index path (e.g. https://elastic.example.com:9200).
+      examples:
+        - https://elasticsearch.example.com:9200
+    index:
+      type: string
+      description: Index name or pattern to search (e.g. logstash-* or logs-generic-default).
+      examples:
+        - logstash-*
+    queries:
+      type: array
+      description: One or more Lucene queries. Each item becomes its own Airbyte stream with its own incremental cursor. Prefer this over a single `query`.
+      items:
+        type: object
+        required:
+          - name
+          - query
+        properties:
+          name:
+            type: string
+            description: Stream name in the destination (letters, numbers, underscores).
+            examples:
+              - logos_dev_peers
+          query:
+            type: string
+            description: Lucene query_string for this stream.
+            examples:
+              - 'fleet:"logos.dev" AND message:"Added address /ip4/"'
+    query:
+      type: string
+      description: Fallback if `queries` is empty. Creates a single stream named `documents`. Empty means match all documents in the index (not recommended for large logstash indices).
+      examples:
+        - 'fleet:"logos.dev" AND message:"Added address /ip4/"'
+    start_date:
+      type: string
+      description: Inclusive lower bound for the first sync, in ISO-8601 UTC. Incremental syncs continue from the last cursor.
+      examples:
+        - "2026-08-05T00:00:00Z"
+    cursor_field:
+      type: string
+      description: Date field used as the incremental cursor.
+      default: "@timestamp"
+    page_size:
+      type: integer
+      description: Hits per search_after page (max 10000).
+      default: 500
+    username:
+      type: string
+      description: Basic-auth username. Ignored if api_key is set.
+    password:
+      type: string
+      description: Basic-auth password. Ignored if api_key is set.
+      airbyte_secret: true
+    api_key:
+      type: string
+      description: Elasticsearch API key (sent as Authorization ApiKey). Takes precedence over username/password.
+      airbyte_secret: true

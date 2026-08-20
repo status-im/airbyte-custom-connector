@@ -1,0 +1,44 @@
+documentationUrl: https://docs.airbyte.com/integrations/sources/logos-testnet-logs
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Logos Testnet Logs Spec
+  type: object
+  required:
+    - username
+    - password
+    - nodes
+  properties:
+    username:
+      type: string
+      description: Basic-auth username for the testnet index server.
+      default: strode
+    password:
+      type: string
+      description: Basic-auth password for the testnet index server.
+      airbyte_secret: true
+    nodes:
+      type: array
+      description: List of node IDs to fetch logs for.
+      items:
+        type: string
+      default:
+        - "0"
+        - "1"
+        - "2"
+        - "3"
+    base_url:
+      type: string
+      description: Base URL of the node-data index (without trailing slash).
+      default: https://testnet.blockchain.logos.co/internal/node-data
+    start_date:
+      type: string
+      description: On the first sync (empty state), the earliest hour to fetch logs from (YYYY-MM-DD-HH, UTC; inclusive). If omitted, defaults to 2 hours ago.
+      pattern: "^\\d{4}-\\d{2}-\\d{2}-\\d{2}$"
+      examples:
+        - "2026-04-15-14"
+    end_date:
+      type: string
+      description: Latest hour to fetch logs up to (YYYY-MM-DD-HH, UTC; inclusive). If omitted, defaults to the last complete UTC hour at sync start (i.e. now - 1h, minute/second truncated), pinned across all nodes and streams so they stop at the same cutoff.
+      pattern: "^\\d{4}-\\d{2}-\\d{2}-\\d{2}$"
+      examples:
+        - "2026-04-15-23"
