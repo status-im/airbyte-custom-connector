@@ -1,0 +1,84 @@
+documentationUrl: https://docs.airbyte.com/integrations/sources/elasticsearch-query
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: Elasticsearch Query Spec
+  type: object
+  required:
+    - endpoint
+    - index
+    - start_date
+    - username
+    - password
+    - queries
+  properties:
+    endpoint:
+      type: string
+      description: Elasticsearch base URL, with no index path (e.g. http://host:9200).
+      examples:
+        - http://elasticsearch.example.com:9200
+    index:
+      type: string
+      description: Index name or pattern to search (e.g. logstash-* or logs-generic-default).
+      examples:
+        - logstash-*
+    queries:
+      type: array
+      minItems: 1
+      description: One or more Lucene queries. Each item becomes its own Airbyte stream with its own incremental cursor.
+      items:
+        type: object
+        required:
+          - name
+          - query
+        properties:
+          name:
+            type: string
+            description: Stream name in the destination (letters, numbers, underscores).
+            examples:
+              - logos_dev_peers
+          query:
+            type: string
+            description: Lucene query_string for this stream.
+            examples:
+              - 'fleet:"logos.dev" AND message:"Added address /ip4/"'
+    start_date:
+      type: string
+      description: Inclusive lower bound for the first sync, in ISO-8601 UTC. Incremental syncs continue from the last cursor.
+      examples:
+        - "2026-08-05T00:00:00Z"
+    cursor_field:
+      type: string
+      description: Date field used as the incremental cursor.
+      default: "@timestamp"
+    extra_fields:
+      type: array
+      description: Extra _source fields to expose as destination columns.
+      items:
+        type: string
+      examples:
+        - ["kubernetes_namespace", "trace_id"]
+    page_size:
+      type: integer
+      description: Hits per search_after page (max 10000). Lower this if the cluster is slow or the connection drops.
+      default: 500
+    request_timeout:
+      type: integer
+      description: Seconds to wait for a search response (read timeout).
+      default: 60
+    connect_timeout:
+      type: integer
+      description: Seconds to wait for the TCP connection. Kept short so a dropped route fails fast and is retried.
+      default: 10
+    max_retries:
+      type: integer
+      description: Retries per search request on connection timeouts, 429 and 5xx, with exponential backoff.
+      default: 5
+    username:
+      type: string
+      order: 3
+      description: Basic-auth username.
+    password:
+      type: string
+      order: 4
+      description: Basic-auth password.
+      airbyte_secret: true
