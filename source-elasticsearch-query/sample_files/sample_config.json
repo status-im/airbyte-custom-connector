@@ -1,0 +1,19 @@
+{
+  "endpoint": "http://elasticsearch.example.com:9200",
+  "index": "logstash-*",
+  "queries": [
+    {
+      "name": "logos_dev_peers",
+      "query": "fleet:\"logos.dev\" AND message:\"Added address /ip4/\" AND message:\"PeerId\""
+    },
+    {
+      "name": "logos_test_peers",
+      "query": "fleet:\"logos.test\" AND message:\"Added address /ip4/\" AND message:\"PeerId\""
+    }
+  ],
+  "start_date": "2026-08-05T07:00:00Z",
+  "cursor_field": "@timestamp",
+  "page_size": 500,
+  "username": "elastic",
+  "password": "REPLACE_ME"
+}

@@ -1,0 +1,24 @@
+data:
+  allowedHosts:
+  registries:
+    oss:
+      enabled: false
+    cloud:
+      enabled: false
+  connectorBuildOptions:
+    baseImage: docker.io/airbyte/python-connector-base:1.1.0
+  connectorSubtype: api
+  connectorType: source
+  definitionId: 96fd9b72-0477-4d8b-a319-7a3c9ec13e61
+  dockerImageTag: 1.4.0
+  dockerRepository: harbor.status.im/bi/airbyte/source-elasticsearch-query
+  githubIssueLabel: source-elasticsearch-query
+  license: MIT
+  name: Elasticsearch Query
+  releaseDate: "2026-08-27"
+  supportLevel: community
+  releaseStage: alpha
+  documentationUrl: https://docs.airbyte.com/integrations/sources/elasticsearch-query
+  tags:
+    - language:python
+metadataSpecVersion: "1.0"
