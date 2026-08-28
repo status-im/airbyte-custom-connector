@@ -10,7 +10,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: 96fd9b72-0477-4d8b-a319-7a3c9ec13e61
-  dockerImageTag: 1.4.0
+  dockerImageTag: 2.0.0
   dockerRepository: harbor.status.im/bi/airbyte/source-elasticsearch-query
   githubIssueLabel: source-elasticsearch-query
   license: MIT

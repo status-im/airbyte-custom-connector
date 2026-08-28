@@ -1,7 +1,7 @@
 import logging
 import re
 from datetime import datetime, timedelta, timezone
-from typing import Any, List, Mapping, Tuple
+from typing import Any, Dict, List, Mapping, Tuple
 
 import requests
 
@@ -10,13 +10,18 @@ from airbyte_cdk.sources.streams import Stream
 
 from .client import (
     DEFAULT_CURSOR,
+    DEFAULT_NEIGHBOUR_DAYS,
+    build_query,
+    close_pit,
+    count_documents,
     fail,
     has_auth,
-    headers,
-    post_with_retry,
-    query_body,
-    search_url,
+    iso_z,
+    open_pit,
+    parse_timestamp,
+    phrase_filters,
 )
+from .slicing import target_indices
 from .streams import DocumentsStream
 
 logger = logging.getLogger("airbyte")
@@ -30,24 +35,29 @@ def _stream_name(name: str) -> str:
     return cleaned
 
 
-def configured_queries(config: Mapping[str, Any]) -> List[Tuple[str, str]]:
-    """Return (stream_name, lucene_query) pairs. Each query gets its own cursor."""
+def configured_queries(config: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    """Return one ``{name, query, filters}`` spec per stream. Each stream gets its own cursor."""
+    common = phrase_filters(config.get("common_filters"), "common_filters")
     items = config.get("queries") or []
-    pairs: List[Tuple[str, str]] = []
+    specs: List[Dict[str, Any]] = []
     seen = set()
     for i, item in enumerate(items):
         raw_name = item.get("name") or f"query_{i + 1}"
         query = (item.get("query") or "").strip()
-        if not query:
-            fail(f"Query '{raw_name}' is empty. An empty Lucene string matches the whole index.")
+        filters = common + phrase_filters(item.get("filters"), f"queries[{i}].filters")
+        if not query and not filters:
+            fail(
+                f"Query '{raw_name}' has neither 'query' nor 'filters'. That would match the "
+                "whole index."
+            )
         name = _stream_name(raw_name)
         if name in seen:
             name = f"{name}_{i + 1}"
         seen.add(name)
-        pairs.append((name, query))
-    if not pairs:
+        specs.append({"name": name, "query": query, "filters": filters})
+    if not specs:
         fail("At least one entry is required in queries.")
-    return pairs
+    return specs
 
 
 class SourceElasticsearchQuery(AbstractSource):
@@ -55,25 +65,52 @@ class SourceElasticsearchQuery(AbstractSource):
         try:
             if not has_auth(config):
                 return False, "Password did not reach the connector"
-            url = search_url(config)
+
             cursor = config.get("cursor_field") or DEFAULT_CURSOR
+            neighbours = config.get("index_neighbour_days")
+            neighbours = DEFAULT_NEIGHBOUR_DAYS if neighbours is None else max(0, int(neighbours))
+
+            end = datetime.now(timezone.utc)
+            start = max(parse_timestamp(config["start_date"]), end - timedelta(days=2))
+            if start >= end:
+                start = end - timedelta(days=2)
+            indices = target_indices(
+                config.get("index"), config.get("index_date_pattern"), start, end, neighbours
+            )
+            logger.info(f"Elasticsearch check target indices: {indices}")
+
             with requests.Session() as session:
-                for name, query in configured_queries(config):
-                    body = query_body(query, cursor, config["start_date"], 0, None)
-                    body["size"] = 0
-                    body["track_total_hits"] = True
-                    resp = post_with_retry(
-                        session,
-                        url,
-                        body,
-                        headers(config),
-                        config,
-                        f"Elasticsearch check for query '{name}'",
+                pit_id = open_pit(session, config, indices, "Elasticsearch check: _pit")
+                if pit_id:
+                    close_pit(session, config, pit_id, "Elasticsearch check")
+                    logger.info("Point-in-time is available; slices page with pit + search_after.")
+                elif str(config.get("pagination") or "auto").strip().lower() == "pit":
+                    return False, (
+                        "pagination is set to 'pit' but this cluster has no point-in-time API. "
+                        "Use 'scroll' or 'auto'."
                     )
-                    if resp.status_code != 200:
-                        return False, f"HTTP {resp.status_code} for query '{name}' {url}: {resp.text[:500]}"
-                    hits = (resp.json().get("hits") or {}).get("total")
-                    logger.info(f"Elasticsearch check ok query={name} hits.total={hits}")
+                else:
+                    logger.info("Point-in-time is unavailable; slices page with the scroll API.")
+
+                for spec in configured_queries(config):
+                    query = build_query(
+                        cursor,
+                        iso_z(start),
+                        iso_z(end),
+                        query_string=spec["query"],
+                        filters=spec["filters"],
+                    )
+                    matches = count_documents(
+                        session,
+                        config,
+                        indices,
+                        query,
+                        f"Elasticsearch check: _count for query '{spec['name']}'",
+                    )
+                    logger.info(
+                        f"Elasticsearch check ok query={spec['name']} "
+                        f"matches_last_2_days={matches}"
+                    )
             return True, None
         except Exception as e:
             return False, str(e)
@@ -81,10 +118,8 @@ class SourceElasticsearchQuery(AbstractSource):
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         if not config.get("start_date"):
             config = dict(config)
-            config["start_date"] = (
-                datetime.now(timezone.utc) - timedelta(days=2)
-            ).strftime("%Y-%m-%dT%H:%M:%SZ")
+            config["start_date"] = iso_z(datetime.now(timezone.utc) - timedelta(days=2))
         return [
-            DocumentsStream(config, name, query)
-            for name, query in configured_queries(config)
+            DocumentsStream(config, spec["name"], spec["query"], spec["filters"])
+            for spec in configured_queries(config)
         ]

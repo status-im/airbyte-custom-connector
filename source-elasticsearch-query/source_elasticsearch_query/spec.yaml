@@ -13,27 +13,35 @@ connectionSpecification:
   properties:
     endpoint:
       type: string
-      description: Elasticsearch base URL, with no index path (e.g. http://host:9200).
+      description: Elasticsearch base URL, no index path.
       examples:
         - http://elasticsearch.example.com:9200
     index:
       type: string
-      description: Index name or pattern to search (e.g. logstash-* or logs-generic-default).
+      description: Index name or pattern. Used when index_date_pattern is unset.
       examples:
         - logstash-*
+    index_date_pattern:
+      type: string
+      description: strftime pattern for daily indices. Slices target the generated names instead of a wildcard.
+      examples:
+        - logstash-%Y.%m.%d
+    index_neighbour_days:
+      type: integer
+      description: Extra days of index names per slice, for documents that landed in the adjacent day's index.
+      default: 1
     queries:
       type: array
       minItems: 1
-      description: One or more Lucene queries. Each item becomes its own Airbyte stream with its own incremental cursor.
+      description: One or more searches. Each item is its own stream with its own cursor.
       items:
         type: object
         required:
           - name
-          - query
         properties:
           name:
             type: string
-            description: Stream name in the destination (letters, numbers, underscores).
+            description: Stream name in the destination.
             examples:
               - logos_dev_peers
           query:
@@ -41,37 +49,106 @@ connectionSpecification:
             description: Lucene query_string for this stream.
             examples:
               - 'fleet:"logos.dev" AND message:"Added address /ip4/"'
+          filters:
+            type: array
+            description: match_phrase filters for this stream, combined with AND.
+            items:
+              type: object
+              required:
+                - field
+                - phrase
+              properties:
+                field:
+                  type: string
+                phrase:
+                  type: string
+    common_filters:
+      type: array
+      description: match_phrase filters applied to every stream.
+      items:
+        type: object
+        required:
+          - field
+          - phrase
+        properties:
+          field:
+            type: string
+          phrase:
+            type: string
     start_date:
       type: string
-      description: Inclusive lower bound for the first sync, in ISO-8601 UTC. Incremental syncs continue from the last cursor.
+      description: Floor for the first sync, ISO-8601 UTC. Later syncs continue from the cursor.
       examples:
         - "2026-08-05T00:00:00Z"
     cursor_field:
       type: string
-      description: Date field used as the incremental cursor.
+      description: Date field used as the incremental cursor and primary sort key.
       default: "@timestamp"
+    source_fields:
+      type: array
+      description: _source fields to fetch. Empty fetches the whole document.
+      items:
+        type: string
+      examples:
+        - ["@timestamp", "message", "logsource", "fleet", "program", "host"]
     extra_fields:
       type: array
-      description: Extra _source fields to expose as destination columns.
+      description: Extra field names to declare as destination columns.
       items:
         type: string
       examples:
         - ["kubernetes_namespace", "trace_id"]
+    slice_granularity:
+      type: string
+      description: Slice size. auto goes hourly when a day exceeds subdivide_threshold.
+      enum:
+        - auto
+        - day
+        - hour
+      default: auto
+    subdivide_threshold:
+      type: integer
+      description: Matches per day above which auto switches to hourly slices.
+      default: 200000
+    pagination:
+      type: string
+      description: auto uses point-in-time with search_after and falls back to scroll.
+      enum:
+        - auto
+        - pit
+        - scroll
+      default: auto
+    keep_alive:
+      type: string
+      description: Lifetime of the point-in-time or scroll context, extended each page.
+      default: "5m"
     page_size:
       type: integer
-      description: Hits per search_after page (max 10000). Lower this if the cluster is slow or the connection drops.
-      default: 500
+      description: Hits per search_after page. Capped at 10000.
+      default: 5000
+    lookback_hours:
+      type: number
+      description: Overlap re-read on resume. Duplicates dedupe on the _id primary key.
+      default: 1
+    ingestion_lag_seconds:
+      type: integer
+      description: Holdback from the wall clock, so every slice is a closed range.
+      default: 60
+    assert_counts:
+      type: boolean
+      description: Fail the sync when a slice emits fewer records than its _count.
+      default: true
     request_timeout:
       type: integer
-      description: Seconds to wait for a search response (read timeout).
-      default: 60
+      description: Seconds to wait for a search response.
+      default: 120
     connect_timeout:
       type: integer
-      description: Seconds to wait for the TCP connection. Kept short so a dropped route fails fast and is retried.
+      description: Seconds to wait for the TCP connection. Kept short so a dead route retries fast.
       default: 10
     max_retries:
       type: integer
-      description: Retries per search request on connection timeouts, 429 and 5xx, with exponential backoff.
+      description: Retries per request, with exponential backoff, before the sync fails.
       default: 5
     username:
       type: string
