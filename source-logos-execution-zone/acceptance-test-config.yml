@@ -1,10 +1,10 @@
 # See [Connector Acceptance Tests](https://docs.airbyte.com/connector-development/testing-connectors/connector-acceptance-tests-reference)
 # for more information about how to configure these tests
-connector_image: airbyte/source-logos-blockchain:dev
+connector_image: airbyte/source-logos-execution-zone:dev
 acceptance_tests:
   spec:
     tests:
-      - spec_path: "source_logos-blockchain/spec.yaml"
+      - spec_path: "source_logos-execution-zone/spec.yaml"
   connection:
     tests:
       - config_path: "secrets/config.json"

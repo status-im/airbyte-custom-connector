@@ -33,6 +33,8 @@ class LogosExecutionZoneStream(HttpStream):
 
     def stream_slices(self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None) -> Iterable[Optional[Mapping[str, Any]]]:
         start_block = stream_state.get("block_id", 1) if stream_state else 1
+        self.logger.info(f"Start block: {start_block}")
+        self.logger.info(f"Latest block: {self.__latest_block_id}")
         for id, block_id in enumerate(range(start_block, self.__latest_block_id + 1)):
             self.logger.info(f"{self.name} > Starting {block_id} / {self.__latest_block_id}")
             yield {
