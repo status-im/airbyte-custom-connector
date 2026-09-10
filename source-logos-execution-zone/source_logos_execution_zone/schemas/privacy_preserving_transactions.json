@@ -6,18 +6,12 @@
     "hash": {
       "type": ["null", "string"]
     },
-    "type": {
-      "type": ["null", "string"],
-      "description": "Transaction variant key from the RPC payload, lowercased (e.g. public, private)"
-    },
-    "accounts": {
-      "type": ["null", "integer"],
-      "description": "Number of account_ids on the transaction"
-    },
-    "account_ids": {
+    "public_actions": {
       "type": ["null", "array"],
+      "description": "public_actions from the transaction message",
       "items": {
-        "type": ["null", "string"]
+        "type": ["null", "object"],
+        "additionalProperties": true
       }
     },
     "block_id": {

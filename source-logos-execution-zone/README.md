@@ -10,33 +10,59 @@ This Airbyte connector extracts data from a **[Logos Execution Zone (LEZ)](https
 
 The connector walks the LEZ chain block by block (via the `getBlockById` JSON-RPC method), from the last synced block up to the latest finalized block (`getLastFinalizedBlockId`), and produces two streams:
 
-### `blocks`
+### `block_info`
 
 One record per block, with aggregated transaction counts:
 
 | Field | Description |
 | --- | --- |
-| `block_id` | Block height / ID (cursor field for incremental sync) |
-| `hash` | Block hash (primary key) |
+| `block_id` | Sequential block height / ID |
+| `hash` | Block hash |
 | `prev_block_hash` | Hash of the previous block |
-| `timestamp` | Block time, converted from epoch milliseconds |
+| `timestamp` | Block time, converted from the RPC millisecond epoch |
 | `timezone` | Always `UTC` |
-| `total_transactions` | Number of transactions in the block |
-| `public_transactions` | Count of public transactions |
-| `private_transactions` | Count of private transactions (`total - public`) |
-| `status` | Bedrock status of the block. Should always be `Finalized`, since the connector only syncs up to the last finalized block (`getLastFinalizedBlockId`). Be careful when processing the latest block - if it is not yet finalized this value will differ. |
-| `rpc_method` | RPC method used to fetch the block. This field is used for debugging purposes. |
+| `total_transactions` | Total number of transactions in the block (sum of the three counts below) |
+| `public_transactions` | Count of `Public` transactions |
+| `privacy_preserving_transactions` | Count of `PrivacyPreserving` transactions |
+| `program_deployment_transactions` | Count of `ProgramDeployment` transactions |
+| `status` | The block's `bedrock_status` as reported by the indexer. Should always be `Finalized`, since the connector only syncs up to the last finalized block (`getLastFinalizedBlockId`). Be careful when processing the latest block - if it is not yet finalized this value will differ. |
+| `rpc_method` | RPC method used to fetch the block. Kept for debugging purposes. |
 
-### `transactions`
+### `public_transactions`
 
-One record per transaction (only transactions carrying a list of `account_ids` are emitted):
+One record per `Public` transaction in a block:
 
 | Field | Description |
 | --- | --- |
 | `hash` | Transaction hash (primary key) |
-| `type` | Transaction type (`public` / `private`) |
-| `accounts` | Number of accounts involved in the transaction. |
+| `program_id` | `program_id` from the transaction message |
+| `accounts` | Number of `account_ids` on the transaction |
 | `account_ids` | Account IDs referenced by the transaction |
+| `block_id` | ID of the containing block |
+| `block_hash` | Hash of the containing block |
+| `block_timestamp` | Timestamp of the containing block |
+| `timezone` | Always `UTC` |
+
+### `privacy_preserving_transactions`
+
+One record per `PrivacyPreserving` transaction in a block:
+
+| Field | Description |
+| --- | --- |
+| `hash` | Transaction hash |
+| `public_actions` | `public_actions` array from the transaction message (list of objects) |
+| `block_id` | ID of the containing block |
+| `block_hash` | Hash of the containing block |
+| `block_timestamp` | Timestamp of the containing block |
+| `timezone` | Always `UTC` |
+
+### `program_deployment_transactions`
+
+One record per `ProgramDeployment` transaction in a block:
+
+| Field | Description |
+| --- | --- |
+| `hash` | Transaction hash |
 | `block_id` | ID of the containing block |
 | `block_hash` | Hash of the containing block |
 | `block_timestamp` | Timestamp of the containing block |

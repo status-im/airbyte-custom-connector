@@ -1,4 +1,4 @@
-import requests, logging, json, datetime
+import requests, logging, json, datetime, re
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
@@ -22,7 +22,7 @@ class LogosExecutionZoneStream(HttpStream):
     def url_base(self):
         return self.__url_base
 
-    def next_page_token(self, response):
+    def next_page_token(self, response: requests.Response):
         return None
 
     def path(self, **kwargs) -> str:
@@ -52,67 +52,143 @@ class LogosExecutionZoneStream(HttpStream):
         }
         return data
 
-class LEZBlocks(LogosExecutionZoneStream):
+    def camel_to_snake(self, name: str) -> str:
+        """
+        Convert a camelCase or PascalCase string to snake_case.
 
-    def __init__(self, url_base: str, rpc_method: str, latest_block_id: int):
+        Parameters:
+            - `name` - the camel case value
+
+        Output:
+            - snake case value
+        """
+        s = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
+        s = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s)
+        return s.lower()
+
+class BlockInfo(LogosExecutionZoneStream):
+
+    TRANSACTION_TYPES = ["Public", "PrivacyPreserving", "ProgramDeployment"]
+
+    def __init__(self, url_base: str, rpc_method: str, latest_block_id: int, cache: MutableMapping[int, Any] = None):
         super().__init__(url_base, rpc_method, latest_block_id)
+        # Shared with LEZTransactions so a block is fetched from LEZ only once.
+        self._cache = cache if cache is not None else {}
 
     def request_body_json(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, any] = None, next_page_token: Mapping[str, Any] = None):
         data = super().request_body_json(stream_state, stream_slice, next_page_token)
         data["params"] = [stream_slice.get("block_id", 1)]
         return data
 
-    def parse_response(self, response: requests.Response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
-
+    def extract_block(self, response: requests.Response, stream_slice: Mapping[str, Any]) -> Tuple[dict, list]:
         data = response.json()["result"]
         transactions: list[dict] = data["body"]["transactions"]
-        total_transactions = len(transactions)
-        public_transactions = sum(["Public" in transaction.keys() for transaction in transactions])
-        private_transactions = total_transactions - public_transactions
+        transaction_info = {}
+        for current_type in self.TRANSACTION_TYPES:
+            transaction_info[f"{self.camel_to_snake(current_type)}_transactions"] = sum([current_type in transaction.keys() for transaction in transactions])
 
-        point = {
+        transaction_info["total_transactions"] = sum(transaction_info.values())
+        block = {
             "block_id": data["header"]["block_id"],
             "hash": data["header"]["hash"],
             "prev_block_hash": data["header"]["prev_block_hash"],
             "timestamp": datetime.datetime.fromtimestamp(data["header"]["timestamp"] / 1_000),
             "timezone": "UTC",
-            "total_transactions": len(transactions),
-            "public_transactions": public_transactions,
-            "private_transactions": private_transactions,
+            **transaction_info,
             "status": data["bedrock_status"],
             "rpc_method": stream_slice["rpc_method"]
         }
-
-        yield point
-
-class LEZTransactions(LEZBlocks):
-
-    def __init__(self, url_base: str, rpc_method: str, latest_block_id: int):
-        super().__init__(url_base, rpc_method, latest_block_id)
+        return block, transactions
 
     def parse_response(self, response: requests.Response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
-        block_data = next(super().parse_response(response, stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token))
+        block, transactions = self.extract_block(response, stream_slice)
+        self._cache[block["block_id"]] = (block, transactions)
+        yield block
 
-        data = response.json()["result"]
-        transactions: list[dict] = data["body"]["transactions"]
+class BlockSubStream(BlockInfo):
+    """
+    Base for any stream whose records are derived from a LEZ block.
+    """
 
+    def __init__(self, url_base: str, rpc_method: str, latest_block_id: int, cache: MutableMapping[int, Any]):
+        super().__init__(url_base, rpc_method, latest_block_id, cache=cache)
+
+    def records_from_block(self, block: Mapping[str, Any], transactions: list) -> Iterable[Mapping[str, Any]]:
+        raise NotImplementedError
+
+    def read_records(self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_slice: Mapping[str, Any] = None, stream_state: Mapping[str, Any] = None) -> Iterable[Mapping[str, Any]]:
+        cached = self._cache.get(stream_slice["block_id"])
+        if cached:
+            yield from self.records_from_block(*cached)
+        else:
+            yield from super().read_records(sync_mode=sync_mode, cursor_field=cursor_field, stream_slice=stream_slice, stream_state=stream_state)
+
+    def parse_response(self, response: requests.Response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
+        block, transactions = self.extract_block(response, stream_slice)
+        self._cache.setdefault(block["block_id"], (block, transactions))
+        yield from self.records_from_block(block, transactions)
+
+
+class PublicTransactions(BlockSubStream):
+
+    primary_key = "hash"
+
+    def records_from_block(self, block: Mapping[str, Any], transactions: list) -> Iterable[Mapping[str, Any]]:
         for current in transactions:
-            for transaction_type, transaction in current.items():
-                account_ids: list[str] = transaction["message"].get("account_ids")
-                if not isinstance(account_ids, list):
-                    continue
+            transaction: dict = current.get("Public") or {}
+            if not transaction:
+                continue
 
-                point = {
-                    "hash": transaction["hash"],
-                    "type": transaction_type.lower(),
-                    "accounts": len(account_ids),
-                    "account_ids": account_ids,
-                    "block_id": block_data["block_id"],
-                    "block_hash": block_data["hash"],
-                    "block_timestamp": block_data["timestamp"],
-                    "timezone": block_data["timezone"]
-                }
-                yield point
+            program_id: str = transaction["message"]["program_id"]
+            account_ids: list[str] = transaction["message"]["account_ids"]
+            yield {
+                "hash": transaction["hash"],
+                "program_id": program_id,
+                "accounts": len(account_ids),
+                "account_ids": account_ids,
+                "block_id": block["block_id"],
+                "block_hash": block["hash"],
+                "block_timestamp": block["timestamp"],
+                "timezone": block["timezone"]
+            }
+
+class PrivacyPreservingTransactions(BlockSubStream):
+
+    primary_key = "hash"
+
+    def records_from_block(self, block: Mapping[str, Any], transactions: list) -> Iterable[Mapping[str, Any]]:
+        for current in transactions:
+            transaction: dict = current.get("PrivacyPreserving") or {}
+            if not transaction:
+                continue
+
+            public_actions: list[dict] = transaction["message"]["public_actions"]
+            yield {
+                "hash": transaction["hash"],
+                "public_actions": public_actions,
+                "block_id": block["block_id"],
+                "block_hash": block["hash"],
+                "block_timestamp": block["timestamp"],
+                "timezone": block["timezone"]
+            }
+
+class ProgramDeploymentTransactions(BlockSubStream):
+
+    primary_key = "hash"
+
+    def records_from_block(self, block: Mapping[str, Any], transactions: list) -> Iterable[Mapping[str, Any]]:
+        for current in transactions:
+            transaction: dict = current.get("ProgramDeployment") or {}
+            if not transaction:
+                continue
+
+            yield {
+                "hash": transaction["hash"],
+                "block_id": block["block_id"],
+                "block_hash": block["hash"],
+                "block_timestamp": block["timestamp"],
+                "timezone": block["timezone"]
+            }
 
 class SourceLogosExecutionZone(AbstractSource):
 
@@ -142,9 +218,12 @@ class SourceLogosExecutionZone(AbstractSource):
             "rpc_method": "getBlockById",
             "latest_block_id": self.get_final_block(config["url"])
         }
+        cache = {}
         streams = [
-            LEZBlocks(**params),
-            LEZTransactions(**params)
+            BlockInfo(**params, cache=cache),
+            PublicTransactions(**params, cache=cache),
+            PrivacyPreservingTransactions(**params, cache=cache),
+            ProgramDeploymentTransactions(**params, cache=cache)
         ]
         return streams
 

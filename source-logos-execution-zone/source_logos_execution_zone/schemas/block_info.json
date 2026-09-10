@@ -27,7 +27,10 @@
     "public_transactions": {
       "type": ["null", "integer"]
     },
-    "private_transactions": {
+    "privacy_preserving_transactions": {
+      "type": ["null", "integer"]
+    },
+    "program_deployment_transactions": {
       "type": ["null", "integer"]
     },
     "status": {
