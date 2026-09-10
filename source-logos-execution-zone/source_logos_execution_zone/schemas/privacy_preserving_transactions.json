@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "hash": {
+      "type": ["null", "string"]
+    },
+    "public_actions": {
+      "type": ["null", "array"],
+      "description": "public_actions from the transaction message",
+      "items": {
+        "type": ["null", "object"],
+        "additionalProperties": true
+      }
+    },
+    "block_id": {
+      "type": ["null", "integer"]
+    },
+    "block_hash": {
+      "type": ["null", "string"]
+    },
+    "block_timestamp": {
+      "type": ["null", "string"],
+      "format": "date-time"
+    },
+    "timezone": {
+      "type": ["null", "string"]
+    }
+  }
+}
