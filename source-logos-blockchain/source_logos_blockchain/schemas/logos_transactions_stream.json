@@ -12,6 +12,9 @@
     "block_id": {
       "type": ["null", "string"]
     },
+    "blockchain_version": {
+      "type": ["null", "string"]
+    },
     "mantle_tx": {
       "type": ["null", "object"],
       "additionalProperties": true,

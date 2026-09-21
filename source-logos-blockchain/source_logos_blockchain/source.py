@@ -10,11 +10,12 @@ class LogosBlockchainStream(HttpStream):
     cursor_field = "slot"
     primary_key = "id"
 
-    def __init__(self, url_base: str, latest_slot: int, pagination: int):
+    def __init__(self, url_base: str, latest_slot: int, pagination: int, blockchain_version: str):
         super().__init__()
         self.__url_base = url_base
         self.latest_slot = latest_slot
         self.pagination = pagination
+        self.blockchain_version = blockchain_version
 
     @property
     def url_base(self):
@@ -73,8 +74,8 @@ class LogosBlockchainStream(HttpStream):
 
 class LogosBlockStream(LogosBlockchainStream):
 
-    def __init__(self, url_base: str, latest_slot: int, pagination: int):
-        super().__init__(url_base, latest_slot, pagination)
+    def __init__(self, url_base: str, latest_slot: int, pagination: int, blockchain_version: str):
+        super().__init__(url_base, latest_slot, pagination, blockchain_version)
 
     def parse_response(self, response: requests.Response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
         # Blocks are returned in ascending order
@@ -83,14 +84,15 @@ class LogosBlockStream(LogosBlockchainStream):
             transactions = block.pop("transactions")
             point = {
                 **block["header"],
-                "transactions": len(transactions)
+                "transactions": len(transactions),
+                "blockchain_version": self.blockchain_version
             }
             yield point
 
 class LogosTransactionsStream(LogosBlockchainStream):
 
-    def __init__(self, url_base: str, latest_slot: int, pagination: int):
-        super().__init__(url_base, latest_slot, pagination)
+    def __init__(self, url_base: str, latest_slot: int, pagination: int, blockchain_version: str):
+        super().__init__(url_base, latest_slot, pagination, blockchain_version)
 
     def parse_response(self, response: requests.Response, *, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None):
         # Blocks are returned in ascending order
@@ -103,6 +105,7 @@ class LogosTransactionsStream(LogosBlockchainStream):
                     "block_id": block["header"]["id"],
                     "slot": block["header"]["slot"],
                     **transaction,
+                    "blockchain_version": self.blockchain_version
                 }
                 yield point
 
@@ -118,7 +121,8 @@ class SourceLogosBlockchain(AbstractSource):
         params = {
             "url_base": self.parse_url(config["url"]),
             "latest_slot": info["slot"],
-            "pagination": config["slot_pagination"]
+            "pagination": config["slot_pagination"],
+            "blockchain_version": config["blockchain_version"]
         }
         streams = [
             LogosBlockStream(**params),

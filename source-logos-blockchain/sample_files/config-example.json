@@ -1,4 +1,5 @@
 {
     "url": "http://example.logos.co:8080/",
-    "slot_pagination": 10000
+    "slot_pagination": 10000,
+    "blockchain_version": "0.2.2"
 }

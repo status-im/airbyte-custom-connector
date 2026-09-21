@@ -18,6 +18,9 @@
     "transactions": {
       "type": ["null", "integer"]
     },
+    "blockchain_version": {
+      "type": ["null", "string"]
+    },
     "proof_of_leadership": {
       "type": ["null", "object"],
       "additionalProperties": true,
