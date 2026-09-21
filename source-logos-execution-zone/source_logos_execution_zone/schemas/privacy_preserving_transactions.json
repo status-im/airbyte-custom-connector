@@ -29,6 +29,9 @@
     },
     "url_base": {
       "type": ["null", "string"]
+    },
+    "blockchain_version": {
+      "type": ["null", "string"]
     }
   }
 }

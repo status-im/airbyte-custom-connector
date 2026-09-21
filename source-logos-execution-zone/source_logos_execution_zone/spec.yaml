@@ -5,8 +5,13 @@ connectionSpecification:
   type: object
   required:
     - url
+    - blockchain_version
   properties:
     url:
         title: 'Host URL'
         type: string
         description: 'The URL and port that connect to Logos Execution Layer RPC'
+    blockchain_version:
+        title: 'Blockchain version'
+        type: string
+        description: 'The blockchain version the data is fetched from. Not to be confused with REST API version.'

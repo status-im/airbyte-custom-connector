@@ -11,9 +11,10 @@ class LogosExecutionZoneStream(HttpStream):
     cursor_field = "block_id"
     primary_key = "hash"
 
-    def __init__(self, url_base: str, rpc_method: str, latest_block_id: int):
+    def __init__(self, url_base: str, rpc_method: str, latest_block_id: int, blockchain_version: str):
         super().__init__()
         self.logger.info(f"{self.name} > Uses RPC method {rpc_method} [{url_base}]")
+        self.blockchain_version = blockchain_version
         self.__latest_block_id = latest_block_id
         self.__url_base = url_base
         self.__rpc_method = rpc_method
@@ -70,8 +71,8 @@ class BlockInfo(LogosExecutionZoneStream):
 
     TRANSACTION_TYPES = ["Public", "PrivacyPreserving", "ProgramDeployment"]
 
-    def __init__(self, url_base: str, rpc_method: str, latest_block_id: int, cache: MutableMapping[int, Any] = None):
-        super().__init__(url_base, rpc_method, latest_block_id)
+    def __init__(self, url_base: str, rpc_method: str, latest_block_id: int, blockchain_version: str, cache: MutableMapping[int, Any] = None):
+        super().__init__(url_base, rpc_method, latest_block_id, blockchain_version)
         # Shared with LEZTransactions so a block is fetched from LEZ only once.
         self._cache = cache if cache is not None else {}
 
@@ -97,7 +98,8 @@ class BlockInfo(LogosExecutionZoneStream):
             **transaction_info,
             "status": data["bedrock_status"],
             "rpc_method": stream_slice["rpc_method"],
-            "url_base": self.url_base
+            "url_base": self.url_base,
+            "blockchain_version": self.blockchain_version
         }
         return block, transactions
 
@@ -111,8 +113,8 @@ class BlockSubStream(BlockInfo):
     Base for any stream whose records are derived from a LEZ block.
     """
 
-    def __init__(self, url_base: str, rpc_method: str, latest_block_id: int, cache: MutableMapping[int, Any]):
-        super().__init__(url_base, rpc_method, latest_block_id, cache=cache)
+    def __init__(self, url_base: str, rpc_method: str, latest_block_id: int, blockchain_version: str, cache: MutableMapping[int, Any]):
+        super().__init__(url_base, rpc_method, latest_block_id, blockchain_version, cache=cache)
 
     def records_from_block(self, block: Mapping[str, Any], transactions: list) -> Iterable[Mapping[str, Any]]:
         raise NotImplementedError
@@ -151,7 +153,8 @@ class PublicTransactions(BlockSubStream):
                 "block_hash": block["hash"],
                 "block_timestamp": block["timestamp"],
                 "timezone": block["timezone"],
-                "url_base": block["url_base"]
+                "url_base": block["url_base"],
+                "blockchain_version": self.blockchain_version
             }
 
 class PrivacyPreservingTransactions(BlockSubStream):
@@ -172,7 +175,8 @@ class PrivacyPreservingTransactions(BlockSubStream):
                 "block_hash": block["hash"],
                 "block_timestamp": block["timestamp"],
                 "timezone": block["timezone"],
-                "url_base": block["url_base"]
+                "url_base": block["url_base"],
+                "blockchain_version": self.blockchain_version
             }
 
 class ProgramDeploymentTransactions(BlockSubStream):
@@ -191,7 +195,8 @@ class ProgramDeploymentTransactions(BlockSubStream):
                 "block_hash": block["hash"],
                 "block_timestamp": block["timestamp"],
                 "timezone": block["timezone"],
-                "url_base": block["url_base"]
+                "url_base": block["url_base"],
+                "blockchain_version": self.blockchain_version
             }
 
 class SourceLogosExecutionZone(AbstractSource):
@@ -220,7 +225,8 @@ class SourceLogosExecutionZone(AbstractSource):
         params = {
             "url_base": config["url"],
             "rpc_method": "getBlockById",
-            "latest_block_id": self.get_final_block(config["url"])
+            "latest_block_id": self.get_final_block(config["url"]),
+            "blockchain_version": config["blockchain_version"]
         }
         cache = {}
         streams = [
