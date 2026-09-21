@@ -77,7 +77,12 @@ class Account(TwitterStream):
         stream_slice: Mapping[str, Any] = None,
         next_page_token: Mapping[str, Any] = None
     ) -> str:
-        return "users/me?user.fields=public_metrics,protected,description,url,most_recent_tweet_id,pinned_tweet_id,created_at,verified_type"
+        fields=[
+            "public_metrics", "protected", "description", "url",
+            "most_recent_tweet_id", "pinned_tweet_id", "created_at", "verified_type",
+            "verified_followers_count"
+        ]
+        return f"users/me?user.fields={','.join(fields)}"
 
     def parse_response(
         self,

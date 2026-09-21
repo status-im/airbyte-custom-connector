@@ -30,6 +30,9 @@
         "type": [ "null", "string" ],
         "format": "date-time"
     },
+    "verified_followers_count": {
+        "type": [ "null", "number" ]
+    },
     "public_metrics": {
       "type": ["null", "object" ],
       "properties": {
