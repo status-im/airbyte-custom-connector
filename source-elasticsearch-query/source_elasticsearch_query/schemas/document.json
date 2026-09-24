@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "_id": {
+      "type": ["null", "string"]
+    },
+    "_index": {
+      "type": ["null", "string"]
+    },
+    "query_name": {
+      "type": ["null", "string"]
+    },
+    "@timestamp": {
+      "type": ["null", "string"]
+    },
+    "@version": {
+      "type": ["null", "string"]
+    },
+    "message": {
+      "type": ["null", "string"]
+    },
+    "fleet": {
+      "type": ["null", "string"]
+    },
+    "host": {
+      "type": ["null", "string"]
+    },
+    "logsource": {
+      "type": ["null", "string"]
+    },
+    "logsource_ip": {
+      "type": ["null", "string"]
+    },
+    "program": {
+      "type": ["null", "string"]
+    },
+    "syslogtag": {
+      "type": ["null", "string"]
+    },
+    "data_center": {
+      "type": ["null", "string"]
+    },
+    "facility_name": {
+      "type": ["null", "string"]
+    },
+    "severity_name": {
+      "type": ["null", "string"]
+    },
+    "type": {
+      "type": ["null", "string"]
+    },
+    "facility": {
+      "type": ["null", "number"]
+    },
+    "severity": {
+      "type": ["null", "number"]
+    },
+    "pid": {
+      "type": ["null", "number"]
+    }
+  }
+}

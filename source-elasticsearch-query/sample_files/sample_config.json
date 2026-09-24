@@ -1,0 +1,37 @@
+{
+  "endpoint": "http://elasticsearch.example.com:9200",
+  "index": "logstash-*",
+  "index_date_pattern": "logstash-%Y.%m.%d",
+  "index_neighbour_days": 1,
+  "common_filters": [
+    { "field": "program", "phrase": "docker/logos-exec-zone-testnet-blockchain" }
+  ],
+  "queries": [
+    {
+      "name": "logos_dev_peers",
+      "filters": [
+        { "field": "fleet", "phrase": "logos.dev" },
+        { "field": "message", "phrase": "Added address /ip4/" },
+        { "field": "message", "phrase": "PeerId" }
+      ]
+    },
+    {
+      "name": "logos_test_peers",
+      "filters": [
+        { "field": "fleet", "phrase": "logos.test" },
+        { "field": "message", "phrase": "Added address /ip4/" },
+        { "field": "message", "phrase": "PeerId" }
+      ]
+    }
+  ],
+  "start_date": "2026-08-05T00:00:00Z",
+  "cursor_field": "@timestamp",
+  "source_fields": ["@timestamp", "message", "logsource", "fleet", "program", "host"],
+  "slice_granularity": "auto",
+  "pagination": "auto",
+  "page_size": 5000,
+  "lookback_hours": 1,
+  "assert_counts": true,
+  "username": "elastic",
+  "password": "REPLACE_ME"
+}
