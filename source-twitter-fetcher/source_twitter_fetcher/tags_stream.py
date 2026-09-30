@@ -8,7 +8,7 @@ from .tweets_stream import TwitterStream
 
 logger = logging.getLogger("airbyte")
 
-class Tags(TwitterStream):
+class TagsStream(TwitterStream):
     primary_key = "id"
 
     def __init__(self, start_time: Union[str, datetime, None] = None, account_ids:

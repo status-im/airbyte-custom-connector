@@ -7,7 +7,7 @@ from airbyte_cdk.sources.streams import Stream
 from .tweets_stream import Account, AccountsAdditional, Tweet, TweetMetrics
 from .tweets_comments_stream import TweetComments
 from .spaces_stream import Space, GetSpaceIds
-from .tags_stream import Tags
+from .tags_stream import TagsStream
 from .auth import TwitterOAuth, TwitterBearerTokenAuth
 import logging
 
@@ -70,29 +70,19 @@ class SourceTwitterFetcher(AbstractSource):
         if "tags_frequent_extractions" in config:
             tags_kwargs["tags_frequent_extractions"] = config["tags_frequent_extractions"]
 
-        logger.info("Tags in the config : %s", config['tags'])
-        tags_list = config['tags']
-        logger.info("len %s", len(tags_list))
-        if len(tags_list) > 0:
-            tags = Tags(**tags_kwargs)
-            streams.append(tags)
-            logger.info("tags added to the config")
+        streams.append(TagsStream(**tags_kwargs))
         # Get space IDs from config, no default
         space_ids = config.get("space_ids", [])
-        if len(space_ids) > 0:
-            space_kwargs = {
-                "authenticator": auth,
-                "space_ids": space_ids
-            }
-            space = Space(**space_kwargs)
-            streams.append(space)
+        space_kwargs = {
+            "authenticator": auth,
+            "space_ids": space_ids
+        }
+        streams.append(Space(**space_kwargs))
         # Get space account IDs from config for space discovery
         space_account = config.get("space_account", [])
-        if len(space_account) > 0:
-            get_space_ids_kwargs = {
-                "authenticator": bearer_auth,
-                "space_account": space_account
-            }
-            get_space_ids = GetSpaceIds(**get_space_ids_kwargs)
-            streams.append(get_space_ids)
+        get_space_ids_kwargs = {
+            "authenticator": bearer_auth,
+            "space_account": space_account
+        }
+        streams.append(GetSpaceIds(**get_space_ids_kwargs))
         return streams
