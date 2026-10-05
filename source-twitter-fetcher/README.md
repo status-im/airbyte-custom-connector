@@ -17,7 +17,6 @@ twitter:
     client_secret: "Secret from the Twitter Developer Account"
     access_token: "Token generated from the generated Twitter account"
     refresh_token: "Refresh token obtain from the Twitter Account"
-    bearer_token: "Bearer Token form Twitter Dev Portal"
     token_expiry_date: "Expiry date off the Token Access"
   account_id: "Id of the Twitter account"
   start_time: "AAAA-MM-DDTHH:mm:SSZ" # Start of the period of tweets sync
