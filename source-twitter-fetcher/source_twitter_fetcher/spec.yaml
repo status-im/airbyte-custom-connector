@@ -9,7 +9,6 @@ connectionSpecification:
     1. **Bearer Token Authentication** for public data streams:
        - TagsStream: Search public tweets by hashtags/mentions
        - GetSpaceIds: Discover public spaces by creator accounts
-       - Requires: bearer_token (from Twitter Developer Portal > Keys and tokens)
 
     2. **User Authentication (OAuth 2.0)** for user-context streams:
        - Account, Tweet, TweetMetrics, TweetComments, Space streams
@@ -23,7 +22,6 @@ connectionSpecification:
       required:
         - client_id
         - client_secret
-        - bearer_token
       properties:
         client_id:
           title: Client ID
@@ -34,11 +32,6 @@ connectionSpecification:
           title: Client Secret
           type: string
           description: "Client Secret of your Twitter Application (required for all streams)"
-          airbyte_secret: true
-        bearer_token:
-          title: Bearer Token
-          type: string
-          description: "Bearer Token from Twitter Developer Portal > Keys and tokens (required for tags and space discovery streams)"
           airbyte_secret: true
         access_token:
           title: Access Token
