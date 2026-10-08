@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id": {"type": ["null", "string"]},
+    "name": {"type": ["null", "string"]},
+    "event_type": {"type": ["null", "string"], "description": "Goal event, such as order_created."},
+    "custom_event_name": {"type": ["null", "string"]},
+    "attribution_window_days": {"type": ["null", "integer"]},
+    "ad_account_id": {"type": ["null", "string"]},
+    "source_ids": {"type": ["null", "array"], "items": {"type": "string"}},
+    "sources": {"type": ["null", "array"], "items": {"type": "object", "additionalProperties": true}},
+    "campaigns": {"type": ["null", "array"], "items": {"type": "object", "additionalProperties": true}},
+    "archived": {"type": ["null", "boolean"]},
+    "version": {"type": ["null", "integer"]}
+  }
+}

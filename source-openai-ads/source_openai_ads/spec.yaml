@@ -1,0 +1,14 @@
+documentationUrl: https://developers.openai.com/ads/reporting
+connectionSpecification:
+  $schema: http://json-schema.org/draft-07/schema#
+  title: OpenAI Ads
+  type: object
+  required:
+    - api_key
+  properties:
+    api_key:
+      type: string
+      title: Ads API key
+      description: Bearer key for one OpenAI ad account. Insights cover the last 7 days.
+      airbyte_secret: true
+      order: 0

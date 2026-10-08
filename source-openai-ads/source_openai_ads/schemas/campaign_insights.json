@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id": {"type": ["null", "string"]},
+    "campaign_id": {"type": ["null", "string"]},
+    "campaign_name": {"type": ["null", "string"]},
+    "readable_time": {"type": ["null", "string"], "format": "date", "description": "Day the row covers, in the account timezone."},
+    "start_time": {"type": ["null", "integer"]},
+    "end_time": {"type": ["null", "integer"]},
+    "impressions": {"type": ["null", "number"]},
+    "clicks": {"type": ["null", "number"]},
+    "spend": {"type": ["null", "number"], "description": "Spend in major currency units, such as 12.50."},
+    "ctr": {"type": ["null", "number"], "description": "Clicks divided by impressions. 0.04 means 4%."},
+    "cpc": {"type": ["null", "number"]},
+    "cpm": {"type": ["null", "number"]},
+    "conversions": {"type": ["null", "number"], "description": "Goal conversions from clicks plus views."},
+    "cpa": {"type": ["null", "number"], "description": "Spend divided by conversions."},
+    "post_click_cvr": {"type": ["null", "number"], "description": "Click-through goal conversions divided by clicks."},
+    "order_created_attributed_sales": {"type": ["null", "string"], "description": "Attributed purchase value as a decimal string."},
+    "order_created_attributed_sales_currency": {"type": ["null", "string"]},
+    "order_created_roas": {"type": ["null", "number"], "description": "Attributed purchase value divided by spend."},
+    "currency_code": {"type": ["null", "string"]},
+    "timezone": {"type": ["null", "string"]},
+    "attribution_window_days": {"type": ["null", "integer"]},
+    "view_through_attribution_window_days": {"type": ["null", "integer"]},
+    "attribution_time_basis": {"type": ["null", "string"]}
+  }
+}
