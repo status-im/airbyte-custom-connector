@@ -1,0 +1,24 @@
+data:
+  allowedHosts:
+    hosts:
+      - api.ads.openai.com
+  registries:
+    oss:
+      enabled: false
+    cloud:
+      enabled: false
+  connectorSubtype: api
+  connectorType: source
+  definitionId: 3c8e1f6a-9b24-4d7e-a1c0-6f5e8d2b7a91
+  dockerImageTag: "0.1.0"
+  dockerRepository: harbor.status.im/bi/airbyte/source-openai-ads
+  githubIssueLabel: source-openai-ads
+  license: MIT
+  name: OpenAI Ads
+  releaseDate: 2026-10-08
+  releaseStage: alpha
+  supportLevel: community
+  documentationUrl: https://developers.openai.com/ads/reporting
+  tags:
+    - language:python
+metadataSpecVersion: "1.0"

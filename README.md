@@ -18,6 +18,7 @@ Repository holding the custom Airbyte connector using in Status-im.
 * `source-simplecast-fetcher`: Source connector to fetch data from Simplecast API
 * `source-twitter-fetcher`: Source connector to fetch data from Twitter API
 * `source-twitter-ads`: Source connector to fetch data from Twitter Ads API
+* `source-openai-ads`: Source connector to fetch data from the OpenAI Ads API
 
 ### Status Analytics related
 

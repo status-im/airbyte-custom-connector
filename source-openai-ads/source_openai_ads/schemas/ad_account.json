@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id": {"type": ["null", "string"], "description": "Ad account id."},
+    "name": {"type": ["null", "string"], "description": "Legal business name."},
+    "legal_name": {"type": ["null", "string"]},
+    "account_name": {"type": ["null", "string"], "description": "Name shown in Ads Manager."},
+    "brand_name": {"type": ["null", "string"], "description": "Public name shown in ads."},
+    "url": {"type": ["null", "string"]},
+    "preview_url": {"type": ["null", "string"]},
+    "status": {"type": ["null", "string"]},
+    "timezone": {"type": ["null", "string"], "description": "Account timezone. Insight dates use this zone."},
+    "currency_code": {"type": ["null", "string"], "description": "Currency of spend and sales."},
+    "review": {"type": ["null", "object"], "additionalProperties": true}
+  }
+}

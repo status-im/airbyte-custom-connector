@@ -1,0 +1,161 @@
+{
+  "streams": [
+    {
+      "stream": {
+        "name": "ad_account",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "campaigns",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "ad_groups",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "ads",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "event_settings",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "overwrite"
+    },
+    {
+      "stream": {
+        "name": "campaign_insights",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["readable_time"],
+        "source_defined_primary_key": [["campaign_id"], ["readable_time"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append_dedup",
+      "cursor_field": ["readable_time"],
+      "primary_key": [["campaign_id"], ["readable_time"]]
+    },
+    {
+      "stream": {
+        "name": "campaign_conversions",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["date"],
+        "source_defined_primary_key": [["campaign_id"], ["date"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append_dedup",
+      "cursor_field": ["date"],
+      "primary_key": [["campaign_id"], ["date"]]
+    },
+    {
+      "stream": {
+        "name": "campaign_insights_country",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["readable_time"],
+        "source_defined_primary_key": [["campaign_id"], ["readable_time"], ["country"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append_dedup",
+      "cursor_field": ["readable_time"],
+      "primary_key": [["campaign_id"], ["readable_time"], ["country"]]
+    },
+    {
+      "stream": {
+        "name": "campaign_insights_device",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["readable_time"],
+        "source_defined_primary_key": [["campaign_id"], ["readable_time"], ["device"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append_dedup",
+      "cursor_field": ["readable_time"],
+      "primary_key": [["campaign_id"], ["readable_time"], ["device"]]
+    },
+    {
+      "stream": {
+        "name": "campaign_insights_platform",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["readable_time"],
+        "source_defined_primary_key": [["campaign_id"], ["readable_time"], ["platform"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append_dedup",
+      "cursor_field": ["readable_time"],
+      "primary_key": [["campaign_id"], ["readable_time"], ["platform"]]
+    },
+    {
+      "stream": {
+        "name": "campaign_insights_product",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["readable_time"],
+        "source_defined_primary_key": [["campaign_id"], ["readable_time"], ["product_feed_id"], ["product_item_id"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append_dedup",
+      "cursor_field": ["readable_time"],
+      "primary_key": [["campaign_id"], ["readable_time"], ["product_feed_id"], ["product_item_id"]]
+    },
+    {
+      "stream": {
+        "name": "campaign_conversions_country",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["date"],
+        "source_defined_primary_key": [["campaign_id"], ["date"], ["country"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append_dedup",
+      "cursor_field": ["date"],
+      "primary_key": [["campaign_id"], ["date"], ["country"]]
+    },
+    {
+      "stream": {
+        "name": "campaign_conversions_device",
+        "json_schema": {},
+        "supported_sync_modes": ["full_refresh"],
+        "source_defined_cursor": true,
+        "default_cursor_field": ["date"],
+        "source_defined_primary_key": [["campaign_id"], ["date"], ["device"]]
+      },
+      "sync_mode": "full_refresh",
+      "destination_sync_mode": "append_dedup",
+      "cursor_field": ["date"],
+      "primary_key": [["campaign_id"], ["date"], ["device"]]
+    }
+  ]
+}

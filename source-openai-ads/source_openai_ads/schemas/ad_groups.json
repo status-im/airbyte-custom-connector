@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id": {"type": ["null", "string"]},
+    "campaign_id": {"type": ["null", "string"]},
+    "name": {"type": ["null", "string"]},
+    "description": {"type": ["null", "string"]},
+    "status": {"type": ["null", "string"]},
+    "context_hints": {"type": ["null", "array"], "items": {"type": "string"}},
+    "bidding_config": {"type": ["null", "object"], "additionalProperties": true},
+    "product_set": {"type": ["null", "object"], "additionalProperties": true},
+    "created_at": {"type": ["null", "integer"]},
+    "updated_at": {"type": ["null", "integer"]}
+  }
+}
