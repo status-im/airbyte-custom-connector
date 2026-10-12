@@ -142,8 +142,8 @@ class PublicTransactions(BlockSubStream):
             if not transaction:
                 continue
 
-            program_id: str = transaction["message"]["program_id"]
-            account_ids: list[str] = transaction["message"]["account_ids"]
+            program_id: str = transaction["message"]["program_account_id"]
+            account_ids: list[str] = [shard_selector["account_id"] for shard_selector in transaction["message"]["shard_selectors"]]
             yield {
                 "hash": transaction["hash"],
                 "program_id": program_id,
