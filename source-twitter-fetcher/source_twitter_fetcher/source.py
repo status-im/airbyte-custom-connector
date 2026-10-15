@@ -17,13 +17,6 @@ DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 class SourceTwitterFetcher(AbstractSource):
     def check_connection(self, logger, config) -> Tuple[bool, any]:
-        try:
-            response = requests.get("https://api.x.com/2/users/me",
-                headers={"Authorization": f"Bearer {config.get('credentials').get('access_token')}"})
-            response.raise_for_status()
-        except requests.HTTPError as e:
-            logger.error(f"Error when testing auth {e}")
-            return False, None
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
