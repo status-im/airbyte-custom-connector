@@ -4,5 +4,6 @@
   "max_results": "100",
   "include_comments_count": false,
   "start_date": "2023-01-01",
-  "fetch_channel_analytics": true
+  "fetch_channel_analytics": true,
+  "additional_videos": []
 } 

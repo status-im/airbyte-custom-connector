@@ -222,6 +222,101 @@ class YouTubeDataAPI:
         except Exception as e:
             logger.warning(f"Could not fetch comments for video {video_id}: {e}")
             return 0
+
+    def get_video_comments(self, video_id: str, max_results: Optional[int] = None) -> List[Dict]:
+        """
+        Get the list of comments for a specific video.
+        
+        Uses commentThreads.list with pagination. Each page costs YouTube API quota,
+        so fetching comments is quota-intensive for videos with many comments.
+        
+        Args:
+            video_id (str): YouTube video ID
+            max_results (Optional[int]): Maximum number of comments to fetch (includes replies)
+            
+        Returns:
+            List[Dict]: List of comment objects with author, text, timestamps, likes and reply info
+        """
+        comments: List[Dict] = []
+        next_page_token = None
+        comments_fetched = 0
+        
+        while True:
+            params = {
+                'part': 'snippet,replies',
+                'videoId': video_id,
+                'maxResults': min(100, max_results - comments_fetched) if max_results else 100,
+                'textFormat': 'plainText',
+            }
+            
+            if next_page_token:
+                params['pageToken'] = next_page_token
+            
+            try:
+                response = self._make_request('commentThreads', params)
+            except Exception as e:
+                logger.warning(f"Could not fetch comments for video {video_id}: {e}")
+                return comments
+            
+            for item in response.get('items', []):
+                if max_results and comments_fetched >= max_results:
+                    return comments
+                
+                snippet = item.get('snippet', {})
+                top_level = snippet.get('topLevelComment', {})
+                top_level_snippet = top_level.get('snippet', {})
+                
+                comment = {
+                    'comment_id': item.get('id', ''),
+                    'video_id': video_id,
+                    'author_display_name': top_level_snippet.get('authorDisplayName', ''),
+                    'author_profile_image_url': top_level_snippet.get('authorProfileImageUrl', ''),
+                    'author_channel_url': top_level_snippet.get('authorChannelUrl', ''),
+                    'author_channel_id': (top_level_snippet.get('authorChannelId') or {}).get('value', ''),
+                    'text_display': top_level_snippet.get('textDisplay', ''),
+                    'text_original': top_level_snippet.get('textOriginal', ''),
+                    'published_at': top_level_snippet.get('publishedAt', ''),
+                    'updated_at': top_level_snippet.get('updatedAt', ''),
+                    'like_count': int(top_level_snippet.get('likeCount', 0)),
+                    'parent_id': None,
+                    'total_reply_count': snippet.get('totalReplyCount', 0),
+                    'is_reply': False,
+                    'can_reply': snippet.get('canReply', True),
+                }
+                comments.append(comment)
+                comments_fetched += 1
+                
+                # Add replies if available
+                if 'replies' in item:
+                    for reply in item['replies'].get('comments', []):
+                        if max_results and comments_fetched >= max_results:
+                            return comments
+                        
+                        reply_snippet = reply.get('snippet', {})
+                        comments.append({
+                            'comment_id': reply.get('id', ''),
+                            'video_id': video_id,
+                            'author_display_name': reply_snippet.get('authorDisplayName', ''),
+                            'author_profile_image_url': reply_snippet.get('authorProfileImageUrl', ''),
+                            'author_channel_url': reply_snippet.get('authorChannelUrl', ''),
+                            'author_channel_id': (reply_snippet.get('authorChannelId') or {}).get('value', ''),
+                            'text_display': reply_snippet.get('textDisplay', ''),
+                            'text_original': reply_snippet.get('textOriginal', ''),
+                            'published_at': reply_snippet.get('publishedAt', ''),
+                            'updated_at': reply_snippet.get('updatedAt', ''),
+                            'like_count': int(reply_snippet.get('likeCount', 0)),
+                            'parent_id': item.get('id', ''),
+                            'total_reply_count': 0,
+                            'is_reply': True,
+                            'can_reply': True,
+                        })
+                        comments_fetched += 1
+            
+            next_page_token = response.get('nextPageToken')
+            if not next_page_token:
+                break
+        
+        return comments
     
     def get_all_channel_videos(self, channel_identifier: str, max_results: Optional[int] = None, 
                              include_comments_count: bool = False) -> List[Dict]:

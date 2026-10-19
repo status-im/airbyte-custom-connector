@@ -218,6 +218,79 @@
     "_airbyte_sync_time": {
       "type": "string",
       "description": "Airbyte sync timestamp"
+    },
+    "_airbyte_video_source": {
+      "type": "string",
+      "description": "Origin of the video record: 'channel' for videos from the channel uploads, 'additional' for videos from the additional_videos config"
+    },
+    "comments": {
+      "type": "array",
+      "description": "List of comments on the video",
+      "items": {
+        "type": "object",
+        "properties": {
+          "comment_id": {
+            "type": "string",
+            "description": "Comment thread ID"
+          },
+          "video_id": {
+            "type": "string",
+            "description": "Video the comment belongs to"
+          },
+          "author_display_name": {
+            "type": "string",
+            "description": "Display name of the comment author"
+          },
+          "author_profile_image_url": {
+            "type": "string",
+            "description": "Profile image URL of the comment author"
+          },
+          "author_channel_url": {
+            "type": "string",
+            "description": "Channel URL of the comment author"
+          },
+          "author_channel_id": {
+            "type": "string",
+            "description": "Channel ID of the comment author"
+          },
+          "text_display": {
+            "type": "string",
+            "description": "Comment text (plain text format)"
+          },
+          "text_original": {
+            "type": "string",
+            "description": "Original comment text"
+          },
+          "published_at": {
+            "type": "string",
+            "description": "When the comment was published, ISO 8601"
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "When the comment was last updated, ISO 8601"
+          },
+          "like_count": {
+            "type": "integer",
+            "description": "Number of likes on the comment"
+          },
+          "parent_id": {
+            "type": ["string", "null"],
+            "description": "ID of the parent comment for replies, null for top-level comments"
+          },
+          "total_reply_count": {
+            "type": "integer",
+            "description": "Number of replies to a top-level comment"
+          },
+          "is_reply": {
+            "type": "boolean",
+            "description": "Whether the comment is a reply to another comment"
+          },
+          "can_reply": {
+            "type": "boolean",
+            "description": "Whether the current viewer can reply to the comment"
+          }
+        }
+      }
     }
   },
   "required": ["video_id", "title", "channel_id", "published_at", "fetched_at"]

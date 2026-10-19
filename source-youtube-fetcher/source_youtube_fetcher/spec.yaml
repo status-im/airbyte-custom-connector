@@ -55,6 +55,16 @@ connectionSpecification:
       description: Whether to include channel-level analytics and metadata in the sync.
       default: true
       order: 5
+    additional_videos:
+      type: array
+      title: Additional Videos
+      description: List of YouTube video IDs to fetch in addition to the channel's videos. Each entry must be a YouTube video ID (e.g., "dQw4w9WgXcQ"). Leave empty to sync only the channel's own videos. The connector works without this field.
+      default: []
+      items:
+        type: string
+        title: Video ID
+        description: A YouTube video ID (the part after "v=" in a YouTube URL).
+      order: 6
 supportsIncremental: true
 supportsNormalization: false
 supportsDBT: false

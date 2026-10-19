@@ -57,6 +57,29 @@ The videos stream provides detailed information about all videos from the channe
 | `include_comments_count` | boolean | No | Fetch detailed comment counts (slower, default: false) |
 | `start_date` | string | No | Start date for incremental syncs (YYYY-MM-DD) |
 | `fetch_channel_analytics` | boolean | No | Include channel analytics (default: true) |
+| `additional_videos` | array | No | List of YouTube video IDs to fetch in addition to the channel's videos. For each, view count, like count, comment count and the full list of comments are extracted. Default: `[]` (connector works without it) |
+
+### Additional Videos
+
+The `additional_videos` field lets you sync a specific list of YouTube videos that may not belong to the configured channel (or that you want to enrich with comments). Each entry must be a YouTube video ID (the part after `v=` in a YouTube URL).
+
+- The connector works without this field: when `additional_videos` is empty or omitted, only the channel's own videos are synced.
+- For each additional video, the `videos` stream emits `view_count`, `like_count`, `comment_count` and the full `comments` list.
+- Videos already present in the channel's uploads are automatically deduplicated by `video_id`.
+- Additional video records are tagged with `_airbyte_video_source: "additional"`, while channel videos are tagged `"channel"`.
+- Fetching the full comments list uses the `commentThreads` API endpoint, which consumes quota per page of results. Keep the list small if you are near your daily quota.
+
+Example:
+
+```json
+{
+  "api_key": "your_youtube_api_key",
+  "channel_identifier": "@TechChannel",
+  "max_results": "all",
+  "include_comments_count": false,
+  "additional_videos": ["dQw4w9WgXcQ", "9bZkp7q19f0"]
+}
+```
 
 ### Channel Identifier Formats
 
