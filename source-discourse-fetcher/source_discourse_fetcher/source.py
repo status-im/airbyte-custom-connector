@@ -5,7 +5,9 @@
 from typing import Any, Iterable, List, Mapping, MutableMapping, Optional, Tuple
 import logging
 import time
+import datetime
 import requests
+from collections import defaultdict
 from airbyte_cdk.sources import AbstractSource
 from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http import HttpStream, HttpSubStream
@@ -369,6 +371,50 @@ class Category(DiscourseStream):
             yield elt
 
 
+class Visit(DiscourseStream):
+    primary_key = "ref_date"
+    cursor_field = "ref_date"
+
+    def path(self, stream_state: Mapping[str, Any] = None, stream_slice: Mapping[str, Any] = None, next_page_token: Mapping[str, Any] = None) -> str:
+        return f"{self.url}/admin/reports/visits.json"
+
+    def request_params(self, stream_state: Mapping[str, Any], stream_slice: Optional[Mapping[str, Any]] = None, next_page_token: Optional[Mapping[str, Any]] = None) -> MutableMapping[str, Any]:
+        end_date = datetime.date.today() - datetime.timedelta(days=1)
+        start_date = end_date - datetime.timedelta(days=365)
+        last_ref_date = stream_state.get(self.cursor_field)
+        if last_ref_date:
+            start_date = min(datetime.date.fromisoformat(last_ref_date) + datetime.timedelta(days=1), end_date)
+
+        return {
+            "chart_grouping": "daily",
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "mode": "stacked_chart",
+        }
+
+    def get_updated_state(self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]) -> Mapping[str, Any]:
+        return {self.cursor_field: latest_record[self.cursor_field].date().isoformat()}
+
+    def parse_response(self, response: requests.Response, stream_state: Mapping[str, Any] = None, **kwargs) -> Iterable[Mapping]:
+        last_ref_date = (stream_state or {}).get(self.cursor_field)  # e.g. "2026-11-03"
+        output = response.json()
+        rows = defaultdict(dict)
+        for series in output["report"]["data"]:
+            source = series["label"].lower().replace(" ", "_")
+            for point in series["data"]:
+                rows[point["x"]][source] = point["y"]
+
+        for x, visits in sorted(rows.items()):
+            if last_ref_date and x <= last_ref_date:
+                continue
+
+            ref_date = datetime.datetime.strptime(x, "%Y-%m-%d")
+            point = {
+                "ref_date": ref_date,
+                "url": self.url,
+                **visits,
+            }
+            yield point
 
 
 # Source
@@ -396,5 +442,6 @@ class SourceDiscourseFetcher(AbstractSource):
             group,
             GroupMember(parent=group, **args),
             Tag(**args),
-            Category(**args)
+            Category(**args),
+            Visit(**args)
         ]
