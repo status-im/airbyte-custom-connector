@@ -268,8 +268,7 @@ def request_with_retry(
             time.sleep(backoff)
 
     fail(
-        f"{context}: giving up after {attempts} attempts. Last error: {last_error}. "
-
+        f"{context}: giving up after {attempts} attempts. Last error: {last_error}. ",
         config_error=False,
     )
 
